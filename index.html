@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V6.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V7.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES (v0.0.22 穩定版) -->
-<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.min.js"></script>
+<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES (v0.0.36 穩定版) -->
+<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.36/dist/occt-import-js.min.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
@@ -471,7 +471,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V6.0</div>
+    <div class="version-badge">V7.0</div>
   </div>
 </header>
 
@@ -595,7 +595,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V6.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V7.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -991,16 +991,19 @@ function init3DScene(){
   const grid = new THREE.GridHelper(10, 20, 0xaabbcc, 0xdde4ee);
   scene3d.add(grid);
 
-  scene3d.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const dLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  scene3d.add(new THREE.AmbientLight(0xffffff, 0.6));
+  // MeshStandardMaterial needs stronger directional lights
+  const dLight = new THREE.DirectionalLight(0xffffff, 1.2);
   dLight.position.set(5, 10, 5);
   scene3d.add(dLight);
-  const dLight2 = new THREE.DirectionalLight(0xaabbcc, 0.5);
+  const dLight2 = new THREE.DirectionalLight(0xcce8ff, 0.8);
   dLight2.position.set(-5, -3, -5);
   scene3d.add(dLight2);
-  const dLight3 = new THREE.DirectionalLight(0xffffff, 0.3);
+  const dLight3 = new THREE.DirectionalLight(0xffffff, 0.5);
   dLight3.position.set(0, -10, 0);
   scene3d.add(dLight3);
+  // HemisphereLight helps fill dark areas on standard material
+  scene3d.add(new THREE.HemisphereLight(0xddeeff, 0x334455, 0.5));
 
   scene3d.add(new THREE.AxesHelper(1));
 
@@ -1088,7 +1091,7 @@ async function getOCCT(){
   show3DLoading('載入 Open CASCADE 引擎（首次約需 10–20 秒）…');
   try {
     // 提供 locateFile 讓 WASM 從正確的 CDN 路徑載入
-    const wasmBase = 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/';
+    const wasmBase = 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.36/dist/';
     occtInstance = await occtimportjs({
       locateFile: (path) => wasmBase + path
     });
@@ -1157,80 +1160,83 @@ async function loadOCCTFile(file, ext){
               'resultKeys:', Object.keys(result),
               meshList[0] ? 'mesh0Keys:'+Object.keys(meshList[0]) : 'no meshes');
 
-  // Helper: safely convert Emscripten typed-array wrappers to real JS typed arrays
-  function toFloat32(src){
-    if(!src) return null;
-    // If it has a .array property (BufferAttribute style), use that
-    if(src.array) src = src.array;
-    // If already a Float32Array, return as-is
-    if(src instanceof Float32Array) return src;
-    // Emscripten memory view: has .size / .get() or is array-like with numeric .length
-    const len = (typeof src.size === 'number') ? src.size : src.length;
-    if(!len || len === 0) return null;
-    const out = new Float32Array(len);
-    for(let i = 0; i < len; i++) out[i] = src[i];
-    return out;
+  // ── SAFE COPY from Emscripten/WASM heap to independent JS heap ──
+  // CRITICAL: Emscripten typed arrays are VIEWS into WASM memory.
+  // After the OCCT call, WASM may reuse that memory.
+  // We MUST copy immediately using Float32Array.from() / Uint32Array.from()
+  // which always allocate a new independent JS array.
+  function safeCopyF32(src) {
+    if (!src) return null;
+    // Unwrap BufferAttribute-style wrapper {array, itemSize}
+    const raw = (src && src.array !== undefined) ? src.array : src;
+    if (!raw || raw.length === 0) return null;
+    // Float32Array.from() guarantees a NEW copy on the JS heap
+    return Float32Array.from(raw);
   }
-  function toUint32(src){
-    if(!src) return null;
-    if(src.array) src = src.array;
-    if(src instanceof Uint32Array) return src;
-    if(src instanceof Uint16Array) { const o = new Uint32Array(src.length); for(let i=0;i<src.length;i++) o[i]=src[i]; return o; }
-    const len = (typeof src.size === 'number') ? src.size : src.length;
-    if(!len || len === 0) return null;
-    const out = new Uint32Array(len);
-    for(let i = 0; i < len; i++) out[i] = src[i];
-    return out;
+  function safeCopyU32(src) {
+    if (!src) return null;
+    const raw = (src && src.array !== undefined) ? src.array : src;
+    if (!raw || raw.length === 0) return null;
+    return Uint32Array.from(raw);
   }
 
-  meshList.forEach((m, mi)=>{
+  meshList.forEach((m, mi) => {
     try {
-      // ── Position ──
-      let posArr = toFloat32(m.attributes?.position) ||
-                   toFloat32(m.position) ||
-                   toFloat32(m.vertices);
+      // ── Extract & copy position (MUST happen before any async gap) ──
+      const posRaw = m.attributes?.position ?? m.position ?? m.vertices ?? null;
+      const posArr = safeCopyF32(posRaw);
 
-      if(!posArr || posArr.length === 0){
-        console.warn('[OCCT] mesh', mi, 'no position data. Keys:', Object.keys(m),
-                     m.attributes ? '| attr keys:' + Object.keys(m.attributes) : '');
+      if (!posArr || posArr.length < 9) {
+        console.warn('[OCCT] mesh', mi, 'skipped – no position data.',
+          'keys:', Object.keys(m),
+          m.attributes ? 'attrKeys:' + Object.keys(m.attributes) : '');
         return;
       }
 
+      // ── Extract & copy normals ──
+      const norRaw = m.attributes?.normal ?? m.normal ?? m.normals ?? null;
+      const norArr = safeCopyF32(norRaw);
+
+      // ── Extract & copy index ──
+      const idxRaw = m.index ?? m.indices ?? null;
+      const idxArr = safeCopyU32(idxRaw);
+
+      console.log(`[OCCT] mesh${mi}: pos=${posArr.length} nor=${norArr?.length||0} idx=${idxArr?.length||0}`);
+
+      // ── Build BufferGeometry ──
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
-      // ── Normals ──
-      const norArr = toFloat32(m.attributes?.normal) ||
-                     toFloat32(m.normal) ||
-                     toFloat32(m.normals);
-      if(norArr && norArr.length > 0){
+      if (norArr && norArr.length === posArr.length) {
         geo.setAttribute('normal', new THREE.BufferAttribute(norArr, 3));
-      } else {
-        geo.computeVertexNormals();
       }
 
-      // ── Index ──
-      // occt-import-js v0.0.22 stores index as m.index (Emscripten obj) or m.index.array
-      const idxRaw = m.index ?? m.indices ?? null;
-      const idxArr = toUint32(idxRaw);
-      if(idxArr && idxArr.length > 0){
+      if (idxArr && idxArr.length > 0) {
         geo.setIndex(new THREE.BufferAttribute(idxArr, 1));
         totalTris += idxArr.length / 3;
       } else {
         totalTris += posArr.length / 9;
       }
 
-      // ── Face colour from OCCT, fallback steel blue ──
-      let faceColor = 0x4d9ecf;
-      if(m.color?.length >= 3){
-        faceColor = (Math.round(m.color[0]*255)<<16)|(Math.round(m.color[1]*255)<<8)|Math.round(m.color[2]*255);
+      // Always compute normals if missing or mismatched – needed for lighting
+      if (!norArr || norArr.length !== posArr.length) {
+        geo.computeVertexNormals();
       }
 
-      const mat = new THREE.MeshPhongMaterial({
-        color: faceColor, specular: 0x446688, shininess: 80, side: THREE.DoubleSide
+      // ── Material: MeshStandardMaterial is more robust than Phong ──
+      let color = new THREE.Color(0x4d9ecf); // default steel blue
+      if (m.color && m.color.length >= 3) {
+        color.setRGB(m.color[0], m.color[1], m.color[2]);
+      }
+      const mat = new THREE.MeshStandardMaterial({
+        color, roughness: 0.4, metalness: 0.2,
+        side: THREE.DoubleSide
       });
       group.add(new THREE.Mesh(geo, mat));
-    } catch(e){ console.error('[OCCT] mesh', mi, 'build error:', e); }
+
+    } catch (e) {
+      console.error('[OCCT] mesh', mi, 'build error:', e);
+    }
   });
 
   if(group.children.length === 0){
@@ -1371,8 +1377,8 @@ function loadOBJText(text, file){
 
 function finalize3DGeo(geo, file, fmtLabel){
   if(mesh3d){ scene3d.remove(mesh3d); wireframe3d && scene3d.remove(wireframe3d); }
-  const mat = new THREE.MeshPhongMaterial({
-    color: 0x4d9ecf, specular: 0x446688, shininess: 80, side: THREE.DoubleSide
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x4d9ecf, roughness: 0.4, metalness: 0.2, side: THREE.DoubleSide
   });
   mesh3d = new THREE.Mesh(geo, mat);
   scene3d.add(mesh3d);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站</title>
+<title>瑞能電子MIS轉檔專屬網站 V6.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -471,7 +471,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V5.0</div>
+    <div class="version-badge">V6.0</div>
   </div>
 </header>
 
@@ -595,7 +595,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V6.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1157,57 +1157,70 @@ async function loadOCCTFile(file, ext){
               'resultKeys:', Object.keys(result),
               meshList[0] ? 'mesh0Keys:'+Object.keys(meshList[0]) : 'no meshes');
 
+  // Helper: safely convert Emscripten typed-array wrappers to real JS typed arrays
+  function toFloat32(src){
+    if(!src) return null;
+    // If it has a .array property (BufferAttribute style), use that
+    if(src.array) src = src.array;
+    // If already a Float32Array, return as-is
+    if(src instanceof Float32Array) return src;
+    // Emscripten memory view: has .size / .get() or is array-like with numeric .length
+    const len = (typeof src.size === 'number') ? src.size : src.length;
+    if(!len || len === 0) return null;
+    const out = new Float32Array(len);
+    for(let i = 0; i < len; i++) out[i] = src[i];
+    return out;
+  }
+  function toUint32(src){
+    if(!src) return null;
+    if(src.array) src = src.array;
+    if(src instanceof Uint32Array) return src;
+    if(src instanceof Uint16Array) { const o = new Uint32Array(src.length); for(let i=0;i<src.length;i++) o[i]=src[i]; return o; }
+    const len = (typeof src.size === 'number') ? src.size : src.length;
+    if(!len || len === 0) return null;
+    const out = new Uint32Array(len);
+    for(let i = 0; i < len; i++) out[i] = src[i];
+    return out;
+  }
+
   meshList.forEach((m, mi)=>{
     try {
-      let posArr = null;
+      // ── Position ──
+      let posArr = toFloat32(m.attributes?.position) ||
+                   toFloat32(m.position) ||
+                   toFloat32(m.vertices);
 
-      // occt-import-js v0.0.22: m.attributes.position.array (Float32Array)
-      if(m.attributes?.position?.array?.length > 0){
-        posArr = m.attributes.position.array;
-      } else if(m.attributes?.position?.length > 0){
-        posArr = m.attributes.position;
-      }
-      // Older / alternative API styles
-      if(!posArr && m.position?.length > 0) posArr = m.position;
-      if(!posArr && m.vertices?.length > 0)  posArr = m.vertices;
-
-      if(!posArr || posArr.length === 0){ 
-        console.warn('[OCCT] mesh', mi, 'no position - keys:', Object.keys(m));
-        // Try to dump attributes
-        if(m.attributes) console.warn('[OCCT] attributes keys:', Object.keys(m.attributes));
-        return; 
+      if(!posArr || posArr.length === 0){
+        console.warn('[OCCT] mesh', mi, 'no position data. Keys:', Object.keys(m),
+                     m.attributes ? '| attr keys:' + Object.keys(m.attributes) : '');
+        return;
       }
 
       const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(Array.from ? Array.from(posArr) : posArr, 3));
+      geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
-      // Normals
-      let norArr = null;
-      if(m.attributes?.normal?.array?.length > 0)  norArr = m.attributes.normal.array;
-      else if(m.attributes?.normal?.length > 0)     norArr = m.attributes.normal;
-      else if(m.normal?.length > 0)                 norArr = m.normal;
-      else if(m.normals?.length > 0)                norArr = m.normals;
-
-      if(norArr?.length > 0){
-        geo.setAttribute('normal', new THREE.Float32BufferAttribute(Array.from ? Array.from(norArr) : norArr, 3));
+      // ── Normals ──
+      const norArr = toFloat32(m.attributes?.normal) ||
+                     toFloat32(m.normal) ||
+                     toFloat32(m.normals);
+      if(norArr && norArr.length > 0){
+        geo.setAttribute('normal', new THREE.BufferAttribute(norArr, 3));
       } else {
         geo.computeVertexNormals();
       }
 
-      // Index
-      let idxArr = null;
-      if(m.index?.array?.length > 0)  idxArr = m.index.array;
-      else if(m.index?.length > 0)    idxArr = m.index;
-      else if(m.indices?.length > 0)  idxArr = m.indices;
-
-      if(idxArr?.length > 0){
-        geo.setIndex(new THREE.Uint32BufferAttribute(Array.from ? Array.from(idxArr) : idxArr, 1));
+      // ── Index ──
+      // occt-import-js v0.0.22 stores index as m.index (Emscripten obj) or m.index.array
+      const idxRaw = m.index ?? m.indices ?? null;
+      const idxArr = toUint32(idxRaw);
+      if(idxArr && idxArr.length > 0){
+        geo.setIndex(new THREE.BufferAttribute(idxArr, 1));
         totalTris += idxArr.length / 3;
       } else {
         totalTris += posArr.length / 9;
       }
 
-      // Face color from OCCT, fallback steel blue
+      // ── Face colour from OCCT, fallback steel blue ──
       let faceColor = 0x4d9ecf;
       if(m.color?.length >= 3){
         faceColor = (Math.round(m.color[0]*255)<<16)|(Math.round(m.color[1]*255)<<8)|Math.round(m.color[2]*255);
@@ -1217,7 +1230,7 @@ async function loadOCCTFile(file, ext){
         color: faceColor, specular: 0x446688, shininess: 80, side: THREE.DoubleSide
       });
       group.add(new THREE.Mesh(geo, mat));
-    } catch(e){ console.error('[OCCT] mesh', mi, 'error:', e); }
+    } catch(e){ console.error('[OCCT] mesh', mi, 'build error:', e); }
   });
 
   if(group.children.length === 0){

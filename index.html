@@ -970,7 +970,7 @@ let camDist = CAMERA_DIST_DEFAULT;
 function init3DScene(){
   const canvas = document.getElementById('canvas3d');
   scene3d   = new THREE.Scene();
-  scene3d.background = new THREE.Color(0x0d1a2e);
+  scene3d.background = new THREE.Color(0xEEF2F7);
 
   camera3d  = new THREE.PerspectiveCamera(45, canvas.clientWidth / 440, 0.01, 10000);
   camera3d.position.set(0, 0, camDist);
@@ -979,16 +979,19 @@ function init3DScene(){
   renderer3d.setPixelRatio(window.devicePixelRatio);
   renderer3d.setSize(canvas.clientWidth, 440);
 
-  const grid = new THREE.GridHelper(10, 20, 0x1a3a5a, 0x0f2340);
+  const grid = new THREE.GridHelper(10, 20, 0xaabbcc, 0xdde4ee);
   scene3d.add(grid);
 
-  scene3d.add(new THREE.AmbientLight(0x334466, 0.8));
-  const dLight = new THREE.DirectionalLight(0x00d4ff, 0.6);
+  scene3d.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const dLight = new THREE.DirectionalLight(0xffffff, 0.8);
   dLight.position.set(5, 10, 5);
   scene3d.add(dLight);
-  const dLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+  const dLight2 = new THREE.DirectionalLight(0xaabbcc, 0.5);
   dLight2.position.set(-5, -3, -5);
   scene3d.add(dLight2);
+  const dLight3 = new THREE.DirectionalLight(0xffffff, 0.3);
+  dLight3.position.set(0, -10, 0);
+  scene3d.add(dLight3);
 
   scene3d.add(new THREE.AxesHelper(1));
 
@@ -1110,35 +1113,87 @@ async function loadOCCTFile(file, ext){
   await new Promise(r=>setTimeout(r,30));
 
   // Remove old mesh
-  if(mesh3d){ scene3d.remove(mesh3d); wireframe3d && scene3d.remove(wireframe3d); }
+  if(mesh3d){ scene3d.remove(mesh3d); wireframe3d && scene3d.remove(wireframe3d); mesh3d=null; wireframe3d=null; }
   const group = new THREE.Group();
   let totalTris = 0;
 
-  result.meshes.forEach(m=>{
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
-    if(m.attributes.normal) geo.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
-    else geo.computeVertexNormals();
-    if(m.index) geo.setIndex(new THREE.Uint32BufferAttribute(m.index.array, 1));
-    totalTris += (m.index ? m.index.array.length : m.attributes.position.array.length/3) / 3;
+  const meshList = result.meshes || [];
+  console.log('[OCCT] meshes count:', meshList.length, 'result keys:', Object.keys(result));
 
-    const mat = new THREE.MeshPhongMaterial({
-      color: 0x5ba8d4, specular: 0x002244,
-      shininess: 60, side: THREE.DoubleSide
-    });
-    group.add(new THREE.Mesh(geo, mat));
+  meshList.forEach((m, mi)=>{
+    try {
+      // Defensive: get position array via multiple possible structures
+      let posArr = null;
+      if(m.attributes && m.attributes.position){
+        posArr = m.attributes.position.array || m.attributes.position;
+      } else if(m.position) {
+        posArr = m.position;
+      }
+      if(!posArr || posArr.length === 0){ console.warn('[OCCT] mesh', mi, 'no position data'); return; }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+
+      // Normal
+      let norArr = null;
+      if(m.attributes && m.attributes.normal){
+        norArr = m.attributes.normal.array || m.attributes.normal;
+      } else if(m.normal){
+        norArr = m.normal;
+      }
+      if(norArr && norArr.length > 0){
+        geo.setAttribute('normal', new THREE.Float32BufferAttribute(norArr, 3));
+      } else {
+        geo.computeVertexNormals();
+      }
+
+      // Index
+      let idxArr = null;
+      if(m.index){ idxArr = m.index.array || m.index; }
+      if(idxArr && idxArr.length > 0){
+        geo.setIndex(new THREE.Uint32BufferAttribute(idxArr, 1));
+        totalTris += idxArr.length / 3;
+      } else {
+        totalTris += posArr.length / 9;
+      }
+
+      // Color from OCCT face color, fallback to steel blue
+      let faceColor = 0x4d9ecf;
+      if(m.color && m.color.length >= 3){
+        faceColor = (Math.round(m.color[0]*255)<<16)|(Math.round(m.color[1]*255)<<8)|Math.round(m.color[2]*255);
+      }
+
+      const mat = new THREE.MeshPhongMaterial({
+        color: faceColor,
+        specular: 0x446688,
+        shininess: 80,
+        side: THREE.DoubleSide
+      });
+      group.add(new THREE.Mesh(geo, mat));
+    } catch(e){ console.error('[OCCT] mesh', mi, 'error:', e); }
   });
+
+  // If nothing built, try legacy flat array structure (some occt-import-js versions)
+  if(group.children.length === 0 && result.meshes && result.meshes.length === 0){
+    console.warn('[OCCT] No meshes found. result:', JSON.stringify(result).substring(0,300));
+  }
 
   mesh3d = group;
   scene3d.add(mesh3d);
 
-  // Fit camera
+  // Auto-fit camera to bounding box
   const box = new THREE.Box3().setFromObject(mesh3d);
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3()).length();
-  camTarget.copy(center);
-  camDist = size * 1.5;
-  rotX = -0.4; rotY = 0.6;
+  if(!box.isEmpty()){
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3()).length();
+    camTarget.copy(center);
+    // Use 2x for a comfortable view; never go below 0.1
+    camDist = Math.max(size * 2.0, 0.1);
+    rotX = -0.35; rotY = 0.5;
+    console.log('[OCCT] bbox size:', size.toFixed(3), 'camDist:', camDist.toFixed(3));
+  } else {
+    console.warn('[OCCT] bounding box is empty — model may not have rendered');
+  }
 
   document.getElementById('canvas3d-wrap').classList.add('active');
   const infoBar = document.getElementById('viewer-info-bar');
@@ -1252,7 +1307,7 @@ function loadOBJText(text, file){
 function finalize3DGeo(geo, file, fmtLabel){
   if(mesh3d){ scene3d.remove(mesh3d); wireframe3d && scene3d.remove(wireframe3d); }
   const mat = new THREE.MeshPhongMaterial({
-    color: 0x5ba8d4, specular: 0x002244, shininess: 60, side: THREE.DoubleSide
+    color: 0x4d9ecf, specular: 0x446688, shininess: 80, side: THREE.DoubleSide
   });
   mesh3d = new THREE.Mesh(geo, mat);
   scene3d.add(mesh3d);
@@ -1275,12 +1330,12 @@ function finalize3DGeo(geo, file, fmtLabel){
   hide3DLoading();
 }
 
-function viewer3d_resetCamera(){ camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; rotX=-0.4; rotY=0.6; }
+function viewer3d_resetCamera(){ if(mesh3d){ const box=new THREE.Box3().setFromObject(mesh3d); if(!box.isEmpty()){ const s=box.getSize(new THREE.Vector3()).length(); camTarget.copy(box.getCenter(new THREE.Vector3())); camDist=s*2.0; } else { camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; } } else { camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; } rotX=-0.35; rotY=0.5; }
 function viewer3d_toggleWire(){
   if(!mesh3d) return;
   isWireframe=!isWireframe;
   mesh3d.traverse(m=>{ if(m.isMesh) m.material.wireframe=isWireframe; });
-  document.getElementById('wire-btn').style.color = isWireframe?'#00FF88':'var(--cyan)';
+  document.getElementById('wire-btn').style.color = isWireframe?'var(--green)':'var(--cyan2)';
 }
 function viewer3d_setView(v){
   const d=camDist;

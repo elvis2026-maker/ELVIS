@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V8.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V9.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -472,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V8.0</div>
+    <div class="version-badge">V9.0</div>
   </div>
 </header>
 
@@ -596,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V8.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V9.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1162,11 +1162,11 @@ async function loadOCCTFile(file, ext){
 
   let result;
   try {
-    // v0.0.9 API: ReadStepFile / ReadIgesFile 只接受 Uint8Array
+    // v0.0.9 API: ReadStepFile / ReadIgesFile 只接受 1 個參數（Uint8Array）
     if(['stp','step'].includes(ext)){
-      result = occt.ReadStepFile(uint8, null);
+      result = occt.ReadStepFile(uint8);
     } else {
-      result = occt.ReadIgesFile(uint8, null);
+      result = occt.ReadIgesFile(uint8);
     }
     console.log('[OCCT] parse result keys:', Object.keys(result),
       'success:', result?.success, 'meshes:', result?.meshes?.length);

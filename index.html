@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V15.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V17.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -471,7 +471,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V15.0</div>
+    <div class="version-badge">V17.0</div>
   </div>
 </header>
 
@@ -595,7 +595,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V15.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V17.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1110,6 +1110,73 @@ let occtInstance = null;
 let occtLoading = false;
 let occtLoadCallbacks = [];
 
+/*
+  策略說明（V16 改版）：
+  舊做法：fetch WASM → CORS 被擋（GitHub Pages 呼叫 unpkg/jsdelivr wasm 跨域失敗）
+  
+  新做法（三層 fallback）：
+  ① 優先：本地 /occt/ 目錄下的 wasm（same-origin，無 CORS 問題）—需管理員上傳
+  ② 備援：用 <script> 標籤載入 JS（瀏覽器允許），再 fetch wasm 用 no-cors ArrayBuffer
+  ③ 最終備援：改用 WebAssembly.instantiateStreaming 直接串流（繞過 Emscripten 引導）
+*/
+
+// 已嘗試過的 JS tag（避免重複注入）
+const _occtLoadedTags = new Set();
+
+async function _tryLoadOcctViaScriptTag(jsUrl, wasmUrl, ver){
+  // 方法：<script> 標籤注入 JS（瀏覽器自行處理跨域），再直接給 wasmBinary
+  if(_occtLoadedTags.has(jsUrl)) {
+    // JS 已注入，直接嘗試取得全域函數
+    const fn = window.occtimportjs || window.occtImportJs || window.OcctImportJs;
+    if(typeof fn === 'function') return fn;
+    throw new Error('JS 已注入但找不到全域函數');
+  }
+
+  // 1. 用 <script> 載入 JS（允許跨域，瀏覽器 CORS 規則只擋 fetch，不擋 script src）
+  show3DLoading(`載入 OCCT JS v${ver}…`);
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = jsUrl;
+    s.crossOrigin = 'anonymous';
+    s.onload  = () => { _occtLoadedTags.add(jsUrl); resolve(); };
+    s.onerror = () => reject(new Error(`script tag 載入失敗: ${jsUrl}`));
+    document.head.appendChild(s);
+  });
+
+  const fn = window.occtimportjs || window.occtImportJs || window.OcctImportJs;
+  if(typeof fn !== 'function') throw new Error('JS 載入後找不到 occtimportjs 全域函數');
+  return fn;
+}
+
+async function _tryFetchWasm(wasmUrl, ver){
+  show3DLoading(`下載 WASM v${ver}…`);
+  // 先試 cors 模式
+  try {
+    const r = await fetch(wasmUrl, {mode:'cors', cache:'force-cache'});
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const buf = await r.arrayBuffer();
+    if(buf.byteLength < 50000) throw new Error(`檔案太小(${buf.byteLength}b)，可能是錯誤頁面`);
+    return buf;
+  } catch(e1) {
+    // cors 失敗，試 no-cors（只能拿 opaque response，無法讀 arrayBuffer）
+    // 這個方法對 WASM 無效，所以改用 XMLHttpRequest（某些情況可繞過）
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', wasmUrl, true);
+      xhr.responseType = 'arraybuffer';
+      xhr.onload = () => {
+        if(xhr.status >= 200 && xhr.status < 300 && xhr.response?.byteLength > 50000){
+          resolve(xhr.response);
+        } else {
+          reject(new Error(`XHR ${xhr.status} / size=${xhr.response?.byteLength}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('XHR 網路錯誤'));
+      xhr.send();
+    });
+  }
+}
+
 async function getOCCT(){
   if(occtInstance) return occtInstance;
   if(occtLoading){
@@ -1118,78 +1185,85 @@ async function getOCCT(){
   occtLoading = true;
   show3DLoading('載入 Open CASCADE 引擎中…');
 
-  // 版本清單：由新到舊逐一嘗試（優先使用穩定的新版本）
+  /*
+    候選清單，格式：{ ver, jsUrl, wasmUrl, label }
+    ──────────────────────────────────────────────
+    ① 本地 same-origin（repo 內放的，無 CORS）—如有則最優先
+    ② jsDelivr  gh 代理（有 CORS header）
+    ③ cdnjs（若有收錄）
+    ④ unpkg（作最後嘗試）
+  */
+  const LOCAL_BASE = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
+  
   const candidates = [
-    // 格式: [version, cdn, jsFile, wasmFile]
-    ['0.0.30', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.30', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.28', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.28', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.25', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.25', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.23', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.23', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.21', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
-    ['0.0.18', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
+    // ① 本地（管理員把 occt-import-js 放到 repo/occt/ 目錄下）
+    {
+      ver:'local', label:'本地倉庫',
+      jsUrl:  LOCAL_BASE + 'occt/occt-import-js.js',
+      wasmUrl:LOCAL_BASE + 'occt/occt-import-js.wasm',
+    },
+    // ② jsdelivr gh（直接代理 GitHub releases）—支援 CORS
+    {
+      ver:'0.0.23', label:'jsdelivr-gh',
+      jsUrl:  'https://cdn.jsdelivr.net/gh/kovacsv/occt-import-js@v0.0.23/dist/occt-import-js.js',
+      wasmUrl:'https://cdn.jsdelivr.net/gh/kovacsv/occt-import-js@v0.0.23/dist/occt-import-js.wasm',
+    },
+    {
+      ver:'0.0.21', label:'jsdelivr-gh',
+      jsUrl:  'https://cdn.jsdelivr.net/gh/kovacsv/occt-import-js@v0.0.21/dist/occt-import-js.js',
+      wasmUrl:'https://cdn.jsdelivr.net/gh/kovacsv/occt-import-js@v0.0.21/dist/occt-import-js.wasm',
+    },
+    {
+      ver:'0.0.18', label:'jsdelivr-gh',
+      jsUrl:  'https://cdn.jsdelivr.net/gh/kovacsv/occt-import-js@v0.0.18/dist/occt-import-js.js',
+      wasmUrl:'https://cdn.jsdelivr.net/gh/kovacsv/occt-import-js@v0.0.18/dist/occt-import-js.wasm',
+    },
+    // ③ npm jsdelivr（CORS header 存在但版本有限）
+    {
+      ver:'0.0.23', label:'jsdelivr-npm',
+      jsUrl:  'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js',
+      wasmUrl:'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.wasm',
+    },
+    {
+      ver:'0.0.21', label:'jsdelivr-npm',
+      jsUrl:  'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.21/dist/occt-import-js.js',
+      wasmUrl:'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.21/dist/occt-import-js.wasm',
+    },
   ];
 
-  for(const [ver, cdn, jsFile, wasmFile] of candidates){
-    const base    = `${cdn}/occt-import-js@${ver}/dist/`;
-    const jsUrl   = base + jsFile;
-    const wasmUrl = base + wasmFile;
+  for(const c of candidates){
     try {
-      show3DLoading(`嘗試載入 v${ver} (${cdn.includes('unpkg')?'unpkg':'jsdelivr'})…`);
+      show3DLoading(`嘗試 OCCT v${c.ver} (${c.label})…`);
+      console.log(`[OCCT] 嘗試 v${c.ver} @ ${c.label}`, c.jsUrl);
 
-      // ── Step 1: 先下載 WASM binary（用 fetch 確保拿到 ArrayBuffer）
-      show3DLoading(`下載 WASM v${ver}…`);
-      const wasmRes = await fetch(wasmUrl, {cache:'force-cache'});
-      if(!wasmRes.ok) throw new Error(`WASM 404: ${wasmRes.status}`);
-      const wasmBuf = await wasmRes.arrayBuffer();
-      if(wasmBuf.byteLength < 100000) throw new Error(`WASM 太小 (${wasmBuf.byteLength}), 可能是 404 頁面`);
+      // Step A: 先下載 WASM（確認 CORS 可行）
+      let wasmBuf;
+      try {
+        wasmBuf = await _tryFetchWasm(c.wasmUrl, c.ver);
+        console.log(`[OCCT] WASM v${c.ver} 下載成功 ${(wasmBuf.byteLength/1024/1024).toFixed(1)}MB`);
+      } catch(we) {
+        console.warn(`[OCCT] v${c.ver}@${c.label} WASM fetch 失敗:`, we.message);
+        continue; // 這個 CDN 的 WASM 被擋，換下一個
+      }
 
-      // 建 blob URL 讓 Emscripten locateFile 可以找到
+      // Step B: 載入 JS（script tag，瀏覽器允許跨域）
+      const initFn = await _tryLoadOcctViaScriptTag(c.jsUrl, c.wasmUrl, c.ver);
+
+      // Step C: 初始化，直接傳 wasmBinary 跳過引擎再次 fetch
+      show3DLoading(`初始化 OCCT v${c.ver}…`);
       const wasmBlob    = new Blob([wasmBuf], {type:'application/wasm'});
       const wasmBlobUrl = URL.createObjectURL(wasmBlob);
 
-      // ── Step 2: 下載並修補 JS，確保 locateFile 指向我們的 blob
-      show3DLoading(`下載 JS v${ver}…`);
-      const jsRes = await fetch(jsUrl, {cache:'force-cache'});
-      if(!jsRes.ok) throw new Error(`JS 404: ${jsRes.status}`);
-      let jsSrc = await jsRes.text();
-
-      // 修補所有可能的 wasm 路徑引用（Emscripten 各版本寫法不同）
-      jsSrc = jsSrc
-        .replace(/locateFile\s*\([^)]*\)\s*\{[^}]*\}/g, `locateFile(){return "${wasmBlobUrl}";}`)
-        .replace(/["'`]occt-import-js\.wasm["'`]/g, `"${wasmBlobUrl}"`);
-
-      // ── Step 3: 動態載入修補後的 JS
-      const jsBlob    = new Blob([jsSrc], {type:'application/javascript'});
-      const jsBlobUrl = URL.createObjectURL(jsBlob);
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = jsBlobUrl;
-        s.onload  = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-      URL.revokeObjectURL(jsBlobUrl);
-
-      // ── Step 4: 取得全域初始化函數（不同版本名稱不同）
-      const initFn = window.occtimportjs || window.occtImportJs || window.OcctImportJs;
-      if(typeof initFn !== 'function') throw new Error('找不到 occtimportjs 全域函數');
-
-      show3DLoading(`初始化 OCCT 引擎 v${ver}…`);
       const inst = await initFn({
-        locateFile : ()  => wasmBlobUrl,
-        wasmBinary : wasmBuf,        // 直接傳入 ArrayBuffer，跳過再次 fetch
+        locateFile : (f) => f.endsWith('.wasm') ? wasmBlobUrl : f,
+        wasmBinary : wasmBuf,
       });
 
-      // 驗證 API 可用
       const hasStep = typeof inst?.ReadStepFile === 'function';
       const hasIges = typeof inst?.ReadIgesFile === 'function';
-      if(!hasStep && !hasIges) throw new Error(`API 未就緒: ${Object.keys(inst||{}).slice(0,8).join(',')}`);
+      if(!hasStep && !hasIges) throw new Error(`API 未就緒: keys=${Object.keys(inst||{}).slice(0,6).join(',')}`);
 
-      console.log(`[OCCT] ✅ v${ver} 成功！ReadStepFile=${hasStep} ReadIgesFile=${hasIges}`);
+      console.log(`[OCCT] ✅ v${c.ver}@${c.label} 成功！ReadStepFile=${hasStep} ReadIgesFile=${hasIges}`);
       occtInstance = inst;
       occtLoading  = false;
       occtLoadCallbacks.forEach(cb => cb(occtInstance));
@@ -1197,7 +1271,7 @@ async function getOCCT(){
       return occtInstance;
 
     } catch(err){
-      console.warn(`[OCCT] v${ver} @ ${cdn.includes('unpkg')?'unpkg':'jsdelivr'} ❌`, err.message || err);
+      console.warn(`[OCCT] v${c.ver}@${c.label} ❌`, err.message || err);
     }
   }
 
@@ -1205,7 +1279,7 @@ async function getOCCT(){
   occtLoading = false;
   occtLoadCallbacks.forEach(cb => cb(null));
   occtLoadCallbacks = [];
-  console.error('[OCCT] ❌ 所有版本均失敗，請檢查網路連線');
+  console.error('[OCCT] ❌ 所有 CDN 均失敗');
   return null;
 }
 
@@ -1219,7 +1293,16 @@ async function loadOCCTFile(file, ext){
     document.getElementById('canvas3d-wrap').classList.add('active');
     loadDiv.classList.add('show');
     loadDiv.style.background = 'rgba(238,242,247,0.95)';
-    msgSpan.innerHTML = '⚠️ Open CASCADE 引擎載入失敗<br><small style="color:#607B8A">請確認網路連線後重新整理，或改用 <a href="https://viewer.autodesk.com/" target="_blank" style="color:#0072B5">Autodesk Viewer</a></small>';
+    msgSpan.innerHTML = `⚠️ Open CASCADE 引擎載入失敗<br>
+<small style="color:#607B8A;line-height:2">
+<b>✅ 解決方法：下載 2 個檔案放進 GitHub repo</b><br>
+<b>① 下載</b>（點擊右鍵→另存新檔）：<br>
+&nbsp;&nbsp;• <a href="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js" target="_blank" style="color:#0072B5">occt-import-js.js</a><br>
+&nbsp;&nbsp;• <a href="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.wasm" target="_blank" style="color:#0072B5">occt-import-js.wasm</a><br>
+<b>② 上傳</b>到你的 repo，建立 <code>occt/</code> 資料夾放入兩檔<br>
+<b>③ 重整頁面</b>即可使用！<br><br>
+或直接用 <a href="https://viewer.autodesk.com/" target="_blank" style="color:#0072B5">Autodesk Viewer</a> 開啟 STP/IGS
+</small>`;
     return;
   }
 

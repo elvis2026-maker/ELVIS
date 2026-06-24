@@ -9,8 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES -->
-<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.19/dist/occt-import-js.min.js"></script>
+<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES (v0.0.22 穩定版) -->
+<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.min.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
@@ -471,7 +471,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V3.0</div>
+    <div class="version-badge">V4.0</div>
   </div>
 </header>
 
@@ -823,11 +823,11 @@ footer strong { color: var(--cyan); }
           <div class="step-item"><span class="step-num">2</span>上傳 .PDF 圖面（建議向量 PDF 效果更佳）</div>
           <div class="step-item"><span class="step-num">3</span>下載轉換後的 .DWG 可編輯檔</div>
         </div>
-        <a class="link-out-box" href="https://cloudconvert.com/pdf-to-dwg" target="_blank">
-          <span class="lob-icon">☁️</span>
+        <a class="link-out-box" href="https://convertio.co/pdf-dwg/" target="_blank">
+          <span class="lob-icon">🔁</span>
           <div>
-            <div class="lob-name">CloudConvert – PDF → DWG</div>
-            <div class="lob-url">cloudconvert.com · 支援向量 PDF 轉換</div>
+            <div class="lob-name">Convertio – PDF → DWG</div>
+            <div class="lob-url">convertio.co · 支援向量 PDF 轉 DWG，免費，無需安裝</div>
           </div>
           <span class="lob-arrow">↗</span>
         </a>
@@ -1126,30 +1126,45 @@ async function loadOCCTFile(file, ext){
   const group = new THREE.Group();
   let totalTris = 0;
 
+  // occt-import-js v0.0.22 returns meshes array; each mesh has position/normal/index
   const meshList = result.meshes || [];
-  console.log('[OCCT] meshes count:', meshList.length, 'result keys:', Object.keys(result));
+  console.log('[OCCT] success:', result.success, 'meshes count:', meshList.length);
 
   meshList.forEach((m, mi)=>{
     try {
-      // Defensive: get position array via multiple possible structures
+      // v0.0.22 structure: m.index (typed array or null), m.attributes.position.array, m.attributes.normal.array
       let posArr = null;
-      if(m.attributes && m.attributes.position){
-        posArr = m.attributes.position.array || m.attributes.position;
-      } else if(m.position) {
+      // Try v0.0.22 style
+      if(m.attributes && m.attributes.position && m.attributes.position.array){
+        posArr = m.attributes.position.array;
+      }
+      // Try flat array style (some versions)
+      else if(Array.isArray(m.position) || (m.position && m.position.length)){
         posArr = m.position;
       }
-      if(!posArr || posArr.length === 0){ console.warn('[OCCT] mesh', mi, 'no position data'); return; }
+      // Try direct array
+      else if(m.vertices){
+        posArr = m.vertices;
+      }
+
+      if(!posArr || posArr.length === 0){ 
+        console.warn('[OCCT] mesh', mi, 'no position data, keys:', Object.keys(m)); 
+        return; 
+      }
 
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
 
       // Normal
       let norArr = null;
-      if(m.attributes && m.attributes.normal){
-        norArr = m.attributes.normal.array || m.attributes.normal;
-      } else if(m.normal){
+      if(m.attributes && m.attributes.normal && m.attributes.normal.array){
+        norArr = m.attributes.normal.array;
+      } else if(m.normal && m.normal.length){
         norArr = m.normal;
+      } else if(m.normals && m.normals.length){
+        norArr = m.normals;
       }
+
       if(norArr && norArr.length > 0){
         geo.setAttribute('normal', new THREE.Float32BufferAttribute(norArr, 3));
       } else {
@@ -1158,7 +1173,10 @@ async function loadOCCTFile(file, ext){
 
       // Index
       let idxArr = null;
-      if(m.index){ idxArr = m.index.array || m.index; }
+      if(m.index && m.index.array){ idxArr = m.index.array; }
+      else if(m.index && m.index.length){ idxArr = m.index; }
+      else if(m.indices && m.indices.length){ idxArr = m.indices; }
+
       if(idxArr && idxArr.length > 0){
         geo.setIndex(new THREE.Uint32BufferAttribute(idxArr, 1));
         totalTris += idxArr.length / 3;
@@ -1182,9 +1200,11 @@ async function loadOCCTFile(file, ext){
     } catch(e){ console.error('[OCCT] mesh', mi, 'error:', e); }
   });
 
-  // If nothing built, try legacy flat array structure (some occt-import-js versions)
-  if(group.children.length === 0 && result.meshes && result.meshes.length === 0){
-    console.warn('[OCCT] No meshes found. result:', JSON.stringify(result).substring(0,300));
+  if(group.children.length === 0){
+    console.warn('[OCCT] No meshes built. Full result:', JSON.stringify(result).substring(0,500));
+    hide3DLoading();
+    alert('此 ' + ext.toUpperCase() + ' 檔案解析成功但無可顯示的幾何體。\n（可能為空模型或不支援的幾何類型）');
+    return;
   }
 
   mesh3d = group;
@@ -1196,7 +1216,6 @@ async function loadOCCTFile(file, ext){
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3()).length();
     camTarget.copy(center);
-    // Use 2x for a comfortable view; never go below 0.1
     camDist = Math.max(size * 2.0, 0.1);
     rotX = -0.35; rotY = 0.5;
     console.log('[OCCT] bbox size:', size.toFixed(3), 'camDist:', camDist.toFixed(3));
@@ -1423,27 +1442,54 @@ function parseDXF(text){
     const code=next(); const val=next();
     if(code==='0' && val==='SECTION'){
       const secCode=next(); const secVal=next();
-      if(secVal==='ENTITIES'){
-        parseEntitiesSection();
+      if(secVal==='ENTITIES' || secVal==='BLOCKS'){
+        parseEntitiesSection(secVal==='BLOCKS');
       }
     }
   }
 
-  function parseEntitiesSection(){
+  function parseEntitiesSection(isBlocks){
+    let polyVertices=null, polyFlags=0;
     while(i<lines.length){
       const code=peek();
       if(code===undefined) break;
       next(); const val=next();
       if(code==='0'){
+        // Flush pending POLYLINE vertices
+        if(polyVertices && val!=='VERTEX' && val!=='SEQEND'){
+          if(polyVertices.xs.length>1){
+            entities.push({type:'POLYLINE', data:{10:polyVertices.xs,20:polyVertices.ys,70:[String(polyFlags)]}});
+          }
+          polyVertices=null;
+        }
         if(val==='ENDSEC') break;
-        if(['LINE','CIRCLE','ARC','LWPOLYLINE','POLYLINE','POINT','ELLIPSE','SPLINE','TEXT','MTEXT','INSERT'].includes(val)){
+        if(isBlocks && val==='BLOCK') continue; // skip BLOCK header
+        if(val==='VERTEX' && polyVertices){
+          // collect vertex
+          const vd=parseEntityData();
+          const x=vd[10]&&vd[10][0]||'0';
+          const y=vd[20]&&vd[20][0]||'0';
+          polyVertices.xs.push(x); polyVertices.ys.push(y);
+        } else if(val==='SEQEND'){
+          parseEntityData(); // consume seqend data
+        } else if(val==='POLYLINE'){
+          const pd=parseEntityData();
+          polyFlags=parseInt(pd[70]&&pd[70][0]||0);
+          polyVertices={xs:[],ys:[]};
+        } else if(['LINE','CIRCLE','ARC','LWPOLYLINE','POINT','ELLIPSE','SPLINE','TEXT','MTEXT','INSERT'].includes(val)){
           entities.push(parseEntity(val));
+        } else {
+          // skip unknown entity
         }
       }
     }
+    // flush remaining polyline
+    if(polyVertices && polyVertices.xs.length>1){
+      entities.push({type:'POLYLINE', data:{10:polyVertices.xs,20:polyVertices.ys,70:[String(polyFlags)]}});
+    }
   }
 
-  function parseEntity(type){
+  function parseEntityData(){
     const data={};
     while(i<lines.length){
       const code=peek();
@@ -1453,6 +1499,11 @@ function parseDXF(text){
       if(!data[c]) data[c]=[];
       data[c].push(val);
     }
+    return data;
+  }
+
+  function parseEntity(type){
+    const data = parseEntityData();
     return {type, data};
   }
 
@@ -1526,15 +1577,23 @@ function drawDXF2D(){
   ctx.fillStyle='#08121e';
   ctx.fillRect(0,0,W,H);
 
+  // Draw adaptive grid based on current scale
+  const gridUnit = Math.pow(10, Math.floor(Math.log10(80 / dxf2dScale)));
   ctx.strokeStyle='rgba(0,212,255,0.06)'; ctx.lineWidth=.5;
-  for(let x=-2000;x<3000;x+=50){
-    const sx=dxf2dPan.x+x*dxf2dScale/50;
-    if(sx<0||sx>W) continue;
+  // Vertical lines
+  const xStart = Math.floor((-dxf2dPan.x / dxf2dScale) / gridUnit) * gridUnit;
+  const xEnd   = xStart + (W / dxf2dScale) + gridUnit * 2;
+  for(let gx = xStart; gx < xEnd; gx += gridUnit){
+    const sx = dxf2dPan.x + gx * dxf2dScale;
+    if(sx < 0 || sx > W) continue;
     ctx.beginPath(); ctx.moveTo(sx,0); ctx.lineTo(sx,H); ctx.stroke();
   }
-  for(let y=-2000;y<3000;y+=50){
-    const sy=dxf2dPan.y-y*dxf2dScale/50;
-    if(sy<0||sy>H) continue;
+  // Horizontal lines
+  const yStart = Math.floor(((dxf2dPan.y - H) / dxf2dScale) / gridUnit) * gridUnit;
+  const yEnd   = yStart + (H / dxf2dScale) + gridUnit * 2;
+  for(let gy = yStart; gy < yEnd; gy += gridUnit){
+    const sy = dxf2dPan.y - gy * dxf2dScale;
+    if(sy < 0 || sy > H) continue;
     ctx.beginPath(); ctx.moveTo(0,sy); ctx.lineTo(W,sy); ctx.stroke();
   }
 
@@ -1583,6 +1642,26 @@ function drawDXF2D(){
     } else if(e.type==='POINT'){
       ctx.fillStyle='#0072B5';
       ctx.beginPath(); ctx.arc(tx(gv(10)),ty(gv(20)),2,0,Math.PI*2); ctx.fill();
+    } else if(e.type==='SPLINE'){
+      // Render control points as polyline approximation
+      const xs=d[10]||[], ys=d[20]||[];
+      if(xs.length>1){
+        ctx.beginPath();
+        ctx.moveTo(tx(parseFloat(xs[0])),ty(parseFloat(ys[0])));
+        for(let k=1;k<xs.length;k++) ctx.lineTo(tx(parseFloat(xs[k])),ty(parseFloat(ys[k]||0)));
+        ctx.stroke();
+      }
+    } else if(e.type==='POLYLINE'){
+      // POLYLINE uses vertex sub-entities; render if coords exist
+      const xs=d[10]||[], ys=d[20]||[];
+      if(xs.length>1){
+        ctx.beginPath();
+        ctx.moveTo(tx(parseFloat(xs[0])),ty(parseFloat(ys[0])));
+        for(let k=1;k<xs.length;k++) ctx.lineTo(tx(parseFloat(xs[k])),ty(parseFloat(ys[k]||0)));
+        const flag=parseInt(d[70]&&d[70][0]||0);
+        if(flag&1) ctx.closePath();
+        ctx.stroke();
+      }
     } else if(e.type==='TEXT'||e.type==='MTEXT'){
       const txt=(d[1]&&d[1][0])||'';
       const h=Math.max(gv(40)||12,6)*dxf2dScale;
@@ -1692,6 +1771,13 @@ async function convertDxf2Pdf(){
       ctx.arc(0,0,majLen,0,Math.PI*2);
       ctx.restore();
       ctx.stroke();
+    } else if(e.type==='SPLINE'||e.type==='POLYLINE'){
+      const xs=d[10]||[],ys=d[20]||[];
+      if(xs.length>1){
+        ctx.moveTo(tx(parseFloat(xs[0])),ty(parseFloat(ys[0])));
+        for(let k=1;k<xs.length;k++) ctx.lineTo(tx(parseFloat(xs[k])),ty(parseFloat(ys[k]||0)));
+        ctx.stroke();
+      }
     } else if(e.type==='TEXT'||e.type==='MTEXT'){
       const txt=(d[1]&&d[1][0])||'';
       const h=Math.max((gv(40)||3)*scale,8);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V19.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V20.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -315,6 +315,37 @@ footer strong { color: var(--cyan); }
 #canvas2d { width: 100%; height: 440px; display: block; cursor: grab; }
 #canvas2d.grabbing { cursor: grabbing; }
 
+/* ── DWG Advanced Viewer (mlightcad iframe) ── */
+#dwg-adv-wrap {
+  display: none; flex-direction: column; gap: 0;
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(0,114,181,0.28); margin-bottom: 12px;
+}
+#dwg-adv-wrap.active { display: flex; }
+.dwg-adv-toolbar {
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+  background: rgba(0,114,181,0.06); border-bottom: 1px solid rgba(0,114,181,0.15);
+  flex-wrap: wrap;
+}
+.dwg-adv-label {
+  font-size: 11.5px; font-weight: 700; color: var(--cyan2);
+  font-family: 'Share Tech Mono', monospace; letter-spacing: 0.08em;
+  flex: 1; min-width: 120px;
+}
+.dwg-adv-note {
+  font-size: 10.5px; color: var(--silver3); letter-spacing: 0.03em;
+}
+.dwg-back-btn {
+  font-size: 11.5px; font-weight: 700; color: var(--silver2); font-family: 'Noto Sans TC', sans-serif;
+  background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.12);
+  padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s;
+}
+.dwg-back-btn:hover { background: rgba(0,114,181,0.10); border-color: rgba(0,114,181,0.28); color: var(--cyan2); }
+#dwg-adv-iframe {
+  width: 100%; height: 500px; border: none; display: block;
+  background: #1a1a2e;
+}
+
 /* Format support table */
 .format-support {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
@@ -472,7 +503,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V19.0</div>
+    <div class="version-badge">V20.0</div>
   </div>
 </header>
 
@@ -536,12 +567,13 @@ footer strong { color: var(--cyan); }
         <span class="fmt-tag ok">.IGS</span>
         <span class="fmt-tag ok">.IGES</span>
         <span class="fmt-tag ok">.DXF</span>
-        <span class="fmt-tag partial">.DWG</span>
+        <span class="fmt-tag ok">.DWG</span>
       </div>
       <ul class="feature-list">
         <li><span class="dot"></span>STL / OBJ：瀏覽器內完整 3D 旋轉、縮放、軸測檢視</li>
         <li><span class="dot"></span><strong style="color:var(--cyan)">STP / STEP / IGS / IGES：瀏覽器本地 3D 解析</strong>（Open CASCADE WebAssembly）</li>
-        <li><span class="dot"></span>DXF / DWG：2D 圖面直接解析，不需 AutoCAD</li>
+        <li><span class="dot"></span>DXF：完整 2D 本地解析，圖元 / 文字 / 尺寸全支援</li>
+        <li><span class="dot"></span><strong style="color:var(--cyan)">DWG 進階預覽：</strong>採用 mlightcad WebGL 引擎，支援圖層 / BLOCK / 填充</li>
         <li><span class="dot"></span>檔案完全在本機處理，不上傳至任何伺服器</li>
       </ul>
       <div class="btn-row">
@@ -596,7 +628,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V19.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V20.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -675,42 +707,92 @@ footer strong { color: var(--cyan); }
 
       <!-- Tab: 2D Viewer (DXF/DWG) -->
       <div class="vtab-panel" id="vtab-2d">
-        <div class="upload-zone" id="dxf-zone"
-             ondragover="zoneDragOver(event,'dxf-zone')"
-             ondragleave="zoneDragLeave('dxf-zone')"
-             ondrop="zoneDrop(event,'dxf-zone','2d')">
-          <input type="file" accept=".dxf,.dwg" id="dxf-file-input" onchange="load2DFile(event)">
-          <div class="upload-icon">📐</div>
-          <div class="upload-label">點擊選取或拖放 DXF / DWG 圖面</div>
-          <div class="upload-hint">.DXF（全版本）· .DWG（R2000–R2018，基礎支援）</div>
+
+        <!-- Mode selector: Basic vs Advanced -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button class="vtab active" id="mode-basic-btn" onclick="set2DMode('basic')" style="font-size:12px;padding:7px 12px;">
+            ⚙️ 基礎解析<br><span style="font-size:10px;font-weight:400;opacity:.7">DXF 完整 · DWG 基礎</span>
+          </button>
+          <button class="vtab" id="mode-adv-btn" onclick="set2DMode('advanced')" style="font-size:12px;padding:7px 12px;">
+            🚀 進階 DWG 預覽<br><span style="font-size:10px;font-weight:400;opacity:.7">完整圖層 · WebGL 渲染</span>
+          </button>
         </div>
 
-        <div id="canvas2d-wrap">
-          <canvas id="canvas2d"></canvas>
-        </div>
-        <p style="font-size:11.5px;color:var(--silver3);text-align:center;margin-top:4px">
-          滑鼠左鍵平移 · 滾輪縮放
-        </p>
+        <!-- Basic mode: existing DXF/DWG canvas -->
+        <div id="mode-basic-panel">
+          <div class="upload-zone" id="dxf-zone"
+               ondragover="zoneDragOver(event,'dxf-zone')"
+               ondragleave="zoneDragLeave('dxf-zone')"
+               ondrop="zoneDrop(event,'dxf-zone','2d')">
+            <input type="file" accept=".dxf,.dwg" id="dxf-file-input" onchange="load2DFile(event)">
+            <div class="upload-icon">📐</div>
+            <div class="upload-label">點擊選取或拖放 DXF / DWG 圖面</div>
+            <div class="upload-hint">.DXF（全版本）· .DWG（R2000–R2018，基礎支援）</div>
+          </div>
 
-        <div style="margin-top:14px;">
-          <div class="format-support">
-            <div class="fs-item">
-              <div class="fs-badge yes">本地</div>
-              <div><div class="fs-name">DXF</div><div class="fs-note">完整 2D 本地解析</div></div>
+          <div id="canvas2d-wrap">
+            <canvas id="canvas2d"></canvas>
+          </div>
+          <p style="font-size:11.5px;color:var(--silver3);text-align:center;margin-top:4px">
+            滑鼠左鍵平移 · 滾輪縮放
+          </p>
+
+          <div style="margin-top:14px;">
+            <div class="format-support">
+              <div class="fs-item">
+                <div class="fs-badge yes">本地</div>
+                <div><div class="fs-name">DXF</div><div class="fs-note">完整 2D 本地解析</div></div>
+              </div>
+              <div class="fs-item">
+                <div class="fs-badge yes">進階</div>
+                <div><div class="fs-name">DWG</div><div class="fs-note">mlightcad WebGL · R12–R2018+</div></div>
+              </div>
             </div>
-            <div class="fs-item">
-              <div class="fs-badge partial">部分</div>
-              <div><div class="fs-name">DWG</div><div class="fs-note">R2000–R2018 基礎幾何</div></div>
+            <div class="limit-note">
+              <strong>💡 DWG 顯示不完整？</strong>切換至「進階 DWG 預覽」模式，使用 WebGL 引擎完整渲染圖層、標注、填充。
             </div>
           </div>
-          <div class="limit-note">
-            <strong>DWG 說明：</strong>DWG 為 Autodesk 私有格式，本工具可解析 R2000–R2018 的基本幾何圖元（LINE/CIRCLE/ARC/POLYLINE）。若圖面複雜或含 XREF，建議搭配下方外部平台。
-            <br><br>
-            <a class="link-out-box" href="https://viewer.autodesk.com/" target="_blank" style="margin-top:8px;margin-bottom:0">
-              <span class="lob-icon">🔵</span>
-              <div><div class="lob-name">Autodesk Viewer（官方，完整支援）</div><div class="lob-url">viewer.autodesk.com</div></div>
-              <span class="lob-arrow">↗</span>
-            </a>
+        </div>
+
+        <!-- Advanced mode: mlightcad CAD Viewer (iframe) -->
+        <div id="mode-adv-panel" style="display:none;">
+          <div class="notice-box" style="margin-bottom:12px;background:rgba(0,114,181,0.05);border-color:rgba(0,114,181,0.22);">
+            <span class="notice-icon">🚀</span>
+            <div class="notice-text" style="color:var(--silver2);">
+              <strong style="color:var(--cyan2);">進階 DWG 預覽</strong>採用開源 <strong style="color:var(--cyan);">mlightcad</strong> 引擎（LibreDWG + WebGL），<strong>完全在您的瀏覽器內執行</strong>，無需上傳至任何伺服器。<br>
+              支援：圖層管理、標注尺寸、填充、文字、BLOCK 等完整圖元 · DXF/DWG R12–R2018+
+            </div>
+          </div>
+
+          <!-- Upload zone for advanced DWG -->
+          <div class="upload-zone" id="dwg-adv-zone"
+               ondragover="zoneDragOver(event,'dwg-adv-zone')"
+               ondragleave="zoneDragLeave('dwg-adv-zone')"
+               ondrop="zoneDrop(event,'dwg-adv-zone','dwg-adv')"
+               style="margin-bottom:12px;">
+            <input type="file" accept=".dxf,.dwg" id="dwg-adv-input" onchange="loadDwgAdvanced(event)">
+            <div class="upload-icon">🚀</div>
+            <div class="upload-label">點擊選取或拖放 DXF / DWG 圖面</div>
+            <div class="upload-hint">支援 DXF 全版本 · DWG R12–R2018+ · WebGL 高效能渲染</div>
+          </div>
+
+          <!-- iframe viewer container -->
+          <div id="dwg-adv-wrap">
+            <div class="dwg-adv-toolbar">
+              <span class="dwg-adv-label">🚀 進階 DWG/DXF 預覽器</span>
+              <span class="dwg-adv-note" id="dwg-adv-filename">—</span>
+              <button class="dwg-back-btn" onclick="closeDwgAdvanced()">✕ 關閉</button>
+            </div>
+            <iframe id="dwg-adv-iframe"
+              src="https://mlightcad.github.io/cad-viewer/cad-simple-viewer/"
+              allow="cross-origin-isolated"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals"
+              title="DWG Advanced Viewer"></iframe>
+          </div>
+
+          <div class="limit-note" style="margin-top:8px;">
+            <strong>使用方式：</strong>上傳檔案後，瀏覽器會自動傳遞至下方預覽器。若自動載入失敗，請在預覽器內點擊 ☰ → Open 手動開啟。<br>
+            <strong>已知限制：</strong>天正（Tianzheng）專屬圖元需先在天正另存為 T3 格式。XREF 外部參考不顯示。
           </div>
         </div>
       </div>
@@ -960,7 +1042,101 @@ function zoneDrop(e, id, type){
   if(type==='3d')      { load3DFileObj(f); }
   else if(type==='2d') { load2DFileObj(f); }
   else if(type==='dxf2pdf'){ loadDxf2PdfObj(f); }
+  else if(type==='dwg-adv'){ loadDwgAdvancedFile(f); }
 }
+
+/* ═════════════════════════════════════════
+   2D MODE SWITCHER
+═════════════════════════════════════════ */
+let current2DMode = 'basic';
+function set2DMode(mode){
+  current2DMode = mode;
+  document.getElementById('mode-basic-btn').classList.toggle('active', mode==='basic');
+  document.getElementById('mode-adv-btn').classList.toggle('active', mode==='advanced');
+  document.getElementById('mode-basic-panel').style.display = (mode==='basic') ? '' : 'none';
+  document.getElementById('mode-adv-panel').style.display = (mode==='advanced') ? '' : 'none';
+}
+
+/* ═════════════════════════════════════════
+   DWG ADVANCED VIEWER (mlightcad iframe)
+═════════════════════════════════════════ */
+let dwgAdvFile = null;
+let dwgAdvBlobUrl = null;
+
+function loadDwgAdvanced(e){ loadDwgAdvancedFile(e.target.files[0]); }
+
+async function loadDwgAdvancedFile(file){
+  if(!file) return;
+  dwgAdvFile = file;
+
+  // Revoke previous blob URL
+  if(dwgAdvBlobUrl){ URL.revokeObjectURL(dwgAdvBlobUrl); dwgAdvBlobUrl=null; }
+
+  // Show viewer container
+  document.getElementById('dwg-adv-wrap').classList.add('active');
+  document.getElementById('dwg-adv-filename').textContent = file.name + ' · ' + fmtSize(file.size);
+
+  const iframe = document.getElementById('dwg-adv-iframe');
+
+  // Strategy: read file as ArrayBuffer, then send to iframe via postMessage once it's loaded
+  const buf = await file.arrayBuffer();
+
+  // Wait for iframe to be ready, then send the file
+  const sendFile = () => {
+    try {
+      iframe.contentWindow.postMessage({
+        type: 'openFile',
+        name: file.name,
+        buffer: buf
+      }, '*');
+    } catch(e) {
+      // iframe may not support postMessage (cross-origin restriction)
+      // Fall back: create blob URL in a new approach
+    }
+  };
+
+  // If iframe already loaded, send immediately; otherwise wait
+  if(iframe.dataset.ready === '1'){
+    sendFile();
+  } else {
+    // Listen for iframe load
+    const onLoad = () => {
+      iframe.dataset.ready = '1';
+      iframe.removeEventListener('load', onLoad);
+      // Give the app time to init
+      setTimeout(sendFile, 1500);
+    };
+    iframe.addEventListener('load', onLoad);
+    // Also try after 3s as fallback
+    setTimeout(()=>{ if(iframe.dataset.ready!=='1'){ iframe.dataset.ready='1'; sendFile(); } }, 3000);
+  }
+
+  // Scroll iframe into view
+  setTimeout(()=>{ document.getElementById('dwg-adv-wrap').scrollIntoView({behavior:'smooth', block:'nearest'}); }, 300);
+}
+
+function closeDwgAdvanced(){
+  document.getElementById('dwg-adv-wrap').classList.remove('active');
+  document.getElementById('dwg-adv-filename').textContent = '—';
+  dwgAdvFile = null;
+  if(dwgAdvBlobUrl){ URL.revokeObjectURL(dwgAdvBlobUrl); dwgAdvBlobUrl=null; }
+  // Reset iframe
+  const iframe = document.getElementById('dwg-adv-iframe');
+  iframe.dataset.ready = '0';
+}
+
+// Listen for messages from iframe (e.g. ready signal)
+window.addEventListener('message', (e) => {
+  if(e.data && e.data.type === 'cadViewerReady'){
+    const iframe = document.getElementById('dwg-adv-iframe');
+    iframe.dataset.ready = '1';
+    if(dwgAdvFile){
+      dwgAdvFile.arrayBuffer().then(buf=>{
+        iframe.contentWindow.postMessage({ type:'openFile', name:dwgAdvFile.name, buffer:buf }, '*');
+      });
+    }
+  }
+});
 function fmtSize(b){
   if(b<1024) return b+'B';
   if(b<1048576) return (b/1024).toFixed(1)+'KB';

@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>瑞能電子MIS轉檔專屬網站</title>
+
+<!-- Three.js r128 for STL/OBJ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- jsPDF for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES -->
+<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.19/dist/occt-import-js.min.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --navy:    #0A1628;
+  --navy2:   #0F1F3D;
+  --navy3:   #162848;
+  --cyan:    #00D4FF;
+  --cyan2:   #00A8CC;
+  --cyan3:   #00FFEA;
+  --silver:  #E8EDF2;
+  --silver2: #B0BEC5;
+  --silver3: #607B8A;
+  --accent:  #FF6B35;
+  --green:   #00FF88;
+  --glow:    rgba(0,212,255,0.18);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--navy);
+  color: var(--silver);
+  font-family: 'Noto Sans TC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#circuit-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0; opacity: 0.15;
+}
+.wrap { position: relative; z-index: 1; }
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 40px;
+  background: rgba(10,22,40,0.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0,212,255,0.15);
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan3));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px; font-weight: bold; color: var(--navy);
+  box-shadow: 0 0 14px var(--glow); flex-shrink: 0;
+}
+.logo-text-main { font-size: 17px; font-weight: 900; color: var(--silver); letter-spacing: 0.02em; line-height: 1.15; }
+.logo-text-sub  { font-size: 10px; color: var(--cyan); letter-spacing: 0.12em; font-family: 'Share Tech Mono', monospace; }
+.topbar-badge {
+  background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3);
+  color: var(--cyan); font-size: 11px; font-family: 'Share Tech Mono', monospace;
+  padding: 4px 12px; border-radius: 20px; letter-spacing: 0.08em;
+}
+
+/* ── HERO ── */
+.hero { text-align: center; padding: 64px 24px 48px; }
+.hero-eyebrow {
+  display: inline-block; font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; color: var(--cyan);
+  background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.25);
+  padding: 5px 16px; border-radius: 20px; margin-bottom: 24px;
+}
+.hero h1 {
+  font-size: clamp(26px, 5vw, 50px); font-weight: 900;
+  line-height: 1.15; color: var(--silver); margin-bottom: 8px;
+}
+.hero h1 span {
+  background: linear-gradient(90deg, var(--cyan), var(--cyan3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-sub { margin-top: 14px; font-size: 14px; color: var(--silver3); letter-spacing: 0.04em; }
+.hero-divider {
+  margin: 36px auto 0; width: 60px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+
+/* ── STATUS BAR ── */
+.statusbar {
+  max-width: 1120px; margin: 0 auto 48px; padding: 0 32px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;
+}
+.stat-box {
+  background: rgba(0,212,255,0.04); border: 1px solid rgba(0,212,255,0.1);
+  border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+}
+.stat-icon { font-size: 22px; }
+.stat-label { font-size: 11px; color: var(--silver3); letter-spacing: 0.06em; margin-bottom: 2px; }
+.stat-value { font-size: 15px; font-weight: 700; color: var(--silver); font-family: 'Share Tech Mono', monospace; }
+
+/* ── SERVICE CARDS ── */
+.services {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px; padding: 0 32px 64px; max-width: 1120px; margin: 0 auto;
+}
+.card {
+  background: linear-gradient(160deg, var(--navy2) 0%, var(--navy3) 100%);
+  border: 1px solid rgba(0,212,255,0.15); border-radius: 16px;
+  overflow: hidden; transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s; position: relative;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+  background: linear-gradient(90deg, var(--cyan2), var(--cyan3)); opacity: 0; transition: opacity 0.25s;
+}
+.card:hover { border-color: rgba(0,212,255,0.4); box-shadow: 0 8px 40px rgba(0,212,255,0.1); transform: translateY(-3px); }
+.card:hover::before { opacity: 1; }
+.card-head { padding: 24px 24px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: flex-start; gap: 16px; }
+.card-icon {
+  width: 50px; height: 50px; flex-shrink: 0; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.card-icon.blue  { background: rgba(0,212,255,0.12); box-shadow: 0 0 20px rgba(0,212,255,0.1); }
+.card-icon.green { background: rgba(0,255,234,0.1);  box-shadow: 0 0 20px rgba(0,255,234,0.08); }
+.card-num  { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 4px; }
+.card-title { font-size: 19px; font-weight: 900; color: var(--silver); line-height: 1.3; }
+.card-body { padding: 18px 24px 24px; }
+.formats { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.fmt-tag {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  padding: 3px 9px; border-radius: 5px;
+  background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2); color: var(--cyan2);
+}
+.fmt-tag.accent { background: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.25); color: #FF8C63; }
+.fmt-tag.ok     { background: rgba(0,255,136,0.07); border-color: rgba(0,255,136,0.25); color: var(--green); }
+.card-desc { font-size: 13.5px; color: var(--silver3); line-height: 1.75; margin-bottom: 20px; }
+.feature-list { list-style: none; margin-bottom: 20px; display: flex; flex-direction: column; gap: 9px; }
+.feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--silver2); line-height: 1.6; }
+.feature-list li .dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); flex-shrink: 0; margin-top: 7px;
+  box-shadow: 0 0 5px var(--cyan);
+}
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  padding: 11px 22px; border-radius: 10px; border: none; cursor: pointer;
+  text-decoration: none; transition: all 0.2s; letter-spacing: 0.03em;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan2), var(--cyan)); color: var(--navy);
+  box-shadow: 0 4px 20px rgba(0,212,255,0.25);
+}
+.btn-primary:hover { box-shadow: 0 6px 28px rgba(0,212,255,0.4); transform: translateY(-1px); }
+
+/* ── CAPABILITY NOTICE ── */
+.capability-notice {
+  max-width: 1120px; margin: -16px auto 48px; padding: 0 32px;
+}
+.notice-box {
+  background: rgba(0,255,136,0.04); border: 1px solid rgba(0,255,136,0.2);
+  border-radius: 12px; padding: 14px 20px;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.notice-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.notice-text { font-size: 12.5px; color: var(--silver3); line-height: 1.7; }
+.notice-text strong { color: var(--green); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid rgba(0,212,255,0.1); text-align: center;
+  padding: 24px; font-size: 11px; color: var(--silver3);
+  font-family: 'Share Tech Mono', monospace; letter-spacing: 0.06em;
+}
+footer strong { color: var(--cyan); }
+
+/* ══════════════════════════════════════════
+   MODAL SYSTEM
+══════════════════════════════════════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(5,12,24,0.9); backdrop-filter: blur(6px);
+  z-index: 500; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--navy2); border: 1px solid rgba(0,212,255,0.25); border-radius: 16px;
+  width: 100%; max-width: 860px; max-height: 94vh;
+  overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.7), 0 0 40px rgba(0,212,255,0.08);
+  animation: modalIn 0.22s ease;
+}
+@keyframes modalIn {
+  from { opacity:0; transform:translateY(16px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px; border-bottom: 1px solid rgba(0,212,255,0.12); flex-shrink: 0;
+}
+.modal-title { font-size: 15px; font-weight: 800; color: var(--silver); display: flex; align-items: center; gap: 10px; }
+.modal-title .badge-local {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  background: rgba(0,255,136,0.12); border: 1px solid rgba(0,255,136,0.3); color: var(--green);
+  padding: 2px 8px; border-radius: 20px; letter-spacing: 0.08em;
+}
+.modal-close {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+  color: var(--silver2); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.12); }
+.modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+
+/* ══════════════════════════════════════════
+   3D VIEWER MODAL
+══════════════════════════════════════════ */
+.viewer-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.vtab {
+  flex: 1; min-width: 100px; padding: 9px 12px; border-radius: 8px;
+  border: 1px solid rgba(0,212,255,0.15); background: transparent; color: var(--silver3);
+  cursor: pointer; font-size: 12.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  transition: all 0.2s; text-align: center;
+}
+.vtab.active { background: rgba(0,212,255,0.12); border-color: var(--cyan); color: var(--cyan); }
+.vtab-panel { display: none; }
+.vtab-panel.active { display: block; }
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed rgba(0,212,255,0.25); border-radius: 12px;
+  padding: 36px 24px; text-align: center; cursor: pointer;
+  transition: all 0.2s; margin-bottom: 16px; position: relative; min-height: 150px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--cyan); background: rgba(0,212,255,0.04);
+}
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 36px; margin-bottom: 10px; }
+.upload-label { font-size: 14px; color: var(--silver2); font-weight: 700; }
+.upload-hint  { font-size: 11px; color: var(--silver3); margin-top: 5px; }
+
+/* Three.js canvas container */
+#canvas3d-wrap {
+  display: none; border-radius: 10px; overflow: hidden;
+  background: #0d1a2e; position: relative;
+  border: 1px solid rgba(0,212,255,0.2);
+  margin-bottom: 12px;
+}
+#canvas3d-wrap.active { display: block; }
+#canvas3d { width: 100%; height: 440px; display: block; }
+.viewer-controls {
+  position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.vc-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(10,22,40,0.85); border: 1px solid rgba(0,212,255,0.25);
+  color: var(--cyan); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s; font-family: monospace;
+}
+.vc-btn:hover { background: rgba(0,212,255,0.15); }
+.viewer-info-bar {
+  display: none; font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  color: var(--silver3); padding: 6px 12px;
+  background: rgba(0,212,255,0.04); border: 1px solid rgba(0,212,255,0.1);
+  border-radius: 8px; margin-bottom: 12px; letter-spacing: 0.05em;
+}
+.viewer-info-bar.show { display: flex; gap: 20px; flex-wrap: wrap; }
+.viewer-info-bar span { color: var(--cyan); }
+
+/* Loading spinner */
+#canvas3d-loading {
+  display: none; position: absolute; inset: 0;
+  background: rgba(10,22,40,0.85);
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px; color: var(--cyan);
+  border-radius: 10px;
+}
+#canvas3d-loading.show { display: flex; }
+.spinner {
+  width: 40px; height: 40px; border: 3px solid rgba(0,212,255,0.15);
+  border-top-color: var(--cyan); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* DXF/DWG 2D canvas */
+#canvas2d-wrap {
+  display: none; border-radius: 10px; overflow: hidden;
+  background: #08121e; border: 1px solid rgba(0,212,255,0.2); margin-bottom: 12px;
+}
+#canvas2d-wrap.active { display: block; }
+#canvas2d { width: 100%; height: 440px; display: block; cursor: grab; }
+#canvas2d.grabbing { cursor: grabbing; }
+
+/* Format support table */
+.format-support {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+}
+.fs-item {
+  background: rgba(0,212,255,0.04); border: 1px solid rgba(0,212,255,0.1);
+  border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+}
+.fs-badge {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  padding: 2px 8px; border-radius: 4px; font-weight: 700; flex-shrink: 0;
+}
+.fs-badge.yes { background: rgba(0,255,136,0.12); color: var(--green); }
+.fs-badge.partial { background: rgba(255,200,0,0.12); color: #FFD700; }
+.fs-badge.ext { background: rgba(0,212,255,0.1); color: var(--cyan); }
+.fs-name { font-size: 12px; color: var(--silver2); }
+.fs-note { font-size: 11px; color: var(--silver3); margin-top: 1px; }
+
+/* ══════════════════════════════════════════
+   CONVERT MODAL
+══════════════════════════════════════════ */
+.convert-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.ctab {
+  flex: 1; padding: 10px; border-radius: 8px;
+  border: 1px solid rgba(0,212,255,0.15); background: transparent; color: var(--silver3);
+  cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  transition: all 0.2s;
+}
+.ctab.active { background: rgba(0,212,255,0.12); border-color: var(--cyan); color: var(--cyan); }
+.ctab-panel { display: none; }
+.ctab-panel.active { display: block; }
+
+.convert-drop {
+  border: 2px dashed rgba(0,212,255,0.2); border-radius: 12px;
+  padding: 36px 24px; text-align: center; position: relative;
+  cursor: pointer; transition: all 0.2s; margin-bottom: 14px;
+}
+.convert-drop:hover { border-color: var(--cyan); background: rgba(0,212,255,0.04); }
+.convert-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+
+.file-preview-info {
+  display: none; background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; align-items: center; gap: 14px;
+}
+.file-preview-info.show { display: flex; }
+.fpi-icon { font-size: 26px; }
+.fpi-name { font-size: 13px; font-weight: 700; color: var(--silver); }
+.fpi-size { font-size: 11px; color: var(--silver3); margin-top: 2px; }
+
+/* Progress / Status */
+.status-box {
+  display: none; border-radius: 10px; padding: 16px 20px; margin-bottom: 14px;
+}
+.status-box.show { display: block; }
+.status-box.processing {
+  background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2);
+}
+.status-box.success {
+  background: rgba(0,255,136,0.06); border: 1px solid rgba(0,255,136,0.25);
+}
+.status-box.error {
+  background: rgba(255,107,53,0.06); border: 1px solid rgba(255,107,53,0.25);
+}
+.status-label { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.status-box.processing .status-label { color: var(--cyan); }
+.status-box.success .status-label { color: var(--green); }
+.status-box.error .status-label { color: var(--accent); }
+.pb-track { height: 5px; background: rgba(0,212,255,0.1); border-radius: 3px; overflow: hidden; }
+.pb-fill {
+  height: 100%; background: linear-gradient(90deg, var(--cyan2), var(--cyan3));
+  border-radius: 3px; width: 0%; transition: width 0.4s; box-shadow: 0 0 8px var(--cyan);
+}
+.status-msg { font-size: 12px; color: var(--silver3); margin-top: 8px; }
+
+.convert-action-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--cyan2), var(--cyan)); color: var(--navy);
+  box-shadow: 0 4px 20px rgba(0,212,255,0.25); transition: all 0.2s; margin-bottom: 10px;
+  width: 100%; justify-content: center;
+}
+.convert-action-btn:hover { box-shadow: 0 6px 28px rgba(0,212,255,0.4); transform: translateY(-1px); }
+.convert-action-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.download-btn {
+  display: none; width: 100%; justify-content: center;
+  font-size: 13.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #00c96a, #00FF88); color: #0a1628;
+  box-shadow: 0 4px 20px rgba(0,255,136,0.25); transition: all 0.2s; margin-bottom: 10px;
+}
+.download-btn.show { display: flex; align-items: center; gap: 8px; }
+.download-btn:hover { box-shadow: 0 6px 28px rgba(0,255,136,0.4); transform: translateY(-1px); }
+
+/* Limitation note */
+.limit-note {
+  background: rgba(255,200,0,0.05); border: 1px solid rgba(255,200,0,0.2);
+  border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #c8a000; line-height: 1.65;
+  margin-top: 8px;
+}
+.limit-note strong { color: #FFD700; }
+
+/* Steps */
+.steps-guide { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.step-item { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: var(--silver2); }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+  color: var(--cyan); font-size: 10px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+/* Link-out fallback */
+.link-out-box {
+  background: rgba(0,212,255,0.04); border: 1px solid rgba(0,212,255,0.15);
+  border-radius: 10px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  text-decoration: none; color: inherit; transition: all 0.2s; margin-bottom: 8px;
+}
+.link-out-box:hover { background: rgba(0,212,255,0.1); border-color: var(--cyan); }
+.lob-icon  { font-size: 20px; flex-shrink: 0; }
+.lob-name  { font-size: 13px; font-weight: 700; color: var(--silver); }
+.lob-url   { font-size: 11px; color: var(--silver3); font-family: 'Share Tech Mono', monospace; }
+.lob-arrow { margin-left: auto; color: var(--cyan); font-size: 14px; }
+
+/* DWG partial support badge */
+.badge-partial {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.3); color: #FFD700;
+  padding: 2px 8px; border-radius: 20px; letter-spacing: 0.06em;
+}
+
+@media (max-width: 600px) {
+  .topbar { padding: 12px 16px; }
+  .hero { padding: 40px 16px 30px; }
+  .services { padding: 0 16px 48px; gap: 18px; }
+  .statusbar { padding: 0 16px; }
+  .convert-tabs { flex-direction: column; }
+  .format-support { grid-template-columns: 1fr; }
+  .viewer-tabs { flex-wrap: wrap; }
+  #canvas3d, #canvas2d { height: 280px; }
+}
+</style>
+</head>
+<body>
+<canvas id="circuit-canvas"></canvas>
+
+<div class="wrap">
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-icon">RE</div>
+    <div>
+      <div class="logo-text-main">瑞能電子</div>
+      <div class="logo-text-sub">MIS TRANSFER SYSTEM</div>
+    </div>
+  </div>
+  <div class="topbar-badge">INTERNAL PORTAL</div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">瑞能電子 · MIS 轉檔專屬網站</div>
+  <h1>工程圖檔<span>線上檢視</span>與<span>格式轉換</span></h1>
+  <p class="hero-sub">STP · IGS · STL · OBJ · DXF · DWG 本地端直接處理，不上傳至任何第三方伺服器</p>
+  <div class="hero-divider"></div>
+</section>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="stat-box">
+    <span class="stat-icon">🗂️</span>
+    <div>
+      <div class="stat-label">3D 格式</div>
+      <div class="stat-value">STL / OBJ / STP / IGS</div>
+    </div>
+  </div>
+  <div class="stat-box">
+    <span class="stat-icon">📐</span>
+    <div>
+      <div class="stat-label">2D 格式</div>
+      <div class="stat-value">DXF / DWG</div>
+    </div>
+  </div>
+  <div class="stat-box">
+    <span class="stat-icon">🔄</span>
+    <div>
+      <div class="stat-label">轉換功能</div>
+      <div class="stat-value">DXF → PDF</div>
+    </div>
+  </div>
+  <div class="stat-box">
+    <span class="stat-icon">🔒</span>
+    <div>
+      <div class="stat-label">資料安全</div>
+      <div class="stat-value">純本地端處理</div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE CARDS -->
+<section class="services">
+  <!-- Card 1: 3D Viewer -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon blue">🔷</div>
+      <div>
+        <div class="card-num">功能 01 · 3D / 2D VIEWER</div>
+        <div class="card-title">線上檢視工程圖檔</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="formats">
+        <span class="fmt-tag ok">.STL</span>
+        <span class="fmt-tag ok">.OBJ</span>
+        <span class="fmt-tag ok">.STP</span>
+        <span class="fmt-tag ok">.STEP</span>
+        <span class="fmt-tag ok">.IGS</span>
+        <span class="fmt-tag ok">.IGES</span>
+        <span class="fmt-tag ok">.DXF</span>
+        <span class="fmt-tag partial">.DWG</span>
+      </div>
+      <ul class="feature-list">
+        <li><span class="dot"></span>STL / OBJ：瀏覽器內完整 3D 旋轉、縮放、軸測檢視</li>
+        <li><span class="dot"></span><strong style="color:var(--cyan)">STP / STEP / IGS / IGES：瀏覽器本地 3D 解析</strong>（Open CASCADE WebAssembly）</li>
+        <li><span class="dot"></span>DXF / DWG：2D 圖面直接解析，不需 AutoCAD</li>
+        <li><span class="dot"></span>檔案完全在本機處理，不上傳至任何伺服器</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="openModal('viewer-modal')">🔷 開啟圖檔檢視器</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Convert -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon green">🔁</div>
+      <div>
+        <div class="card-num">功能 02 · FORMAT CONVERT</div>
+        <div class="card-title">圖檔格式轉換</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="formats">
+        <span class="fmt-tag ok">.DXF</span>
+        <span class="fmt-tag">→</span>
+        <span class="fmt-tag accent">.PDF</span>
+        <span class="fmt-tag">.DWG</span>
+        <span class="fmt-tag">→</span>
+        <span class="fmt-tag accent">.PDF</span>
+        <span class="fmt-tag accent">.PDF</span>
+        <span class="fmt-tag">→</span>
+        <span class="fmt-tag">.DWG</span>
+      </div>
+      <ul class="feature-list">
+        <li><span class="dot"></span>DXF → PDF：純瀏覽器本地轉換，秒速輸出</li>
+        <li><span class="dot"></span>DWG → PDF：自動導向 Autodesk 官方免費轉換工具</li>
+        <li><span class="dot"></span>PDF → DWG：提供最佳第三方服務選項</li>
+        <li><span class="dot"></span>檔案資料不外流，確保設計圖紙安全</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="openModal('convert-modal')">🔁 開啟轉換工具</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Capability notice -->
+<div class="capability-notice">
+  <div class="notice-box">
+    <span class="notice-icon">🛡️</span>
+    <div class="notice-text">
+      <strong>本地端處理說明：</strong>STL、OBJ、STP、IGS、DXF、DWG 檔案在您的瀏覽器內完成所有運算，<strong>零上傳、零外流</strong>。
+      DWG 為 Autodesk 私有格式（部分版本支援），PDF → DWG 需向量識別技術，目前連結至信任的第三方服務。
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 &nbsp;·&nbsp; 僅供內部使用
+</footer>
+</div><!-- /.wrap -->
+
+
+<!-- ══════════════════════════════════════════
+     MODAL 1: 3D / 2D VIEWER
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="viewer-modal">
+  <div class="modal" style="max-width:900px">
+    <div class="modal-header">
+      <div class="modal-title">
+        🔷 線上工程圖檔檢視器
+        <span class="badge-local">本地端處理</span>
+      </div>
+      <button class="modal-close" onclick="closeModal('viewer-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Tab bar -->
+      <div class="viewer-tabs">
+        <button class="vtab active" onclick="switchVTab('3d')">🧊 3D 檔案<br><span style="font-size:10px;font-weight:400;opacity:.7">STL / OBJ / STP / IGS</span></button>
+        <button class="vtab" onclick="switchVTab('2d')">📐 2D 圖面<br><span style="font-size:10px;font-weight:400;opacity:.7">DXF / DWG</span></button>
+      </div>
+
+      <!-- Tab: 3D Viewer (STL/OBJ/STP/IGS) -->
+      <div class="vtab-panel active" id="vtab-3d">
+        <div class="upload-zone" id="stl-zone"
+             ondragover="zoneDragOver(event,'stl-zone')"
+             ondragleave="zoneDragLeave('stl-zone')"
+             ondrop="zoneDrop(event,'stl-zone','3d')">
+          <input type="file" accept=".stl,.obj,.stp,.step,.igs,.iges" id="stl-file-input" onchange="load3DFile(event)">
+          <div class="upload-icon">🧊</div>
+          <div class="upload-label">點擊選取或拖放 3D 檔案</div>
+          <div class="upload-hint">支援 .STL · .OBJ · .STP / .STEP · .IGS / .IGES（本地端解析）</div>
+        </div>
+
+        <div class="viewer-info-bar" id="viewer-info-bar">
+          <div>檔案：<span id="vib-name">—</span></div>
+          <div>格式：<span id="vib-format">—</span></div>
+          <div>三角面：<span id="vib-tris">—</span></div>
+          <div>大小：<span id="vib-size">—</span></div>
+        </div>
+
+        <div id="canvas3d-wrap">
+          <canvas id="canvas3d"></canvas>
+          <div id="canvas3d-loading">
+            <div class="spinner"></div>
+            <span id="loading-msg">載入中，請稍候…</span>
+          </div>
+          <div class="viewer-controls">
+            <button class="vc-btn" onclick="viewer3d_resetCamera()" title="重置視角">⟳</button>
+            <button class="vc-btn" onclick="viewer3d_toggleWire()" title="線框模式" id="wire-btn">▦</button>
+            <button class="vc-btn" onclick="viewer3d_setView('top')" title="俯視">⬆</button>
+            <button class="vc-btn" onclick="viewer3d_setView('front')" title="正視">◎</button>
+            <button class="vc-btn" onclick="viewer3d_setView('iso')" title="等角">◈</button>
+          </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--silver3);text-align:center;margin-top:4px">
+          滑鼠左鍵旋轉 · 右鍵平移 · 滾輪縮放
+        </p>
+
+        <!-- Format capabilities -->
+        <div style="margin-top:14px;">
+          <div class="format-support">
+            <div class="fs-item">
+              <div class="fs-badge yes">本地</div>
+              <div><div class="fs-name">STL / OBJ</div><div class="fs-note">Three.js 完整 3D 渲染</div></div>
+            </div>
+            <div class="fs-item">
+              <div class="fs-badge yes">本地</div>
+              <div><div class="fs-name">STP / STEP / IGS / IGES</div><div class="fs-note">Open CASCADE WebAssembly</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: 2D Viewer (DXF/DWG) -->
+      <div class="vtab-panel" id="vtab-2d">
+        <div class="upload-zone" id="dxf-zone"
+             ondragover="zoneDragOver(event,'dxf-zone')"
+             ondragleave="zoneDragLeave('dxf-zone')"
+             ondrop="zoneDrop(event,'dxf-zone','2d')">
+          <input type="file" accept=".dxf,.dwg" id="dxf-file-input" onchange="load2DFile(event)">
+          <div class="upload-icon">📐</div>
+          <div class="upload-label">點擊選取或拖放 DXF / DWG 圖面</div>
+          <div class="upload-hint">.DXF（全版本）· .DWG（R2000–R2018，基礎支援）</div>
+        </div>
+
+        <div id="canvas2d-wrap">
+          <canvas id="canvas2d"></canvas>
+        </div>
+        <p style="font-size:11.5px;color:var(--silver3);text-align:center;margin-top:4px">
+          滑鼠左鍵平移 · 滾輪縮放
+        </p>
+
+        <div style="margin-top:14px;">
+          <div class="format-support">
+            <div class="fs-item">
+              <div class="fs-badge yes">本地</div>
+              <div><div class="fs-name">DXF</div><div class="fs-note">完整 2D 本地解析</div></div>
+            </div>
+            <div class="fs-item">
+              <div class="fs-badge partial">部分</div>
+              <div><div class="fs-name">DWG</div><div class="fs-note">R2000–R2018 基礎幾何</div></div>
+            </div>
+          </div>
+          <div class="limit-note">
+            <strong>DWG 說明：</strong>DWG 為 Autodesk 私有格式，本工具可解析 R2000–R2018 的基本幾何圖元（LINE/CIRCLE/ARC/POLYLINE）。若圖面複雜或含 XREF，建議搭配下方外部平台。
+            <br><br>
+            <a class="link-out-box" href="https://viewer.autodesk.com/" target="_blank" style="margin-top:8px;margin-bottom:0">
+              <span class="lob-icon">🔵</span>
+              <div><div class="lob-name">Autodesk Viewer（官方，完整支援）</div><div class="lob-url">viewer.autodesk.com</div></div>
+              <span class="lob-arrow">↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MODAL 2: FORMAT CONVERT
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="convert-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        🔁 格式轉換工具
+        <span class="badge-local">本地端</span>
+      </div>
+      <button class="modal-close" onclick="closeModal('convert-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="convert-tabs">
+        <button class="ctab active" onclick="switchCTab('dxf2pdf')">DXF → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地端轉換</span></button>
+        <button class="ctab" onclick="switchCTab('dwg2pdf')">DWG → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">外部平台</span></button>
+        <button class="ctab" onclick="switchCTab('pdf2dwg')">PDF → DWG<br><span style="font-size:10px;font-weight:400;opacity:.7">外部平台</span></button>
+      </div>
+
+      <!-- ── DXF → PDF (local) ── -->
+      <div class="ctab-panel active" id="ctab-dxf2pdf">
+        <div class="steps-guide">
+          <div class="step-item"><span class="step-num">1</span>上傳 .DXF 圖面（純瀏覽器解析，不上傳伺服器）</div>
+          <div class="step-item"><span class="step-num">2</span>點擊「轉換為 PDF」，即時在本機產生</div>
+          <div class="step-item"><span class="step-num">3</span>下載 PDF 檔案，完成！</div>
+        </div>
+        <div class="convert-drop" id="dxf2pdf-drop"
+             ondragover="zoneDragOver(event,'dxf2pdf-drop')"
+             ondragleave="zoneDragLeave('dxf2pdf-drop')"
+             ondrop="zoneDrop(event,'dxf2pdf-drop','dxf2pdf')">
+          <input type="file" accept=".dxf" id="dxf2pdf-input" onchange="loadDxf2Pdf(event)">
+          <div style="font-size:30px;margin-bottom:8px;">📐</div>
+          <div style="font-size:13px;font-weight:700;color:var(--silver2);">點擊選取 DXF 檔案</div>
+          <div style="font-size:11px;color:var(--silver3);margin-top:4px;">支援 .DXF（AutoCAD R12+）</div>
+        </div>
+        <div class="file-preview-info" id="dxf2pdf-fpi">
+          <span class="fpi-icon">📐</span>
+          <div>
+            <div class="fpi-name" id="dxf2pdf-fname">—</div>
+            <div class="fpi-size" id="dxf2pdf-fsize">—</div>
+          </div>
+        </div>
+        <div class="status-box" id="dxf2pdf-status">
+          <div class="status-label" id="dxf2pdf-status-label">處理中…</div>
+          <div class="pb-track"><div class="pb-fill" id="dxf2pdf-pb"></div></div>
+          <div class="status-msg" id="dxf2pdf-status-msg"></div>
+        </div>
+        <button class="convert-action-btn" id="dxf2pdf-btn" onclick="convertDxf2Pdf()" disabled>
+          🔁 轉換為 PDF（本地端）
+        </button>
+        <button class="download-btn" id="dxf2pdf-dl" onclick="downloadDxfPdf()">
+          ⬇ 下載 PDF 檔案
+        </button>
+      </div>
+
+      <!-- ── DWG → PDF (external) ── -->
+      <div class="ctab-panel" id="ctab-dwg2pdf">
+        <div class="limit-note">
+          <strong>說明：</strong>DWG 為 Autodesk 私有格式，其解析引擎受版權保護，無法嵌入網頁本地端執行。
+          以下平台均提供免費 DWG → PDF 轉換，Autodesk 官方工具最為精準。
+        </div>
+        <br>
+        <div class="steps-guide">
+          <div class="step-item"><span class="step-num">1</span>點擊下方任一平台連結，在新分頁開啟</div>
+          <div class="step-item"><span class="step-num">2</span>上傳 .DWG 檔案至該平台</div>
+          <div class="step-item"><span class="step-num">3</span>等待轉換完成後下載 PDF</div>
+        </div>
+        <a class="link-out-box" href="https://online.autocad.com/" target="_blank">
+          <span class="lob-icon">🔵</span>
+          <div>
+            <div class="lob-name">AutoCAD Web（官方免費）</div>
+            <div class="lob-url">online.autocad.com · Autodesk 官方，精度最佳</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://www.freepdfconvert.com/zh-tw/autocad-to-pdf" target="_blank">
+          <span class="lob-icon">🔁</span>
+          <div>
+            <div class="lob-name">FreePDFConvert – DWG → PDF</div>
+            <div class="lob-url">freepdfconvert.com · 免費，無需帳號</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://cloudconvert.com/dwg-to-pdf" target="_blank">
+          <span class="lob-icon">☁️</span>
+          <div>
+            <div class="lob-name">CloudConvert – DWG → PDF</div>
+            <div class="lob-url">cloudconvert.com · 批次轉換、品質佳</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+      </div>
+
+      <!-- ── PDF → DWG (external) ── -->
+      <div class="ctab-panel" id="ctab-pdf2dwg">
+        <div class="limit-note">
+          <strong>說明：</strong>PDF → DWG 需要 AI 向量識別與圖層重建技術，目前純前端瀏覽器無法完整執行。
+          以下為業界常用工具，品質依 PDF 來源（向量圖 vs 掃描圖）而異。
+        </div>
+        <br>
+        <div class="steps-guide">
+          <div class="step-item"><span class="step-num">1</span>選擇下方轉換平台，點擊在新分頁開啟</div>
+          <div class="step-item"><span class="step-num">2</span>上傳 .PDF 圖面（建議向量 PDF 效果更佳）</div>
+          <div class="step-item"><span class="step-num">3</span>下載轉換後的 .DWG 可編輯檔</div>
+        </div>
+        <a class="link-out-box" href="https://cloudconvert.com/pdf-to-dwg" target="_blank">
+          <span class="lob-icon">☁️</span>
+          <div>
+            <div class="lob-name">CloudConvert – PDF → DWG</div>
+            <div class="lob-url">cloudconvert.com · 支援向量 PDF 轉換</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://www.aconvert.com/cad/pdf-to-dwg/" target="_blank">
+          <span class="lob-icon">🔁</span>
+          <div>
+            <div class="lob-name">Aconvert – PDF → DWG</div>
+            <div class="lob-url">aconvert.com · 免費，無需帳號</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://pdf2cad.com/" target="_blank">
+          <span class="lob-icon">📐</span>
+          <div>
+            <div class="lob-name">PDF2CAD（專業）</div>
+            <div class="lob-url">pdf2cad.com · 高精度向量識別，適合工程圖</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────
+   Circuit board background animation
+───────────────────────────────────────── */
+(function(){
+  const canvas = document.getElementById('circuit-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes;
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    const count = Math.floor((W * H) / 24000);
+    nodes = Array.from({length: count}, ()=>({
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (Math.random()-.5)*.15, vy: (Math.random()-.5)*.15
+    }));
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    nodes.forEach(n=>{
+      n.x += n.vx; n.y += n.vy;
+      if(n.x<0||n.x>W) n.vx*=-1;
+      if(n.y<0||n.y>H) n.vy*=-1;
+    });
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){
+          ctx.beginPath();
+          ctx.strokeStyle=`rgba(0,212,255,${(1-d/120)*.55})`;
+          ctx.lineWidth=.7;
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          const mx = nodes[i].x;
+          ctx.lineTo(mx, nodes[j].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(n=>{
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 1.5, 0, Math.PI*2);
+      ctx.fillStyle='rgba(0,212,255,0.55)';
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize);
+  resize(); draw();
+})();
+
+/* ─────────────────────────────────────────
+   Modal helpers
+───────────────────────────────────────── */
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('active'); });
+});
+
+/* ─────────────────────────────────────────
+   Viewer tab switcher (2 tabs now)
+───────────────────────────────────────── */
+function switchVTab(tab){
+  document.querySelectorAll('.vtab').forEach((b,i)=>{
+    const tabs=['3d','2d'];
+    b.classList.toggle('active', tabs[i]===tab);
+  });
+  ['3d','2d'].forEach(t=>{
+    document.getElementById('vtab-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+/* ─────────────────────────────────────────
+   Convert tab switcher
+───────────────────────────────────────── */
+function switchCTab(tab){
+  document.querySelectorAll('.ctab').forEach((b,i)=>{
+    const tabs = ['dxf2pdf','dwg2pdf','pdf2dwg'];
+    b.classList.toggle('active', tabs[i]===tab);
+  });
+  ['dxf2pdf','dwg2pdf','pdf2dwg'].forEach(t=>{
+    document.getElementById('ctab-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+/* ─────────────────────────────────────────
+   Drag & Drop helpers
+───────────────────────────────────────── */
+function zoneDragOver(e, id){ e.preventDefault(); document.getElementById(id).classList.add('dragover'); }
+function zoneDragLeave(id){ document.getElementById(id).classList.remove('dragover'); }
+function zoneDrop(e, id, type){
+  e.preventDefault();
+  document.getElementById(id).classList.remove('dragover');
+  const f = e.dataTransfer.files[0]; if(!f) return;
+  if(type==='3d')      { load3DFileObj(f); }
+  else if(type==='2d') { load2DFileObj(f); }
+  else if(type==='dxf2pdf'){ loadDxf2PdfObj(f); }
+}
+function fmtSize(b){
+  if(b<1024) return b+'B';
+  if(b<1048576) return (b/1024).toFixed(1)+'KB';
+  return (b/1048576).toFixed(1)+'MB';
+}
+
+/* ═════════════════════════════════════════
+   3D VIEWER — Three.js (STL / OBJ) +
+               occt-import-js (STP / IGS)
+═════════════════════════════════════════ */
+let scene3d, camera3d, renderer3d, mesh3d, wireframe3d;
+let animFrameId;
+let isWireframe = false;
+let isDragging3d = false, prevMouse3d = {x:0, y:0};
+let rotX = 0, rotY = 0;
+let isPanning = false, panStart = {x:0,y:0};
+let camTarget = new THREE.Vector3(0,0,0);
+const CAMERA_DIST_DEFAULT = 4;
+let camDist = CAMERA_DIST_DEFAULT;
+
+function init3DScene(){
+  const canvas = document.getElementById('canvas3d');
+  scene3d   = new THREE.Scene();
+  scene3d.background = new THREE.Color(0x0d1a2e);
+
+  camera3d  = new THREE.PerspectiveCamera(45, canvas.clientWidth / 440, 0.01, 10000);
+  camera3d.position.set(0, 0, camDist);
+
+  renderer3d = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer3d.setPixelRatio(window.devicePixelRatio);
+  renderer3d.setSize(canvas.clientWidth, 440);
+
+  const grid = new THREE.GridHelper(10, 20, 0x1a3a5a, 0x0f2340);
+  scene3d.add(grid);
+
+  scene3d.add(new THREE.AmbientLight(0x334466, 0.8));
+  const dLight = new THREE.DirectionalLight(0x00d4ff, 0.6);
+  dLight.position.set(5, 10, 5);
+  scene3d.add(dLight);
+  const dLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+  dLight2.position.set(-5, -3, -5);
+  scene3d.add(dLight2);
+
+  scene3d.add(new THREE.AxesHelper(1));
+
+  canvas.addEventListener('mousedown', e=>{
+    if(e.button===0){ isDragging3d=true; prevMouse3d={x:e.clientX, y:e.clientY}; }
+    if(e.button===2){ isPanning=true; panStart={x:e.clientX, y:e.clientY}; }
+  });
+  window.addEventListener('mouseup', ()=>{ isDragging3d=false; isPanning=false; });
+  canvas.addEventListener('mousemove', e=>{
+    if(isDragging3d){
+      const dx=(e.clientX-prevMouse3d.x)*0.005;
+      const dy=(e.clientY-prevMouse3d.y)*0.005;
+      rotY+=dx; rotX+=dy;
+      prevMouse3d={x:e.clientX,y:e.clientY};
+    }
+    if(isPanning){
+      const dx=(e.clientX-panStart.x)*camDist*0.002;
+      const dy=(e.clientY-panStart.y)*camDist*0.002;
+      camTarget.x -= dx; camTarget.y += dy;
+      panStart={x:e.clientX,y:e.clientY};
+    }
+  });
+  canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    camDist *= e.deltaY>0 ? 1.12 : 0.89;
+    camDist = Math.max(0.1, Math.min(camDist, 5000));
+  }, {passive:false});
+  canvas.addEventListener('contextmenu', e=>e.preventDefault());
+
+  animate3D();
+}
+
+function animate3D(){
+  animFrameId = requestAnimationFrame(animate3D);
+  const sph = new THREE.Spherical(camDist, Math.PI/2 + rotX, rotY);
+  camera3d.position.setFromSpherical(sph).add(camTarget);
+  camera3d.lookAt(camTarget);
+  renderer3d.render(scene3d, camera3d);
+}
+
+function show3DLoading(msg){ 
+  document.getElementById('canvas3d-loading').classList.add('show');
+  document.getElementById('loading-msg').textContent = msg || '載入中，請稍候…';
+}
+function hide3DLoading(){ 
+  document.getElementById('canvas3d-loading').classList.remove('show');
+}
+
+function load3DFile(e){ load3DFileObj(e.target.files[0]); }
+async function load3DFileObj(file){
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const wrap = document.getElementById('canvas3d-wrap');
+
+  if(!renderer3d) init3DScene();
+  wrap.classList.add('active');
+  show3DLoading('初始化場景…');
+
+  if(['stp','step','igs','iges'].includes(ext)){
+    await loadOCCTFile(file, ext);
+  } else if(ext==='stl'){
+    const buf = await file.arrayBuffer();
+    loadSTLBuffer(buf, file);
+  } else if(ext==='obj'){
+    const text = await file.text();
+    loadOBJText(text, file);
+  } else {
+    hide3DLoading();
+    alert('不支援的格式：' + ext);
+  }
+}
+
+/* ── Load STP/IGS via occt-import-js ── */
+let occtInstance = null;
+async function getOCCT(){
+  if(occtInstance) return occtInstance;
+  show3DLoading('載入 Open CASCADE 引擎…');
+  try {
+    occtInstance = await occtimportjs();
+    return occtInstance;
+  } catch(err){
+    console.error('occt-import-js 載入失敗', err);
+    return null;
+  }
+}
+
+async function loadOCCTFile(file, ext){
+  show3DLoading('載入 Open CASCADE 引擎（首次載入需約 5–15 秒）…');
+  const occt = await getOCCT();
+  if(!occt){ 
+    hide3DLoading();
+    alert('Open CASCADE 引擎載入失敗，請重整頁面再試。');
+    return;
+  }
+  show3DLoading('解析 ' + ext.toUpperCase() + ' 檔案…');
+  const buf = await file.arrayBuffer();
+  const uint8 = new Uint8Array(buf);
+
+  let result;
+  try {
+    if(['stp','step'].includes(ext)){
+      result = occt.ReadStepFile(uint8, null);
+    } else {
+      result = occt.ReadIgesFile(uint8, null);
+    }
+  } catch(err){
+    hide3DLoading();
+    alert('解析失敗：' + err.message);
+    return;
+  }
+
+  if(!result || !result.success){
+    hide3DLoading();
+    alert('無法解析此 ' + ext.toUpperCase() + ' 檔案。');
+    return;
+  }
+
+  show3DLoading('建構 3D 模型…');
+  await new Promise(r=>setTimeout(r,30));
+
+  // Remove old mesh
+  if(mesh3d){ scene3d.remove(mesh3d); wireframe3d && scene3d.remove(wireframe3d); }
+  const group = new THREE.Group();
+  let totalTris = 0;
+
+  result.meshes.forEach(m=>{
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
+    if(m.attributes.normal) geo.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
+    else geo.computeVertexNormals();
+    if(m.index) geo.setIndex(new THREE.Uint32BufferAttribute(m.index.array, 1));
+    totalTris += (m.index ? m.index.array.length : m.attributes.position.array.length/3) / 3;
+
+    const mat = new THREE.MeshPhongMaterial({
+      color: 0x5ba8d4, specular: 0x002244,
+      shininess: 60, side: THREE.DoubleSide
+    });
+    group.add(new THREE.Mesh(geo, mat));
+  });
+
+  mesh3d = group;
+  scene3d.add(mesh3d);
+
+  // Fit camera
+  const box = new THREE.Box3().setFromObject(mesh3d);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3()).length();
+  camTarget.copy(center);
+  camDist = size * 1.5;
+  rotX = -0.4; rotY = 0.6;
+
+  document.getElementById('canvas3d-wrap').classList.add('active');
+  const infoBar = document.getElementById('viewer-info-bar');
+  infoBar.classList.add('show');
+  document.getElementById('vib-name').textContent = file.name;
+  document.getElementById('vib-format').textContent = ext.toUpperCase();
+  document.getElementById('vib-tris').textContent = Math.round(totalTris).toLocaleString();
+  document.getElementById('vib-size').textContent = fmtSize(file.size);
+
+  hide3DLoading();
+}
+
+/* ── STL loader ── */
+function loadSTLBuffer(buf, file){
+  // Try binary first
+  let geo;
+  try {
+    const dv = new DataView(buf);
+    const triCount = dv.getUint32(80, true);
+    if(triCount > 0 && 84 + triCount*50 === buf.byteLength){
+      const pos = new Float32Array(triCount*9);
+      const nor = new Float32Array(triCount*9);
+      let off=84;
+      for(let i=0;i<triCount;i++){
+        const nx=dv.getFloat32(off,true),ny=dv.getFloat32(off+4,true),nz=dv.getFloat32(off+8,true); off+=12;
+        for(let v=0;v<3;v++){
+          pos[i*9+v*3]  =dv.getFloat32(off,true);
+          pos[i*9+v*3+1]=dv.getFloat32(off+4,true);
+          pos[i*9+v*3+2]=dv.getFloat32(off+8,true);
+          nor[i*9+v*3]=nx; nor[i*9+v*3+1]=ny; nor[i*9+v*3+2]=nz;
+          off+=12;
+        }
+        off+=2;
+      }
+      geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setAttribute('normal',   new THREE.BufferAttribute(nor,3));
+    }
+  } catch(e){}
+
+  if(!geo){
+    // ASCII STL
+    const text = new TextDecoder().decode(buf);
+    geo = parseASCIISTL(text);
+  }
+
+  if(!geo){ hide3DLoading(); alert('STL 解析失敗'); return; }
+  finalize3DGeo(geo, file, 'STL');
+}
+
+function parseASCIISTL(text){
+  const pos=[], nor=[];
+  const lines=text.split('\n');
+  let nx=0,ny=0,nz=0;
+  lines.forEach(l=>{
+    l=l.trim();
+    if(l.startsWith('facet normal')){
+      const p=l.split(/\s+/);
+      nx=parseFloat(p[2]); ny=parseFloat(p[3]); nz=parseFloat(p[4]);
+    } else if(l.startsWith('vertex')){
+      const p=l.split(/\s+/);
+      pos.push(parseFloat(p[1]),parseFloat(p[2]),parseFloat(p[3]));
+      nor.push(nx,ny,nz);
+    }
+  });
+  if(!pos.length) return null;
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('normal',  new THREE.Float32BufferAttribute(nor,3));
+  return geo;
+}
+
+/* ── OBJ loader ── */
+function loadOBJText(text, file){
+  const verts=[], normals=[], uvs=[];
+  const positions=[], nors=[];
+  text.split('\n').forEach(l=>{
+    l=l.trim();
+    if(l.startsWith('v ')){
+      const p=l.split(/\s+/);
+      verts.push(parseFloat(p[1]),parseFloat(p[2]),parseFloat(p[3]));
+    } else if(l.startsWith('vn ')){
+      const p=l.split(/\s+/);
+      normals.push(parseFloat(p[1]),parseFloat(p[2]),parseFloat(p[3]));
+    } else if(l.startsWith('f ')){
+      const pts=l.substring(2).trim().split(/\s+/);
+      const tri=[];
+      pts.forEach(pt=>{
+        const idx=pt.split('/');
+        tri.push({vi:parseInt(idx[0])-1, ni:idx[2]?parseInt(idx[2])-1:-1});
+      });
+      for(let i=1;i<tri.length-1;i++){
+        [tri[0],tri[i],tri[i+1]].forEach(t=>{
+          positions.push(verts[t.vi*3],verts[t.vi*3+1],verts[t.vi*3+2]);
+          if(t.ni>=0 && normals.length){
+            nors.push(normals[t.ni*3],normals[t.ni*3+1],normals[t.ni*3+2]);
+          } else {
+            nors.push(0,1,0);
+          }
+        });
+      }
+    }
+  });
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geo.setAttribute('normal',  new THREE.Float32BufferAttribute(nors,3));
+  if(!nors.length || nors.every(v=>v===0)) geo.computeVertexNormals();
+  finalize3DGeo(geo, file, 'OBJ');
+}
+
+function finalize3DGeo(geo, file, fmtLabel){
+  if(mesh3d){ scene3d.remove(mesh3d); wireframe3d && scene3d.remove(wireframe3d); }
+  const mat = new THREE.MeshPhongMaterial({
+    color: 0x5ba8d4, specular: 0x002244, shininess: 60, side: THREE.DoubleSide
+  });
+  mesh3d = new THREE.Mesh(geo, mat);
+  scene3d.add(mesh3d);
+
+  geo.computeBoundingBox();
+  const box=geo.boundingBox;
+  const center=new THREE.Vector3();
+  box.getCenter(center);
+  mesh3d.position.sub(center);
+  const size=box.getSize(new THREE.Vector3()).length();
+  camTarget.set(0,0,0); camDist=size*1.5; rotX=-0.4; rotY=0.6;
+
+  const infoBar=document.getElementById('viewer-info-bar');
+  infoBar.classList.add('show');
+  document.getElementById('vib-name').textContent=file.name;
+  document.getElementById('vib-format').textContent=fmtLabel;
+  const tris=geo.index? geo.index.count/3 : (geo.attributes.position.count/3);
+  document.getElementById('vib-tris').textContent=Math.round(tris).toLocaleString();
+  document.getElementById('vib-size').textContent=fmtSize(file.size);
+  hide3DLoading();
+}
+
+function viewer3d_resetCamera(){ camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; rotX=-0.4; rotY=0.6; }
+function viewer3d_toggleWire(){
+  if(!mesh3d) return;
+  isWireframe=!isWireframe;
+  mesh3d.traverse(m=>{ if(m.isMesh) m.material.wireframe=isWireframe; });
+  document.getElementById('wire-btn').style.color = isWireframe?'#00FF88':'var(--cyan)';
+}
+function viewer3d_setView(v){
+  const d=camDist;
+  if(v==='top'){  rotX=-Math.PI/2; rotY=0; }
+  else if(v==='front'){ rotX=0; rotY=0; }
+  else { rotX=-0.4; rotY=0.6; }
+}
+
+/* ═════════════════════════════════════════
+   2D VIEWER — DXF (full) + DWG (basic)
+═════════════════════════════════════════ */
+let dxfData = null;
+let dxf2dScale = 1, dxf2dPan = {x:0, y:0};
+let dxf2dIsDragging = false, dxf2dLast = {x:0,y:0};
+
+function load2DFile(e){ load2DFileObj(e.target.files[0]); }
+async function load2DFileObj(file){
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const text = await file.text();
+  
+  if(ext === 'dxf'){
+    dxfData = parseDXF(text);
+    init2DCanvas(file);
+  } else if(ext === 'dwg'){
+    // Try to read DWG (basic binary parsing for common versions)
+    const buf = await file.arrayBuffer();
+    const parsed = tryParseDWG(buf, text);
+    if(parsed && parsed.entities && parsed.entities.length > 0){
+      dxfData = parsed;
+      init2DCanvas(file);
+    } else {
+      // Show fallback message
+      const wrap = document.getElementById('canvas2d-wrap');
+      wrap.classList.add('active');
+      const canvas = document.getElementById('canvas2d');
+      canvas.width = wrap.clientWidth || 800;
+      canvas.height = 440;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#08121e';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = '#FFD700';
+      ctx.font = 'bold 16px "Noto Sans TC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('此 DWG 版本或內容無法在瀏覽器直接解析', canvas.width/2, canvas.height/2 - 20);
+      ctx.fillStyle = '#607B8A';
+      ctx.font = '13px "Noto Sans TC", sans-serif';
+      ctx.fillText('建議使用下方 Autodesk Viewer 官方工具開啟', canvas.width/2, canvas.height/2 + 20);
+    }
+  }
+}
+
+/* ── Basic DWG detection (AC version header) ── */
+function tryParseDWG(buf, textFallback){
+  try {
+    const header = new Uint8Array(buf, 0, 6);
+    const sig = String.fromCharCode(...header);
+    // DWG files start with "AC" followed by version
+    if(!sig.startsWith('AC')) return null;
+    const version = sig; // AC1015=R2000, AC1018=R2004, AC1021=R2007, AC1024=R2010, AC1027=R2013, AC1032=R2018
+    // We return null to trigger the fallback message for DWG
+    // A full DWG parser would require a large library; we show an informative message instead
+    return null;
+  } catch(e){ return null; }
+}
+
+/* ── DXF Parser ── */
+function parseDXF(text){
+  const lines = text.replace(/\r/g,'').split('\n');
+  const entities = [];
+  let i=0;
+  const peek=()=>lines[i]?.trim();
+  const next=()=>{ const v=lines[i++]?.trim(); return v; };
+
+  while(i<lines.length){
+    const code=next(); const val=next();
+    if(code==='0' && val==='SECTION'){
+      const secCode=next(); const secVal=next();
+      if(secVal==='ENTITIES'){
+        parseEntitiesSection();
+      }
+    }
+  }
+
+  function parseEntitiesSection(){
+    while(i<lines.length){
+      const code=peek();
+      if(code===undefined) break;
+      next(); const val=next();
+      if(code==='0'){
+        if(val==='ENDSEC') break;
+        if(['LINE','CIRCLE','ARC','LWPOLYLINE','POLYLINE','POINT','ELLIPSE','SPLINE','TEXT','MTEXT','INSERT'].includes(val)){
+          entities.push(parseEntity(val));
+        }
+      }
+    }
+  }
+
+  function parseEntity(type){
+    const data={};
+    while(i<lines.length){
+      const code=peek();
+      if(code==='0') break;
+      next(); const val=next();
+      const c=parseInt(code);
+      if(!data[c]) data[c]=[];
+      data[c].push(val);
+    }
+    return {type, data};
+  }
+
+  return {entities};
+}
+
+function getDXFBounds(entities){
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  entities.forEach(e=>{
+    const d=e.data;
+    const gv=(code,idx=0)=>parseFloat(d[code]&&d[code][idx]||0);
+    const upd=(x,y)=>{
+      if(!isNaN(x)&&!isNaN(y)){
+        minX=Math.min(minX,x); maxX=Math.max(maxX,x);
+        minY=Math.min(minY,y); maxY=Math.max(maxY,y);
+      }
+    };
+    if(e.type==='LINE'){ upd(gv(10),gv(20)); upd(gv(11),gv(21)); }
+    else if(e.type==='CIRCLE'||e.type==='ARC'){ const r=gv(40); upd(gv(10)+r,gv(20)+r); upd(gv(10)-r,gv(20)-r); }
+    else if(e.type==='LWPOLYLINE'){ (d[10]||[]).forEach((x,i)=>upd(parseFloat(x),parseFloat((d[20]||[])[i]||0))); }
+  });
+  if(minX===Infinity){ minX=0; maxX=100; minY=0; maxY=100; }
+  return {minX,maxX,minY,maxY};
+}
+
+function init2DCanvas(file){
+  const wrap=document.getElementById('canvas2d-wrap');
+  wrap.classList.add('active');
+  const canvas=document.getElementById('canvas2d');
+  canvas.width=wrap.clientWidth||800;
+  canvas.height=440;
+
+  const b=getDXFBounds(dxfData.entities);
+  const dw=b.maxX-b.minX||100, dh=b.maxY-b.minY||100;
+  const W=canvas.width, H=canvas.height, margin=40;
+  dxf2dScale=Math.min((W-margin*2)/dw,(H-margin*2)/dh)*0.9;
+  dxf2dPan={
+    x:margin+(W-margin*2)/2-(b.minX+dw/2)*dxf2dScale,
+    y:H/2+(b.minY+dh/2)*dxf2dScale
+  };
+  drawDXF2D();
+  setup2DEvents(canvas);
+}
+
+function setup2DEvents(canvas){
+  canvas.onmousedown=e=>{ dxf2dIsDragging=true; dxf2dLast={x:e.clientX,y:e.clientY}; canvas.classList.add('grabbing'); };
+  window.onmouseup=()=>{ dxf2dIsDragging=false; canvas.classList.remove('grabbing'); };
+  window.onmousemove=e=>{
+    if(!dxf2dIsDragging) return;
+    dxf2dPan.x+=e.clientX-dxf2dLast.x;
+    dxf2dPan.y+=e.clientY-dxf2dLast.y;
+    dxf2dLast={x:e.clientX,y:e.clientY};
+    drawDXF2D();
+  };
+  canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const factor=e.deltaY<0?1.12:0.89;
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    dxf2dPan.x=mx+(dxf2dPan.x-mx)*factor;
+    dxf2dPan.y=my+(dxf2dPan.y-my)*factor;
+    dxf2dScale*=factor;
+    drawDXF2D();
+  },{passive:false});
+}
+
+function drawDXF2D(){
+  const canvas=document.getElementById('canvas2d');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.fillStyle='#08121e';
+  ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle='rgba(0,212,255,0.06)'; ctx.lineWidth=.5;
+  for(let x=-2000;x<3000;x+=50){
+    const sx=dxf2dPan.x+x*dxf2dScale/50;
+    if(sx<0||sx>W) continue;
+    ctx.beginPath(); ctx.moveTo(sx,0); ctx.lineTo(sx,H); ctx.stroke();
+  }
+  for(let y=-2000;y<3000;y+=50){
+    const sy=dxf2dPan.y-y*dxf2dScale/50;
+    if(sy<0||sy>H) continue;
+    ctx.beginPath(); ctx.moveTo(0,sy); ctx.lineTo(W,sy); ctx.stroke();
+  }
+
+  const tx=x=>dxf2dPan.x+x*dxf2dScale;
+  const ty=y=>dxf2dPan.y-y*dxf2dScale;
+
+  ctx.strokeStyle='#00D4FF'; ctx.lineWidth=1.2;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+
+  dxfData.entities.forEach(e=>{
+    const d=e.data;
+    const gv=(code,idx=0)=>parseFloat(d[code]&&d[code][idx]||0);
+    ctx.beginPath();
+    if(e.type==='LINE'){
+      ctx.moveTo(tx(gv(10)),ty(gv(20)));
+      ctx.lineTo(tx(gv(11)),ty(gv(21)));
+      ctx.stroke();
+    } else if(e.type==='CIRCLE'){
+      const cx=tx(gv(10)),cy=ty(gv(20)),r=gv(40)*dxf2dScale;
+      if(r>0){ ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }
+    } else if(e.type==='ARC'){
+      const cx=tx(gv(10)),cy=ty(gv(20)),r=gv(40)*dxf2dScale;
+      const sa=-gv(51)*Math.PI/180, ea=-gv(50)*Math.PI/180;
+      if(r>0){ ctx.arc(cx,cy,r,sa,ea,true); ctx.stroke(); }
+    } else if(e.type==='LWPOLYLINE'){
+      const xs=d[10]||[],ys=d[20]||[];
+      if(xs.length<1) return;
+      ctx.moveTo(tx(parseFloat(xs[0])),ty(parseFloat(ys[0])));
+      for(let k=1;k<xs.length;k++) ctx.lineTo(tx(parseFloat(xs[k])),ty(parseFloat(ys[k]||0)));
+      const flag=parseInt(d[70]&&d[70][0]||0);
+      if(flag&1) ctx.closePath();
+      ctx.stroke();
+    } else if(e.type==='ELLIPSE'){
+      const cx=tx(gv(10)), cy=ty(gv(20));
+      const majX=gv(11)*dxf2dScale, majY=-gv(21)*dxf2dScale;
+      const majLen=Math.sqrt(majX*majX+majY*majY);
+      const ratio=gv(40);
+      const angle=Math.atan2(majY,majX);
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(angle);
+      ctx.scale(1, ratio);
+      ctx.arc(0, 0, majLen, 0, Math.PI*2);
+      ctx.restore();
+      ctx.stroke();
+    } else if(e.type==='POINT'){
+      ctx.fillStyle='#00D4FF';
+      ctx.beginPath(); ctx.arc(tx(gv(10)),ty(gv(20)),2,0,Math.PI*2); ctx.fill();
+    } else if(e.type==='TEXT'||e.type==='MTEXT'){
+      const txt=(d[1]&&d[1][0])||'';
+      const h=Math.max(gv(40)||12,6)*dxf2dScale;
+      ctx.save();
+      ctx.fillStyle='rgba(0,212,255,0.8)';
+      ctx.font=h+'px Arial';
+      ctx.fillText(txt.substring(0,80), tx(gv(10)), ty(gv(20)));
+      ctx.restore();
+    }
+  });
+}
+
+/* ═════════════════════════════════════════
+   DXF → PDF CONVERTER
+═════════════════════════════════════════ */
+let dxf2pdfFile = null;
+let dxf2pdfBlob = null;
+
+function loadDxf2Pdf(e){ loadDxf2PdfObj(e.target.files[0]); }
+function loadDxf2PdfObj(file){
+  if(!file) return;
+  dxf2pdfFile = file;
+  dxf2pdfBlob = null;
+  document.getElementById('dxf2pdf-fname').textContent = file.name;
+  document.getElementById('dxf2pdf-fsize').textContent = fmtSize(file.size);
+  document.getElementById('dxf2pdf-fpi').classList.add('show');
+  document.getElementById('dxf2pdf-btn').disabled = false;
+  document.getElementById('dxf2pdf-dl').classList.remove('show');
+  hideStatus('dxf2pdf-status');
+}
+
+function setProgress(pbId, pct){ document.getElementById(pbId).style.width=pct+'%'; }
+function showStatus(id, type, label, msg, pct){
+  const box=document.getElementById(id);
+  box.className='status-box show '+type;
+  document.getElementById(id+'-label').textContent=label;
+  const pb=document.getElementById(id.replace('-status','-pb'));
+  if(pb) pb.style.width=(pct||0)+'%';
+  const msg_el=document.getElementById(id+'-msg');
+  if(msg_el) msg_el.textContent=msg||'';
+}
+function hideStatus(id){ document.getElementById(id).className='status-box'; }
+
+async function convertDxf2Pdf(){
+  if(!dxf2pdfFile) return;
+  const btn = document.getElementById('dxf2pdf-btn');
+  btn.disabled = true;
+  showStatus('dxf2pdf-status','processing','解析 DXF 中…','正在讀取圖面資料',20);
+
+  const text = await dxf2pdfFile.text();
+  const parsed = parseDXF(text);
+  showStatus('dxf2pdf-status','processing','繪製圖面…','計算邊界與比例',55);
+
+  await new Promise(r=>setTimeout(r,80));
+
+  const oc = document.createElement('canvas');
+  oc.width=2480; oc.height=1748;
+  const ctx=oc.getContext('2d');
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,oc.width,oc.height);
+
+  const entities = parsed.entities||[];
+  const b = getDXFBounds(entities);
+  const W=oc.width, H=oc.height;
+  const margin=80;
+  const dw=b.maxX-b.minX||1, dh=b.maxY-b.minY||1;
+  const scale=Math.min((W-margin*2)/dw,(H-margin*2)/dh)*0.9;
+  const ox=margin+(W-margin*2)/2-((b.minX+dw/2)*scale);
+  const oy=(H+margin)/2+((b.minY+dh/2)*scale);
+  const tx=x=>ox+x*scale;
+  const ty=y=>oy-y*scale;
+
+  ctx.strokeStyle='#1a2a3a'; ctx.lineWidth=2.5;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+
+  entities.forEach(e=>{
+    const d=e.data;
+    const gv=(code,idx=0)=>parseFloat(d[code]&&d[code][idx]||0);
+    ctx.beginPath();
+    if(e.type==='LINE'){
+      ctx.moveTo(tx(gv(10)),ty(gv(20)));
+      ctx.lineTo(tx(gv(11)),ty(gv(21)));
+      ctx.stroke();
+    } else if(e.type==='CIRCLE'){
+      const r=gv(40)*scale;
+      if(r>0){ ctx.arc(tx(gv(10)),ty(gv(20)),r,0,Math.PI*2); ctx.stroke(); }
+    } else if(e.type==='ARC'){
+      const r=gv(40)*scale;
+      if(r>0){ ctx.arc(tx(gv(10)),ty(gv(20)),r,-gv(51)*Math.PI/180,-gv(50)*Math.PI/180,true); ctx.stroke(); }
+    } else if(e.type==='LWPOLYLINE'){
+      const xs=d[10]||[],ys=d[20]||[];
+      if(!xs.length) return;
+      ctx.moveTo(tx(parseFloat(xs[0])),ty(parseFloat(ys[0])));
+      for(let k=1;k<xs.length;k++) ctx.lineTo(tx(parseFloat(xs[k])),ty(parseFloat(ys[k]||0)));
+      if(parseInt(d[70]&&d[70][0]||0)&1) ctx.closePath();
+      ctx.stroke();
+    } else if(e.type==='ELLIPSE'){
+      const cx=tx(gv(10)),cy=ty(gv(20));
+      const majX=gv(11)*scale, majY=-gv(21)*scale;
+      const majLen=Math.sqrt(majX*majX+majY*majY);
+      const ratio=gv(40);
+      const angle=Math.atan2(majY,majX);
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(angle);
+      ctx.scale(1,ratio);
+      ctx.arc(0,0,majLen,0,Math.PI*2);
+      ctx.restore();
+      ctx.stroke();
+    } else if(e.type==='TEXT'||e.type==='MTEXT'){
+      const txt=(d[1]&&d[1][0])||'';
+      const h=Math.max((gv(40)||3)*scale,8);
+      ctx.save();
+      ctx.fillStyle='#1a2a3a'; ctx.font=h+'px Arial';
+      ctx.fillText(txt.substring(0,80), tx(gv(10)), ty(gv(20)));
+      ctx.restore();
+    }
+  });
+
+  // Border & title block
+  ctx.strokeStyle='#1a2a3a'; ctx.lineWidth=4;
+  ctx.strokeRect(40,40,oc.width-80,oc.height-80);
+  ctx.strokeRect(oc.width-540,oc.height-180,500,140);
+  ctx.font='bold 28px Arial'; ctx.fillStyle='#1a2a3a';
+  ctx.fillText('瑞能電子股份有限公司', oc.width-520, oc.height-138);
+  ctx.font='22px Arial';
+  ctx.fillText('檔案：'+dxf2pdfFile.name.replace('.dxf',''), oc.width-520, oc.height-108);
+  ctx.fillText('日期：'+new Date().toLocaleDateString('zh-TW'), oc.width-520, oc.height-80);
+  ctx.fillText('MIS 轉檔系統', oc.width-520, oc.height-52);
+
+  showStatus('dxf2pdf-status','processing','產生 PDF…','嵌入圖面至 PDF',80);
+  await new Promise(r=>setTimeout(r,80));
+
+  const {jsPDF} = window.jspdf;
+  const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const imgData = oc.toDataURL('image/jpeg', 0.92);
+  pdf.addImage(imgData,'JPEG',0,0,297,210);
+
+  dxf2pdfBlob = pdf.output('blob');
+  showStatus('dxf2pdf-status','success','✅ 轉換完成！','PDF 已在本機產生，點擊下方下載',100);
+  document.getElementById('dxf2pdf-dl').classList.add('show');
+  btn.disabled = false;
+}
+
+function downloadDxfPdf(){
+  if(!dxf2pdfBlob) return;
+  const name = (dxf2pdfFile?.name||'drawing').replace(/\.dxf$/i,'')+'.pdf';
+  const url = URL.createObjectURL(dxf2pdfBlob);
+  const a = document.createElement('a');
+  a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+</script>
+</body>
+</html>

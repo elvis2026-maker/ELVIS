@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V17.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V18.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -261,9 +261,10 @@ footer strong { color: var(--cyan); }
 /* Three.js canvas container */
 #canvas3d-wrap {
   display: none; border-radius: 10px; overflow: hidden;
-  background: #EEF2F7; position: relative;
-  border: 1px solid rgba(0,114,181,0.2);
+  background: #0D1117; position: relative;
+  border: 1px solid rgba(0,114,181,0.35);
   margin-bottom: 12px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.4);
 }
 #canvas3d-wrap.active { display: block; }
 #canvas3d { width: 100%; height: 440px; display: block; }
@@ -290,17 +291,17 @@ footer strong { color: var(--cyan); }
 /* Loading spinner */
 #canvas3d-loading {
   display: none; position: absolute; inset: 0;
-  background: rgba(238,242,247,0.90);
+  background: rgba(13,17,23,0.92);
   align-items: center; justify-content: center;
   flex-direction: column; gap: 16px;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 13px; color: var(--cyan);
+  font-size: 13px; color: #5BC8FF;
   border-radius: 10px;
 }
 #canvas3d-loading.show { display: flex; }
 .spinner {
-  width: 40px; height: 40px; border: 3px solid rgba(0,114,181,0.15);
-  border-top-color: var(--cyan2); border-radius: 50%;
+  width: 40px; height: 40px; border: 3px solid rgba(91,200,255,0.15);
+  border-top-color: #5BC8FF; border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -471,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V17.0</div>
+    <div class="version-badge">V18.0</div>
   </div>
 </header>
 
@@ -595,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V17.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V18.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -987,7 +988,10 @@ function init3DScene(){
   const H = 440;
 
   scene3d   = new THREE.Scene();
-  scene3d.background = new THREE.Color(0xEEF2F7);
+  scene3d.background = new THREE.Color(0x0D1117);
+
+  // 加霧氣，增加深度感
+  scene3d.fog = new THREE.FogExp2(0x0D1117, 0.008);
 
   camera3d  = new THREE.PerspectiveCamera(45, W / H, 0.01, 100000);
   camera3d.position.set(0, 0, camDist);
@@ -995,24 +999,31 @@ function init3DScene(){
   renderer3d = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer3d.setSize(W, H);
+  renderer3d.shadowMap.enabled = true;
+  renderer3d.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer3d.outputEncoding = THREE.sRGBEncoding || 3001; // r128 compat
 
-  // grid 預設大小，載入模型後會重設
-  window._sceneGrid = new THREE.GridHelper(10, 20, 0xaabbcc, 0xdde4ee);
-  scene3d.add(window._sceneGrid);
-
-  scene3d.add(new THREE.AmbientLight(0xffffff, 0.6));
-  // MeshStandardMaterial needs stronger directional lights
-  const dLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  // ── 暗背景專用燈光配置 ──
+  // 環境光（低，讓陰影更明顯）
+  scene3d.add(new THREE.AmbientLight(0x223344, 0.8));
+  // 主光：正上偏右，強白光
+  const dLight = new THREE.DirectionalLight(0xffffff, 2.0);
   dLight.position.set(5, 10, 5);
   scene3d.add(dLight);
-  const dLight2 = new THREE.DirectionalLight(0xcce8ff, 0.8);
-  dLight2.position.set(-5, -3, -5);
+  // 補光：左下青色（科技感）
+  const dLight2 = new THREE.DirectionalLight(0x4488BB, 1.0);
+  dLight2.position.set(-6, -2, -4);
   scene3d.add(dLight2);
-  const dLight3 = new THREE.DirectionalLight(0xffffff, 0.5);
-  dLight3.position.set(0, -10, 0);
+  // 底部反射光
+  const dLight3 = new THREE.DirectionalLight(0x334455, 0.6);
+  dLight3.position.set(0, -8, 2);
   scene3d.add(dLight3);
-  // HemisphereLight helps fill dark areas on standard material
-  scene3d.add(new THREE.HemisphereLight(0xddeeff, 0x334455, 0.5));
+  // Hemisphere：天空藍 / 地面深藍
+  scene3d.add(new THREE.HemisphereLight(0x223355, 0x0A0F18, 0.8));
+
+  // grid 預設大小，載入模型後會重設（暗色格線）
+  window._sceneGrid = new THREE.GridHelper(10, 20, 0x1E3A5F, 0x111A26);
+  scene3d.add(window._sceneGrid);
 
   scene3d.add(new THREE.AxesHelper(1));
 
@@ -1432,13 +1443,14 @@ async function loadOCCTFile(file, ext){
 
       geo.computeVertexNormals(); // 重新計算確保法向量正確
 
-      let color = new THREE.Color(0xC0C8D0); // 類似 3dpea 的淺灰色
+      let color = new THREE.Color(0x8BB8D4); // 金屬藍灰，暗背景下好看
       if (md.color && md.color.length >= 3) {
         color.setRGB(md.color[0], md.color[1], md.color[2]);
       }
       const mat = new THREE.MeshStandardMaterial({
-        color, roughness: 0.55, metalness: 0.15,
-        side: THREE.DoubleSide
+        color, roughness: 0.35, metalness: 0.4,
+        side: THREE.DoubleSide,
+        envMapIntensity: 1.0,
       });
       group.add(new THREE.Mesh(geo, mat));
       console.log(`[OCCT] mesh${mi} built: ${pos.length/3} verts`);
@@ -1470,8 +1482,8 @@ async function loadOCCTFile(file, ext){
   // 更新 Grid
   if(window._sceneGrid){ scene3d.remove(window._sceneGrid); }
   const gSize = Math.ceil(modelSize * 1.2);
-  window._sceneGrid = new THREE.GridHelper(gSize, 20, 0xaabbcc, 0xdde4ee);
-  window._sceneGrid.position.y = globalMin.y - cy; // grid 貼在模型底部
+  window._sceneGrid = new THREE.GridHelper(gSize, 24, 0x1E3A5F, 0x111A26);
+  window._sceneGrid.position.y = globalMin.y - cy;
   scene3d.add(window._sceneGrid);
 
   document.getElementById('canvas3d-wrap').classList.add('active');
@@ -1591,7 +1603,7 @@ function loadOBJText(text, file){
 function finalize3DGeo(geo, file, fmtLabel){
   if(mesh3d){ scene3d.remove(mesh3d); wireframe3d && scene3d.remove(wireframe3d); }
   const mat = new THREE.MeshStandardMaterial({
-    color: 0x4d9ecf, roughness: 0.4, metalness: 0.2, side: THREE.DoubleSide
+    color: 0x6EA8CC, roughness: 0.35, metalness: 0.4, side: THREE.DoubleSide
   });
   mesh3d = new THREE.Mesh(geo, mat);
   scene3d.add(mesh3d);

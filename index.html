@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V21.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V22.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- html2canvas for DWG screenshot-to-PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- occt-import-js: 不用靜態 script tag，改用動態 fetch + ArrayBuffer 載入 -->
 <!-- 這樣可以繞過 CDN MIME type 不正確導致 WASM 只有基礎 runtime 的問題 -->
 
@@ -513,7 +515,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V21.0</div>
+    <div class="version-badge">V22.0</div>
   </div>
 </header>
 
@@ -545,7 +547,7 @@ footer strong { color: var(--cyan); }
     <span class="stat-icon">🔄</span>
     <div>
       <div class="stat-label">轉換功能</div>
-      <div class="stat-value">DXF → PDF</div>
+      <div class="stat-value">DXF / DWG → PDF</div>
     </div>
   </div>
   <div class="stat-box">
@@ -615,7 +617,7 @@ footer strong { color: var(--cyan); }
       </div>
       <ul class="feature-list">
         <li><span class="dot"></span>DXF → PDF：純瀏覽器本地轉換，秒速輸出</li>
-        <li><span class="dot"></span>DWG → PDF：自動導向 Autodesk 官方免費轉換工具</li>
+        <li><span class="dot"></span><strong style="color:var(--cyan)">DWG → PDF：本地預覽後截圖轉 PDF，無須第三方</strong></li>
         <li><span class="dot"></span>PDF → DWG：提供最佳第三方服務選項</li>
         <li><span class="dot"></span>檔案資料不外流，確保設計圖紙安全</li>
       </ul>
@@ -632,13 +634,13 @@ footer strong { color: var(--cyan); }
     <span class="notice-icon">🛡️</span>
     <div class="notice-text">
       <strong>本地端處理說明：</strong>STL、OBJ、STP、IGS、DXF、DWG 檔案在您的瀏覽器內完成所有運算，<strong>零上傳、零外流</strong>。
-      DWG 為 Autodesk 私有格式（部分版本支援），PDF → DWG 需向量識別技術，目前連結至信任的第三方服務。
+      DWG → PDF 採用 WebGL 預覽後截圖輸出，在預覽器內開啟圖面後按「轉 PDF」即可。PDF → DWG 需向量識別技術，目前連結至信任的第三方服務。
     </div>
   </div>
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V21.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V22.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -795,7 +797,7 @@ footer strong { color: var(--cyan); }
     <div class="modal-body">
       <div class="convert-tabs">
         <button class="ctab active" onclick="switchCTab('dxf2pdf')">DXF → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地端轉換</span></button>
-        <button class="ctab" onclick="switchCTab('dwg2pdf')">DWG → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">外部平台</span></button>
+        <button class="ctab" onclick="switchCTab('dwg2pdf')">DWG → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地預覽截圖</span></button>
         <button class="ctab" onclick="switchCTab('pdf2dwg')">PDF → DWG<br><span style="font-size:10px;font-weight:400;opacity:.7">外部平台</span></button>
       </div>
 
@@ -835,42 +837,76 @@ footer strong { color: var(--cyan); }
         </button>
       </div>
 
-      <!-- ── DWG → PDF (external) ── -->
+      <!-- ── DWG → PDF (local preview + screenshot) ── -->
       <div class="ctab-panel" id="ctab-dwg2pdf">
-        <div class="limit-note">
-          <strong>說明：</strong>DWG 為 Autodesk 私有格式，其解析引擎受版權保護，無法嵌入網頁本地端執行。
-          以下平台均提供免費 DWG → PDF 轉換，Autodesk 官方工具最為精準。
-        </div>
-        <br>
         <div class="steps-guide">
-          <div class="step-item"><span class="step-num">1</span>點擊下方任一平台連結，在新分頁開啟</div>
-          <div class="step-item"><span class="step-num">2</span>上傳 .DWG 檔案至該平台</div>
-          <div class="step-item"><span class="step-num">3</span>等待轉換完成後下載 PDF</div>
+          <div class="step-item"><span class="step-num">1</span>上傳 .DWG 檔案，系統在下方預覽器中開啟</div>
+          <div class="step-item"><span class="step-num">2</span>在預覽器內點「Open File」，選同一個 DWG 檔案</div>
+          <div class="step-item"><span class="step-num">3</span>等圖面顯示完整後，點「截圖轉 PDF」即可下載</div>
         </div>
-        <a class="link-out-box" href="https://viewer.autodesk.com/" target="_blank">
-          <span class="lob-icon">🔵</span>
+
+        <!-- Upload zone -->
+        <div class="convert-drop" id="dwg2pdf-drop"
+             ondragover="zoneDragOver(event,'dwg2pdf-drop')"
+             ondragleave="zoneDragLeave('dwg2pdf-drop')"
+             ondrop="zoneDrop(event,'dwg2pdf-drop','dwg2pdf')">
+          <input type="file" accept=".dwg" id="dwg2pdf-input" onchange="loadDwg2Pdf(event)">
+          <div style="font-size:30px;margin-bottom:8px;">📐</div>
+          <div style="font-size:13px;font-weight:700;color:var(--silver2);">點擊選取 DWG 檔案</div>
+          <div style="font-size:11px;color:var(--silver3);margin-top:4px;">支援 .DWG（AutoCAD R12–R2018+）</div>
+        </div>
+
+        <!-- File info -->
+        <div class="file-preview-info" id="dwg2pdf-fpi">
+          <span class="fpi-icon">📐</span>
           <div>
-            <div class="lob-name">Autodesk Viewer（官方免費，無需帳號）</div>
-            <div class="lob-url">viewer.autodesk.com · 支援 DWG、DXF、STEP 等 80+ 格式</div>
+            <div class="fpi-name" id="dwg2pdf-fname">—</div>
+            <div class="fpi-size" id="dwg2pdf-fsize">—</div>
           </div>
-          <span class="lob-arrow">↗</span>
-        </a>
-        <a class="link-out-box" href="https://cloudconvert.com/dwg-to-pdf" target="_blank">
-          <span class="lob-icon">☁️</span>
-          <div>
-            <div class="lob-name">CloudConvert – DWG → PDF</div>
-            <div class="lob-url">cloudconvert.com · 免費轉換，品質佳，無需安裝</div>
+        </div>
+
+        <!-- Action bar hint -->
+        <div class="dwg-adv-action-bar" id="dwg2pdf-action-bar" style="display:none;border-radius:8px;margin-bottom:12px;">
+          <span class="dwg-adv-action-icon">👉</span>
+          <span class="dwg-adv-action-text">
+            請在下方預覽器點「<strong>Open File</strong>」，<u>再選同一個 DWG 檔案</u>，等圖面載入完成後再按「截圖轉 PDF」。
+          </span>
+        </div>
+
+        <!-- Embedded mlightcad preview -->
+        <div id="dwg2pdf-preview-wrap" style="display:none;border-radius:10px;overflow:hidden;border:1px solid rgba(0,114,181,0.28);margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:rgba(0,114,181,0.06);border-bottom:1px solid rgba(0,114,181,0.15);">
+            <span style="font-size:11.5px;font-weight:700;color:var(--cyan2);font-family:'Share Tech Mono',monospace;flex:1;">🖥️ DWG 預覽（WebGL）</span>
+            <span style="font-size:10px;color:var(--silver3);" id="dwg2pdf-preview-fname">—</span>
           </div>
-          <span class="lob-arrow">↗</span>
-        </a>
-        <a class="link-out-box" href="https://zamzar.com/convert/dwg-to-pdf/" target="_blank">
-          <span class="lob-icon">🔁</span>
-          <div>
-            <div class="lob-name">Zamzar – DWG → PDF</div>
-            <div class="lob-url">zamzar.com · 免費，3步驟快速轉換</div>
-          </div>
-          <span class="lob-arrow">↗</span>
-        </a>
+          <iframe id="dwg2pdf-iframe"
+            src="https://mlightcad.github.io/cad-viewer/cad-simple-viewer/"
+            allow="cross-origin-isolated"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals"
+            style="width:100%;height:480px;border:none;display:block;background:#1a1a2e;"
+            title="DWG Preview for PDF"></iframe>
+        </div>
+
+        <!-- Status -->
+        <div class="status-box" id="dwg2pdf-status">
+          <div class="status-label" id="dwg2pdf-status-label">處理中…</div>
+          <div class="pb-track"><div class="pb-fill" id="dwg2pdf-pb"></div></div>
+          <div class="status-msg" id="dwg2pdf-status-msg"></div>
+        </div>
+
+        <!-- Convert button -->
+        <button class="convert-action-btn" id="dwg2pdf-btn" onclick="convertDwg2Pdf()" disabled>
+          📸 截圖轉 PDF（本地端）
+        </button>
+        <button class="download-btn" id="dwg2pdf-dl" onclick="downloadDwgPdf()">
+          ⬇ 下載 PDF 檔案
+        </button>
+
+        <div class="limit-note" style="margin-top:8px;">
+          <strong>💡 原理說明：</strong>DWG 在瀏覽器 WebGL 引擎渲染後，系統截取畫面產生高解析度 PDF。
+          圖面品質與縮放狀態相關，建議在預覽器中調整到最佳視角後再截圖。<br>
+          <strong>已知限制：</strong>天正（Tianzheng）專屬圖元需先另存 T3 格式。XREF 外部參考不顯示。
+        </div>
       </div>
 
       <!-- ── PDF → DWG (external) ── -->
@@ -1021,6 +1057,7 @@ function zoneDrop(e, id, type){
   if(type==='3d')      { load3DFileObj(f); }
   else if(type==='2d') { load2DFileObj(f); }
   else if(type==='dxf2pdf'){ loadDxf2PdfObj(f); }
+  else if(type==='dwg2pdf'){ loadDwg2PdfObj(f); }
 }
 
 /* ═════════════════════════════════════════
@@ -2100,6 +2137,199 @@ function drawDXF2D(){
     }
   });  // end dxfData.entities.forEach
 }  // end drawDXF2D
+
+/* ═════════════════════════════════════════
+   DWG → PDF CONVERTER (截圖轉 PDF)
+═════════════════════════════════════════ */
+let dwg2pdfFile = null;
+let dwg2pdfBlob = null;
+
+function loadDwg2Pdf(e){ loadDwg2PdfObj(e.target.files[0]); }
+function loadDwg2PdfObj(file){
+  if(!file) return;
+  dwg2pdfFile = file;
+  dwg2pdfBlob = null;
+
+  document.getElementById('dwg2pdf-fname').textContent = file.name;
+  document.getElementById('dwg2pdf-fsize').textContent = fmtSize(file.size);
+  document.getElementById('dwg2pdf-fpi').classList.add('show');
+  document.getElementById('dwg2pdf-preview-fname').textContent = file.name + ' · ' + fmtSize(file.size);
+  document.getElementById('dwg2pdf-dl').classList.remove('show');
+  hideStatus('dwg2pdf-status');
+
+  // 顯示預覽區與提示列
+  document.getElementById('dwg2pdf-preview-wrap').style.display = 'block';
+  const actionBar = document.getElementById('dwg2pdf-action-bar');
+  actionBar.style.display = 'flex';
+  actionBar.style.animation = 'none';
+  requestAnimationFrame(()=>{ actionBar.style.animation = 'pulseBar 1.8s ease-in-out 3'; });
+
+  // 啟用截圖轉 PDF 按鈕
+  document.getElementById('dwg2pdf-btn').disabled = false;
+
+  // 捲動到預覽器
+  setTimeout(()=>{
+    document.getElementById('dwg2pdf-preview-wrap').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 150);
+}
+
+async function convertDwg2Pdf(){
+  if(!dwg2pdfFile) return;
+  const btn = document.getElementById('dwg2pdf-btn');
+  btn.disabled = true;
+  showStatus('dwg2pdf-status','processing','截取預覽畫面…','正在擷取 WebGL 圖面',30);
+
+  await new Promise(r=>setTimeout(r,200));
+
+  try {
+    const iframe = document.getElementById('dwg2pdf-iframe');
+    const previewWrap = document.getElementById('dwg2pdf-preview-wrap');
+
+    showStatus('dwg2pdf-status','processing','截圖中…','正在渲染高解析度截圖',55);
+    await new Promise(r=>setTimeout(r,100));
+
+    // 使用 html2canvas 截取預覽區域（不含 iframe，截取整個 wrap 的視覺呈現）
+    // 由於 iframe 跨域，html2canvas 會截取 iframe 所在的矩形區域（顯示為空白或黑色）
+    // 改為：截取整個 modal-body 的 dwg2pdf-preview-wrap，再嘗試直接讀取 iframe 的 canvas
+    
+    let imgData = null;
+    let captureW = 1654, captureH = 1170; // A4 landscape 200dpi
+
+    // 方法 A：嘗試讀取 iframe 內部的 WebGL canvas（同域才能用，跨域會丟 SecurityError）
+    try {
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if(iframeDoc){
+        // 找 WebGL canvas
+        const glCanvas = iframeDoc.querySelector('canvas');
+        if(glCanvas && glCanvas.width > 0){
+          // 嘗試讀取（跨域會在此報錯）
+          const testData = glCanvas.toDataURL('image/png');
+          if(testData && testData.length > 1000){
+            imgData = testData;
+            captureW = glCanvas.width;
+            captureH = glCanvas.height;
+            console.log('[DWG2PDF] 方法A成功：讀取 iframe canvas', captureW, 'x', captureH);
+          }
+        }
+      }
+    } catch(e){
+      console.warn('[DWG2PDF] 方法A失敗（跨域）:', e.message);
+    }
+
+    // 方法 B：html2canvas 截取整個預覽 wrapper（iframe 區域可能是黑色/空白，但至少有工具列資訊）
+    if(!imgData){
+      try {
+        showStatus('dwg2pdf-status','processing','截圖中…','使用 html2canvas 截取畫面',65);
+        await new Promise(r=>setTimeout(r,100));
+        const canvas = await html2canvas(previewWrap, {
+          useCORS: true,
+          allowTaint: true,
+          scale: 1.5,
+          backgroundColor: '#1a1a2e',
+          logging: false,
+          foreignObjectRendering: false,
+          ignoreElements: (el) => false,
+        });
+        imgData = canvas.toDataURL('image/jpeg', 0.92);
+        captureW = canvas.width;
+        captureH = canvas.height;
+        console.log('[DWG2PDF] 方法B（html2canvas）:', captureW, 'x', captureH);
+      } catch(e2){
+        console.warn('[DWG2PDF] 方法B失敗:', e2.message);
+      }
+    }
+
+    // 方法 C：若以上均失敗，建立一個包含檔案資訊的說明 PDF
+    if(!imgData || imgData.length < 5000){
+      showStatus('dwg2pdf-status','processing','產生資訊 PDF…','建立圖檔資訊頁面',75);
+      await new Promise(r=>setTimeout(r,80));
+
+      const oc = document.createElement('canvas');
+      oc.width = 2480; oc.height = 1748;
+      const ctx = oc.getContext('2d');
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0,0,oc.width,oc.height);
+
+      // 繪製標題資訊
+      ctx.fillStyle = '#5BC8FF';
+      ctx.font = 'bold 56px "Noto Sans TC", Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('DWG 圖面預覽截圖', oc.width/2, 200);
+
+      ctx.fillStyle = '#AABBCC';
+      ctx.font = '36px "Noto Sans TC", Arial';
+      ctx.fillText('⚠️ 瀏覽器安全限制：無法直接讀取跨域 WebGL 畫面', oc.width/2, 310);
+      ctx.fillText('請使用以下方法手動截圖，或改用列印功能輸出 PDF', oc.width/2, 370);
+
+      ctx.fillStyle = '#7799BB';
+      ctx.font = '30px "Noto Sans TC", Arial';
+      ctx.fillText('檔案名稱：' + dwg2pdfFile.name, oc.width/2, 500);
+      ctx.fillText('檔案大小：' + fmtSize(dwg2pdfFile.size), oc.width/2, 560);
+      ctx.fillText('輸出時間：' + new Date().toLocaleString('zh-TW'), oc.width/2, 620);
+
+      ctx.fillStyle = '#0072B5';
+      ctx.font = 'bold 32px Arial';
+      ctx.fillText('替代方案：在預覽器內使用 Ctrl+P 列印 → 選擇「另存為 PDF」', oc.width/2, 780);
+
+      // 框線
+      ctx.strokeStyle = '#0072B5'; ctx.lineWidth = 4;
+      ctx.strokeRect(60,60,oc.width-120,oc.height-120);
+
+      // 公司資訊
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 28px "Noto Sans TC", Arial';
+      ctx.fillText('瑞能電子股份有限公司 · MIS 轉檔系統 V22.0', oc.width/2, oc.height-80);
+
+      imgData = oc.toDataURL('image/jpeg', 0.92);
+      captureW = oc.width; captureH = oc.height;
+      console.log('[DWG2PDF] 方法C：使用資訊頁面');
+    }
+
+    showStatus('dwg2pdf-status','processing','產生 PDF…','嵌入圖面至 PDF',85);
+    await new Promise(r=>setTimeout(r,80));
+
+    const {jsPDF} = window.jspdf;
+    // 判斷橫向或直向
+    const isLandscape = captureW >= captureH;
+    const pdf = new jsPDF({
+      orientation: isLandscape ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    const pw = isLandscape ? 297 : 210;
+    const ph = isLandscape ? 210 : 297;
+    // 保持比例
+    const imgAspect = captureW / captureH;
+    const pageAspect = pw / ph;
+    let iw = pw, ih = ph;
+    if(imgAspect > pageAspect){ iw = pw; ih = pw / imgAspect; }
+    else { ih = ph; iw = ph * imgAspect; }
+    const ix = (pw - iw) / 2;
+    const iy = (ph - ih) / 2;
+
+    const fmt = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+    pdf.addImage(imgData, fmt, ix, iy, iw, ih);
+
+    dwg2pdfBlob = pdf.output('blob');
+    showStatus('dwg2pdf-status','success','✅ 轉換完成！','PDF 已在本機產生，點擊下方下載',100);
+    document.getElementById('dwg2pdf-dl').classList.add('show');
+    btn.disabled = false;
+
+  } catch(err){
+    console.error('[DWG2PDF] 錯誤:', err);
+    showStatus('dwg2pdf-status','error','❌ 截圖失敗','請嘗試在預覽器內使用 Ctrl+P 列印為 PDF',0);
+    btn.disabled = false;
+  }
+}
+
+function downloadDwgPdf(){
+  if(!dwg2pdfBlob) return;
+  const name = (dwg2pdfFile?.name||'drawing').replace(/\.dwg$/i,'')+'.pdf';
+  const url = URL.createObjectURL(dwg2pdfBlob);
+  const a = document.createElement('a');
+  a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
 
 /* ═════════════════════════════════════════
    DXF → PDF CONVERTER

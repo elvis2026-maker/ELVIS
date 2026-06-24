@@ -471,7 +471,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V4.0</div>
+    <div class="version-badge">V5.0</div>
   </div>
 </header>
 
@@ -1075,26 +1075,52 @@ async function load3DFileObj(file){
 
 /* ── Load STP/IGS via occt-import-js ── */
 let occtInstance = null;
+let occtLoading = false;
+let occtLoadCallbacks = [];
+
 async function getOCCT(){
   if(occtInstance) return occtInstance;
-  show3DLoading('載入 Open CASCADE 引擎…');
+  // 如果正在載入，等待
+  if(occtLoading){
+    return new Promise((res)=>{ occtLoadCallbacks.push(res); });
+  }
+  occtLoading = true;
+  show3DLoading('載入 Open CASCADE 引擎（首次約需 10–20 秒）…');
   try {
-    occtInstance = await occtimportjs();
+    // 提供 locateFile 讓 WASM 從正確的 CDN 路徑載入
+    const wasmBase = 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/';
+    occtInstance = await occtimportjs({
+      locateFile: (path) => wasmBase + path
+    });
+    occtLoading = false;
+    console.log('[OCCT] 引擎載入成功, 可用方法:', Object.getOwnPropertyNames(occtInstance).filter(k=>typeof occtInstance[k]==='function'));
+    occtLoadCallbacks.forEach(cb => cb(occtInstance));
+    occtLoadCallbacks = [];
     return occtInstance;
   } catch(err){
-    console.error('occt-import-js 載入失敗', err);
+    occtLoading = false;
+    occtLoadCallbacks.forEach(cb => cb(null));
+    occtLoadCallbacks = [];
+    console.error('occt-import-js 載入失敗:', err);
     return null;
   }
 }
 
 async function loadOCCTFile(file, ext){
-  show3DLoading('載入 Open CASCADE 引擎（首次載入需約 5–15 秒）…');
+  show3DLoading('載入 Open CASCADE 引擎（首次約需 10–20 秒）…');
   const occt = await getOCCT();
   if(!occt){ 
     hide3DLoading();
-    alert('Open CASCADE 引擎載入失敗，請重整頁面再試。');
+    // 顯示友善的失敗訊息在 loading 層
+    const loadDiv = document.getElementById('canvas3d-loading');
+    const msgSpan = document.getElementById('loading-msg');
+    document.getElementById('canvas3d-wrap').classList.add('active');
+    loadDiv.classList.add('show');
+    loadDiv.style.background = 'rgba(238,242,247,0.95)';
+    msgSpan.innerHTML = '⚠️ Open CASCADE 引擎載入失敗<br><small style="color:#607B8A">請確認網路連線後重新整理，或改用 <a href="https://viewer.autodesk.com/" target="_blank" style="color:#0072B5">Autodesk Viewer</a></small>';
     return;
   }
+
   show3DLoading('解析 ' + ext.toUpperCase() + ' 檔案…');
   const buf = await file.arrayBuffer();
   const uint8 = new Uint8Array(buf);
@@ -1108,13 +1134,13 @@ async function loadOCCTFile(file, ext){
     }
   } catch(err){
     hide3DLoading();
-    alert('解析失敗：' + err.message);
+    alert('解析失敗：' + (err.message || err));
     return;
   }
 
   if(!result || !result.success){
     hide3DLoading();
-    alert('無法解析此 ' + ext.toUpperCase() + ' 檔案。');
+    alert('無法解析此 ' + ext.toUpperCase() + ' 檔案（解析引擎回傳失敗）。');
     return;
   }
 
@@ -1126,91 +1152,84 @@ async function loadOCCTFile(file, ext){
   const group = new THREE.Group();
   let totalTris = 0;
 
-  // occt-import-js v0.0.22 returns meshes array; each mesh has position/normal/index
   const meshList = result.meshes || [];
-  console.log('[OCCT] success:', result.success, 'meshes count:', meshList.length);
+  console.log('[OCCT] success:', result.success, 'meshes:', meshList.length, 
+              'resultKeys:', Object.keys(result),
+              meshList[0] ? 'mesh0Keys:'+Object.keys(meshList[0]) : 'no meshes');
 
   meshList.forEach((m, mi)=>{
     try {
-      // v0.0.22 structure: m.index (typed array or null), m.attributes.position.array, m.attributes.normal.array
       let posArr = null;
-      // Try v0.0.22 style
-      if(m.attributes && m.attributes.position && m.attributes.position.array){
+
+      // occt-import-js v0.0.22: m.attributes.position.array (Float32Array)
+      if(m.attributes?.position?.array?.length > 0){
         posArr = m.attributes.position.array;
+      } else if(m.attributes?.position?.length > 0){
+        posArr = m.attributes.position;
       }
-      // Try flat array style (some versions)
-      else if(Array.isArray(m.position) || (m.position && m.position.length)){
-        posArr = m.position;
-      }
-      // Try direct array
-      else if(m.vertices){
-        posArr = m.vertices;
-      }
+      // Older / alternative API styles
+      if(!posArr && m.position?.length > 0) posArr = m.position;
+      if(!posArr && m.vertices?.length > 0)  posArr = m.vertices;
 
       if(!posArr || posArr.length === 0){ 
-        console.warn('[OCCT] mesh', mi, 'no position data, keys:', Object.keys(m)); 
+        console.warn('[OCCT] mesh', mi, 'no position - keys:', Object.keys(m));
+        // Try to dump attributes
+        if(m.attributes) console.warn('[OCCT] attributes keys:', Object.keys(m.attributes));
         return; 
       }
 
       const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(Array.from ? Array.from(posArr) : posArr, 3));
 
-      // Normal
+      // Normals
       let norArr = null;
-      if(m.attributes && m.attributes.normal && m.attributes.normal.array){
-        norArr = m.attributes.normal.array;
-      } else if(m.normal && m.normal.length){
-        norArr = m.normal;
-      } else if(m.normals && m.normals.length){
-        norArr = m.normals;
-      }
+      if(m.attributes?.normal?.array?.length > 0)  norArr = m.attributes.normal.array;
+      else if(m.attributes?.normal?.length > 0)     norArr = m.attributes.normal;
+      else if(m.normal?.length > 0)                 norArr = m.normal;
+      else if(m.normals?.length > 0)                norArr = m.normals;
 
-      if(norArr && norArr.length > 0){
-        geo.setAttribute('normal', new THREE.Float32BufferAttribute(norArr, 3));
+      if(norArr?.length > 0){
+        geo.setAttribute('normal', new THREE.Float32BufferAttribute(Array.from ? Array.from(norArr) : norArr, 3));
       } else {
         geo.computeVertexNormals();
       }
 
       // Index
       let idxArr = null;
-      if(m.index && m.index.array){ idxArr = m.index.array; }
-      else if(m.index && m.index.length){ idxArr = m.index; }
-      else if(m.indices && m.indices.length){ idxArr = m.indices; }
+      if(m.index?.array?.length > 0)  idxArr = m.index.array;
+      else if(m.index?.length > 0)    idxArr = m.index;
+      else if(m.indices?.length > 0)  idxArr = m.indices;
 
-      if(idxArr && idxArr.length > 0){
-        geo.setIndex(new THREE.Uint32BufferAttribute(idxArr, 1));
+      if(idxArr?.length > 0){
+        geo.setIndex(new THREE.Uint32BufferAttribute(Array.from ? Array.from(idxArr) : idxArr, 1));
         totalTris += idxArr.length / 3;
       } else {
         totalTris += posArr.length / 9;
       }
 
-      // Color from OCCT face color, fallback to steel blue
+      // Face color from OCCT, fallback steel blue
       let faceColor = 0x4d9ecf;
-      if(m.color && m.color.length >= 3){
+      if(m.color?.length >= 3){
         faceColor = (Math.round(m.color[0]*255)<<16)|(Math.round(m.color[1]*255)<<8)|Math.round(m.color[2]*255);
       }
 
       const mat = new THREE.MeshPhongMaterial({
-        color: faceColor,
-        specular: 0x446688,
-        shininess: 80,
-        side: THREE.DoubleSide
+        color: faceColor, specular: 0x446688, shininess: 80, side: THREE.DoubleSide
       });
       group.add(new THREE.Mesh(geo, mat));
     } catch(e){ console.error('[OCCT] mesh', mi, 'error:', e); }
   });
 
   if(group.children.length === 0){
-    console.warn('[OCCT] No meshes built. Full result:', JSON.stringify(result).substring(0,500));
+    console.warn('[OCCT] No meshes built. result sample:', JSON.stringify(result).substring(0,600));
     hide3DLoading();
-    alert('此 ' + ext.toUpperCase() + ' 檔案解析成功但無可顯示的幾何體。\n（可能為空模型或不支援的幾何類型）');
+    alert('此 ' + ext.toUpperCase() + ' 解析成功但無可顯示幾何體。\n詳情請開啟 F12 主控台查看 [OCCT] 訊息。');
     return;
   }
 
   mesh3d = group;
   scene3d.add(mesh3d);
 
-  // Auto-fit camera to bounding box
   const box = new THREE.Box3().setFromObject(mesh3d);
   if(!box.isEmpty()){
     const center = box.getCenter(new THREE.Vector3());
@@ -1220,10 +1239,15 @@ async function loadOCCTFile(file, ext){
     rotX = -0.35; rotY = 0.5;
     console.log('[OCCT] bbox size:', size.toFixed(3), 'camDist:', camDist.toFixed(3));
   } else {
-    console.warn('[OCCT] bounding box is empty — model may not have rendered');
+    console.warn('[OCCT] bounding box empty');
   }
 
   document.getElementById('canvas3d-wrap').classList.add('active');
+  // Reset loading div styling in case it was modified
+  const loadDiv = document.getElementById('canvas3d-loading');
+  loadDiv.style.background = '';
+  const msgSpan = document.getElementById('loading-msg');
+  msgSpan.textContent = '載入中，請稍候…';
   const infoBar = document.getElementById('viewer-info-bar');
   infoBar.classList.add('show');
   document.getElementById('vib-name').textContent = file.name;
@@ -1383,15 +1407,35 @@ function load2DFile(e){ load2DFileObj(e.target.files[0]); }
 async function load2DFileObj(file){
   if(!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
-  const text = await file.text();
+
+  // 智慧編碼偵測：台灣 AutoCAD DXF 通常是 Big5(CP950)，但也有 UTF-8
+  async function readDXFText(file){
+    const buf = await file.arrayBuffer();
+    // 先嘗試 UTF-8
+    try {
+      const utfText = new TextDecoder('utf-8', {fatal: true}).decode(buf);
+      // 如果 UTF-8 成功且含中文，直接用
+      return utfText;
+    } catch(e) {
+      // UTF-8 失敗，改用 Big5 (CP950)
+    }
+    try {
+      return new TextDecoder('big5').decode(buf);
+    } catch(e2) {
+      // 最後嘗試 GBK（簡體中文）
+      try { return new TextDecoder('gbk').decode(buf); }
+      catch(e3) { return new TextDecoder('utf-8', {fatal:false}).decode(buf); }
+    }
+  }
   
   if(ext === 'dxf'){
+    const text = await readDXFText(file);
     dxfData = parseDXF(text);
     init2DCanvas(file);
   } else if(ext === 'dwg'){
     // Try to read DWG (basic binary parsing for common versions)
     const buf = await file.arrayBuffer();
-    const parsed = tryParseDWG(buf, text);
+    const parsed = tryParseDWG(buf);
     if(parsed && parsed.entities && parsed.entities.length > 0){
       dxfData = parsed;
       init2DCanvas(file);
@@ -1663,16 +1707,29 @@ function drawDXF2D(){
         ctx.stroke();
       }
     } else if(e.type==='TEXT'||e.type==='MTEXT'){
-      const txt=(d[1]&&d[1][0])||'';
-      const h=Math.max(gv(40)||12,6)*dxf2dScale;
+      let txt=(d[1]&&d[1][0])||'';
+      // Clean MTEXT control codes: \P=newline, {\f...} font switch, %%d=°, %%p=±, %%c=⌀
+      txt = txt
+        .replace(/\\P/g, ' ')                        // paragraph break → space
+        .replace(/\{\\[^}]*\}/g, '')                  // {font/format codes}
+        .replace(/\\[A-Za-z]\d*(\.\d+)?;?/g, '')     // \L \O \C3 etc.
+        .replace(/%%[dD]/g, '°')
+        .replace(/%%[pP]/g, '±')
+        .replace(/%%[cC]/g, '⌀')
+        .replace(/%%[uU]/g, '')
+        .replace(/%%[oO]/g, '')
+        .trim();
+      if(!txt) return;
+      const h = Math.max(gv(40)||12, 5) * dxf2dScale;
+      const clampH = Math.min(Math.max(h, 8), 48); // clamp: never too tiny/huge
       ctx.save();
-      ctx.fillStyle='rgba(0,72,181,0.85)';
-      ctx.font=h+'px Arial';
-      ctx.fillText(txt.substring(0,80), tx(gv(10)), ty(gv(20)));
+      ctx.fillStyle = 'rgba(0,180,255,0.9)';
+      ctx.font = clampH + 'px "Noto Sans TC", Arial, sans-serif';
+      ctx.fillText(txt.substring(0, 80), tx(gv(10)), ty(gv(20)));
       ctx.restore();
     }
-  });
-}
+  });  // end dxfData.entities.forEach
+}  // end drawDXF2D
 
 /* ═════════════════════════════════════════
    DXF → PDF CONVERTER
@@ -1779,10 +1836,17 @@ async function convertDxf2Pdf(){
         ctx.stroke();
       }
     } else if(e.type==='TEXT'||e.type==='MTEXT'){
-      const txt=(d[1]&&d[1][0])||'';
+      let txt=(d[1]&&d[1][0])||'';
+      txt = txt
+        .replace(/\\P/g, ' ')
+        .replace(/\{\\[^}]*\}/g, '')
+        .replace(/\\[A-Za-z]\d*(\.\d+)?;?/g, '')
+        .replace(/%%[dD]/g, '°').replace(/%%[pP]/g, '±').replace(/%%[cC]/g, '⌀')
+        .trim();
+      if(!txt) return;
       const h=Math.max((gv(40)||3)*scale,8);
       ctx.save();
-      ctx.fillStyle='#1a2a3a'; ctx.font=h+'px Arial';
+      ctx.fillStyle='#1a2a3a'; ctx.font=h+'px "Noto Sans TC", Arial';
       ctx.fillText(txt.substring(0,80), tx(gv(10)), ty(gv(20)));
       ctx.restore();
     }

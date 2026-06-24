@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V14.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V15.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -471,7 +471,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V14.0</div>
+    <div class="version-badge">V15.0</div>
   </div>
 </header>
 
@@ -595,7 +595,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V14.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V15.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -911,7 +911,11 @@ footer strong { color: var(--cyan); }
 /* ─────────────────────────────────────────
    Modal helpers
 ───────────────────────────────────────── */
-function openModal(id){ document.getElementById(id).classList.add('active'); }
+function openModal(id){ 
+  document.getElementById(id).classList.add('active'); 
+  // 等 modal 動畫完成後重設 renderer 尺寸
+  setTimeout(()=>{ resizeRenderer3D(); }, 50);
+}
 function closeModal(id){ document.getElementById(id).classList.remove('active'); }
 document.querySelectorAll('.modal-overlay').forEach(m=>{
   m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('active'); });
@@ -978,15 +982,19 @@ let camDist = CAMERA_DIST_DEFAULT;
 
 function init3DScene(){
   const canvas = document.getElementById('canvas3d');
+  // ── 關鍵修正：modal 開啟後 canvas 寬度才正確，用 offsetParent 取得正確寬度 ──
+  const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 760;
+  const H = 440;
+
   scene3d   = new THREE.Scene();
   scene3d.background = new THREE.Color(0xEEF2F7);
 
-  camera3d  = new THREE.PerspectiveCamera(45, canvas.clientWidth / 440, 0.01, 10000);
+  camera3d  = new THREE.PerspectiveCamera(45, W / H, 0.01, 100000);
   camera3d.position.set(0, 0, camDist);
 
   renderer3d = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer3d.setPixelRatio(window.devicePixelRatio);
-  renderer3d.setSize(canvas.clientWidth, 440);
+  renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer3d.setSize(W, H);
 
   // grid 預設大小，載入模型後會重設
   window._sceneGrid = new THREE.GridHelper(10, 20, 0xaabbcc, 0xdde4ee);
@@ -1037,6 +1045,16 @@ function init3DScene(){
   animate3D();
 }
 
+function resizeRenderer3D(){
+  if(!renderer3d || !camera3d) return;
+  const canvas = document.getElementById('canvas3d');
+  const W = canvas.offsetWidth || 760;
+  const H = 440;
+  renderer3d.setSize(W, H);
+  camera3d.aspect = W / H;
+  camera3d.updateProjectionMatrix();
+}
+
 function animate3D(){
   animFrameId = requestAnimationFrame(animate3D);
   const sph = new THREE.Spherical(camDist, Math.PI/2 + rotX, rotY);
@@ -1059,8 +1077,18 @@ async function load3DFileObj(file){
   const ext = file.name.split('.').pop().toLowerCase();
   const wrap = document.getElementById('canvas3d-wrap');
 
-  if(!renderer3d) init3DScene();
+  // ── 先顯示 wrap，讓 canvas 有正確的 clientWidth ──
   wrap.classList.add('active');
+
+  if(!renderer3d){
+    // 等一個 microtask，讓 DOM layout 完成
+    await new Promise(r=>requestAnimationFrame(r));
+    init3DScene();
+  } else {
+    // 重設 renderer 尺寸（以防 modal 上次關閉時尺寸跑掉）
+    resizeRenderer3D();
+  }
+
   show3DLoading('初始化場景…');
 
   if(['stp','step','igs','iges'].includes(ext)){
@@ -1090,70 +1118,86 @@ async function getOCCT(){
   occtLoading = true;
   show3DLoading('載入 Open CASCADE 引擎中…');
 
-  // 版本清單：由新到舊逐一嘗試
-  const versions = ['0.0.23', '0.0.21', '0.0.18', '0.0.11'];
-  const cdns = ['https://unpkg.com', 'https://cdn.jsdelivr.net/npm'];
+  // 版本清單：由新到舊逐一嘗試（優先使用穩定的新版本）
+  const candidates = [
+    // 格式: [version, cdn, jsFile, wasmFile]
+    ['0.0.30', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.30', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.28', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.28', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.25', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.25', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.23', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.23', 'https://unpkg.com',            'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.21', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
+    ['0.0.18', 'https://cdn.jsdelivr.net/npm', 'occt-import-js.js', 'occt-import-js.wasm'],
+  ];
 
-  for(const ver of versions){
-    for(const cdn of cdns){
-      const base = `${cdn}/occt-import-js@${ver}/dist/`;
-      const jsUrl   = base + 'occt-import-js.js';
-      const wasmUrl = base + 'occt-import-js.wasm';
-      try {
-        show3DLoading(`嘗試載入 v${ver} (${cdn.includes('unpkg')?'unpkg':'jsdelivr'})…`);
+  for(const [ver, cdn, jsFile, wasmFile] of candidates){
+    const base    = `${cdn}/occt-import-js@${ver}/dist/`;
+    const jsUrl   = base + jsFile;
+    const wasmUrl = base + wasmFile;
+    try {
+      show3DLoading(`嘗試載入 v${ver} (${cdn.includes('unpkg')?'unpkg':'jsdelivr'})…`);
 
-        // ── Step 1: 用 fetch 取得 JS 原始碼，注入 blob URL 避免 locateFile 問題 ──
-        const jsRes = await fetch(jsUrl);
-        if(!jsRes.ok) throw new Error(`JS fetch failed: ${jsRes.status}`);
-        let jsSrc = await jsRes.text();
+      // ── Step 1: 先下載 WASM binary（用 fetch 確保拿到 ArrayBuffer）
+      show3DLoading(`下載 WASM v${ver}…`);
+      const wasmRes = await fetch(wasmUrl, {cache:'force-cache'});
+      if(!wasmRes.ok) throw new Error(`WASM 404: ${wasmRes.status}`);
+      const wasmBuf = await wasmRes.arrayBuffer();
+      if(wasmBuf.byteLength < 100000) throw new Error(`WASM 太小 (${wasmBuf.byteLength}), 可能是 404 頁面`);
 
-        // ── Step 2: 預先 fetch WASM 為 ArrayBuffer，轉成 blob URL ──
-        // 關鍵：自訂 Content-Type 為 application/wasm，繞過 CDN MIME 問題
-        show3DLoading(`下載 WASM 二進位 v${ver}…`);
-        const wasmRes = await fetch(wasmUrl);
-        if(!wasmRes.ok) throw new Error(`WASM fetch failed: ${wasmRes.status}`);
-        const wasmBuf = await wasmRes.arrayBuffer();
-        const wasmBlob = new Blob([wasmBuf], {type: 'application/wasm'});
-        const wasmBlobUrl = URL.createObjectURL(wasmBlob);
+      // 建 blob URL 讓 Emscripten locateFile 可以找到
+      const wasmBlob    = new Blob([wasmBuf], {type:'application/wasm'});
+      const wasmBlobUrl = URL.createObjectURL(wasmBlob);
 
-        // ── Step 3: 把 JS 裡的 .wasm 路徑替換成 blob URL ──
-        // Emscripten 在 JS 裡有一個 locateFile 或直接硬編碼的 wasm 檔名
-        jsSrc = jsSrc.replace(/["']occt-import-js\.wasm["']/g, `"${wasmBlobUrl}"`);
+      // ── Step 2: 下載並修補 JS，確保 locateFile 指向我們的 blob
+      show3DLoading(`下載 JS v${ver}…`);
+      const jsRes = await fetch(jsUrl, {cache:'force-cache'});
+      if(!jsRes.ok) throw new Error(`JS 404: ${jsRes.status}`);
+      let jsSrc = await jsRes.text();
 
-        // ── Step 4: 用 blob 執行 JS，確保 occtimportjs 全域函數可用 ──
-        const jsBlob = new Blob([jsSrc], {type: 'application/javascript'});
-        const jsBlobUrl = URL.createObjectURL(jsBlob);
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = jsBlobUrl;
-          s.onload = resolve;
-          s.onerror = reject;
-          document.head.appendChild(s);
-        });
-        URL.revokeObjectURL(jsBlobUrl);
+      // 修補所有可能的 wasm 路徑引用（Emscripten 各版本寫法不同）
+      jsSrc = jsSrc
+        .replace(/locateFile\s*\([^)]*\)\s*\{[^}]*\}/g, `locateFile(){return "${wasmBlobUrl}";}`)
+        .replace(/["'`]occt-import-js\.wasm["'`]/g, `"${wasmBlobUrl}"`);
 
-        // ── Step 5: 初始化，直接傳入 wasmBinary 跳過再次 fetch ──
-        show3DLoading(`初始化 OCCT 引擎 v${ver}…`);
-        const inst = await occtimportjs({
-          locateFile: () => wasmBlobUrl,
-          wasmBinary: wasmBuf   // 直接給 ArrayBuffer，100% 繞過 MIME 問題
-        });
+      // ── Step 3: 動態載入修補後的 JS
+      const jsBlob    = new Blob([jsSrc], {type:'application/javascript'});
+      const jsBlobUrl = URL.createObjectURL(jsBlob);
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = jsBlobUrl;
+        s.onload  = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      URL.revokeObjectURL(jsBlobUrl);
 
-        if(!inst || typeof inst.ReadStepFile !== 'function'){
-          URL.revokeObjectURL(wasmBlobUrl);
-          throw new Error(`ReadStepFile 未綁定，可用方法: ${Object.keys(inst||{}).slice(0,5).join(',')}`);
-        }
+      // ── Step 4: 取得全域初始化函數（不同版本名稱不同）
+      const initFn = window.occtimportjs || window.occtImportJs || window.OcctImportJs;
+      if(typeof initFn !== 'function') throw new Error('找不到 occtimportjs 全域函數');
 
-        console.log(`[OCCT] v${ver} 載入成功！可用方法數: ${Object.keys(inst).length}`);
-        occtInstance = inst;
-        occtLoading = false;
-        occtLoadCallbacks.forEach(cb => cb(occtInstance));
-        occtLoadCallbacks = [];
-        return occtInstance;
+      show3DLoading(`初始化 OCCT 引擎 v${ver}…`);
+      const inst = await initFn({
+        locateFile : ()  => wasmBlobUrl,
+        wasmBinary : wasmBuf,        // 直接傳入 ArrayBuffer，跳過再次 fetch
+      });
 
-      } catch(err){
-        console.warn(`[OCCT] v${ver} @ ${cdn} 失敗:`, err.message || err);
-      }
+      // 驗證 API 可用
+      const hasStep = typeof inst?.ReadStepFile === 'function';
+      const hasIges = typeof inst?.ReadIgesFile === 'function';
+      if(!hasStep && !hasIges) throw new Error(`API 未就緒: ${Object.keys(inst||{}).slice(0,8).join(',')}`);
+
+      console.log(`[OCCT] ✅ v${ver} 成功！ReadStepFile=${hasStep} ReadIgesFile=${hasIges}`);
+      occtInstance = inst;
+      occtLoading  = false;
+      occtLoadCallbacks.forEach(cb => cb(occtInstance));
+      occtLoadCallbacks = [];
+      return occtInstance;
+
+    } catch(err){
+      console.warn(`[OCCT] v${ver} @ ${cdn.includes('unpkg')?'unpkg':'jsdelivr'} ❌`, err.message || err);
     }
   }
 
@@ -1161,7 +1205,7 @@ async function getOCCT(){
   occtLoading = false;
   occtLoadCallbacks.forEach(cb => cb(null));
   occtLoadCallbacks = [];
-  console.error('[OCCT] 所有版本/CDN 均失敗');
+  console.error('[OCCT] ❌ 所有版本均失敗，請檢查網路連線');
   return null;
 }
 
@@ -1330,10 +1374,15 @@ async function loadOCCTFile(file, ext){
   mesh3d = group;
   scene3d.add(mesh3d);
 
-  // ── 相機設定：對準原點 ──
+  // ── 相機設定：對準原點，far plane 跟著模型大小調整 ──
   camTarget.set(0, 0, 0);
-  camDist = Math.max(modelSize * 1.8, 0.1);
+  camDist = Math.max(modelSize * 2.0, 1.0);
   rotX = -0.35; rotY = 0.5;
+
+  // 動態更新相機的 near/far，避免大型模型被裁切
+  camera3d.near = camDist * 0.001;
+  camera3d.far  = camDist * 200;
+  camera3d.updateProjectionMatrix();
 
   // 更新 Grid
   if(window._sceneGrid){ scene3d.remove(window._sceneGrid); }
@@ -1471,6 +1520,11 @@ function finalize3DGeo(geo, file, fmtLabel){
   mesh3d.position.sub(center);
   const size=box.getSize(new THREE.Vector3()).length();
   camTarget.set(0,0,0); camDist=size*1.5; rotX=-0.4; rotY=0.6;
+
+  // 動態更新相機 near/far
+  camera3d.near = camDist * 0.001;
+  camera3d.far  = camDist * 200;
+  camera3d.updateProjectionMatrix();
 
   const infoBar=document.getElementById('viewer-info-bar');
   infoBar.classList.add('show');

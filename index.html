@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V12.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V13.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -472,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V12.0</div>
+    <div class="version-badge">V13.0</div>
   </div>
 </header>
 
@@ -596,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V12.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V13.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1199,8 +1199,6 @@ async function loadOCCTFile(file, ext){
     meshList[0] ? 'mesh[0] keys:' + Object.keys(meshList[0]) : 'no meshes');
 
   // ── 從 WASM heap 安全複製資料到 JS heap ──
-  // v0.0.9 結構: m.attributes.position (BufferAttribute: {array, itemSize})
-  //              m.index (BufferAttribute: {array, itemSize})
   function extractF32(attr) {
     if (!attr) return null;
     const arr = (attr.array !== undefined) ? attr.array : attr;
@@ -1214,90 +1212,116 @@ async function loadOCCTFile(file, ext){
     return new Uint32Array(arr);
   }
 
+  // ── Step 1: 先收集所有 mesh，計算全域 BoundingBox ──
+  const meshDataList = [];
+  let globalMin = new THREE.Vector3(Infinity,Infinity,Infinity);
+  let globalMax = new THREE.Vector3(-Infinity,-Infinity,-Infinity);
+
   meshList.forEach((m, mi) => {
-    try {
-      const posAttr = m.attributes?.position ?? null;
-      const posArr  = extractF32(posAttr);
-
-      if (!posArr || posArr.length < 9) {
-        console.warn('[OCCT] mesh', mi, '跳過 – 無 position 資料',
-          'keys:', Object.keys(m),
-          m.attributes ? 'attrs:' + Object.keys(m.attributes) : '');
-        return;
+    const posAttr = m.attributes?.position ?? null;
+    const posArr  = extractF32(posAttr);
+    if (!posArr || posArr.length < 9) {
+      console.warn('[OCCT] mesh', mi, '跳過 – 無 position 資料');
+      return;
+    }
+    // 掃描這個 mesh 的 min/max
+    for(let i=0; i<posArr.length; i+=3){
+      const x=posArr[i], y=posArr[i+1], z=posArr[i+2];
+      if(isFinite(x)&&isFinite(y)&&isFinite(z)){
+        if(x<globalMin.x) globalMin.x=x; if(x>globalMax.x) globalMax.x=x;
+        if(y<globalMin.y) globalMin.y=y; if(y>globalMax.y) globalMax.y=y;
+        if(z<globalMin.z) globalMin.z=z; if(z>globalMax.z) globalMax.z=z;
       }
+    }
+    meshDataList.push({
+      posArr,
+      norArr: extractF32(m.attributes?.normal ?? null),
+      idxArr: extractU32(m.index ?? null),
+      color:  m.color
+    });
+  });
 
-      const norAttr = m.attributes?.normal ?? null;
-      const norArr  = extractF32(norAttr);
+  if(meshDataList.length === 0){
+    hide3DLoading();
+    alert('此 ' + ext.toUpperCase() + ' 解析成功但無可顯示幾何體。');
+    return;
+  }
 
-      const idxAttr = m.index ?? null;
-      const idxArr  = extractU32(idxAttr);
+  // ── Step 2: 計算置中偏移量 ──
+  const cx = (globalMin.x + globalMax.x) / 2;
+  const cy = (globalMin.y + globalMax.y) / 2;
+  const cz = (globalMin.z + globalMax.z) / 2;
+  const modelSize = Math.sqrt(
+    Math.pow(globalMax.x-globalMin.x,2) +
+    Math.pow(globalMax.y-globalMin.y,2) +
+    Math.pow(globalMax.z-globalMin.z,2)
+  );
+  console.log('[OCCT] center:', cx.toFixed(2), cy.toFixed(2), cz.toFixed(2),
+              'size:', modelSize.toFixed(2));
 
-      console.log(`[OCCT] mesh${mi}: pos=${posArr.length} nor=${norArr?.length||0} idx=${idxArr?.length||0}`);
+  // ── Step 3: 建立 mesh，頂點直接減去中心 ──
+  meshDataList.forEach((md, mi) => {
+    try {
+      // 頂點座標直接置中（幾何層級，最可靠）
+      const pos = new Float32Array(md.posArr.length);
+      for(let i=0; i<md.posArr.length; i+=3){
+        pos[i]   = md.posArr[i]   - cx;
+        pos[i+1] = md.posArr[i+1] - cy;
+        pos[i+2] = md.posArr[i+2] - cz;
+      }
 
       const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
 
-      if (norArr && norArr.length === posArr.length) {
-        geo.setAttribute('normal', new THREE.BufferAttribute(norArr, 3));
+      if (md.norArr && md.norArr.length === md.posArr.length) {
+        geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(md.norArr), 3));
       }
 
-      if (idxArr && idxArr.length > 0) {
-        geo.setIndex(new THREE.BufferAttribute(idxArr, 1));
-        totalTris += idxArr.length / 3;
+      if (md.idxArr && md.idxArr.length > 0) {
+        geo.setIndex(new THREE.BufferAttribute(new Uint32Array(md.idxArr), 1));
+        totalTris += md.idxArr.length / 3;
       } else {
-        totalTris += posArr.length / 9;
+        totalTris += pos.length / 9;
       }
 
-      if (!norArr || norArr.length !== posArr.length) {
-        geo.computeVertexNormals();
-      }
+      geo.computeVertexNormals(); // 重新計算確保法向量正確
 
-      let color = new THREE.Color(0x4d9ecf);
-      if (m.color && m.color.length >= 3) {
-        color.setRGB(m.color[0], m.color[1], m.color[2]);
+      let color = new THREE.Color(0xC0C8D0); // 類似 3dpea 的淺灰色
+      if (md.color && md.color.length >= 3) {
+        color.setRGB(md.color[0], md.color[1], md.color[2]);
       }
       const mat = new THREE.MeshStandardMaterial({
-        color, roughness: 0.4, metalness: 0.2,
+        color, roughness: 0.55, metalness: 0.15,
         side: THREE.DoubleSide
       });
       group.add(new THREE.Mesh(geo, mat));
-
-    } catch (e) {
+      console.log(`[OCCT] mesh${mi} built: ${pos.length/3} verts`);
+    } catch(e) {
       console.error('[OCCT] mesh', mi, 'build error:', e);
     }
   });
 
   if(group.children.length === 0){
-    console.warn('[OCCT] No meshes built. result sample:', JSON.stringify(result).substring(0,600));
     hide3DLoading();
-    alert('此 ' + ext.toUpperCase() + ' 解析成功但無可顯示幾何體。\n詳情請開啟 F12 主控台查看 [OCCT] 訊息。');
+    alert('此 ' + ext.toUpperCase() + ' 建構幾何體失敗，請開 F12 查看錯誤。');
     return;
   }
 
+  // group position 保持 (0,0,0)，所有置中已在頂點層完成
   mesh3d = group;
   scene3d.add(mesh3d);
 
-  // ── 將模型置中到原點，相機對準 (0,0,0) ──
-  const box = new THREE.Box3().setFromObject(mesh3d);
-  if(!box.isEmpty()){
-    const center = box.getCenter(new THREE.Vector3());
-    const size   = box.getSize(new THREE.Vector3()).length();
-    // 把整個 group 平移到原點
-    mesh3d.position.sub(center);
-    // 相機 target 固定在原點
-    camTarget.set(0, 0, 0);
-    camDist = Math.max(size * 1.8, 0.1);
-    rotX = -0.35; rotY = 0.5;
-    // 重設 grid 大小配合模型
-    if(window._sceneGrid){ scene3d.remove(window._sceneGrid); }
-    const gSize = Math.ceil(size * 1.2);
-    window._sceneGrid = new THREE.GridHelper(gSize, 20, 0xaabbcc, 0xdde4ee);
-    window._sceneGrid.position.y = box.min.y - center.y; // 貼在模型底部
-    scene3d.add(window._sceneGrid);
-    console.log('[OCCT] bbox size:', size.toFixed(3), 'camDist:', camDist.toFixed(3), 'center:', center);
-  } else {
-    console.warn('[OCCT] bounding box empty');
-  }
+  // ── 相機設定：對準原點 ──
+  camTarget.set(0, 0, 0);
+  camDist = Math.max(modelSize * 1.8, 0.1);
+  rotX = -0.35; rotY = 0.5;
+
+  // 更新 Grid
+  if(window._sceneGrid){ scene3d.remove(window._sceneGrid); }
+  const gSize = Math.ceil(modelSize * 1.2);
+  window._sceneGrid = new THREE.GridHelper(gSize, 20, 0xaabbcc, 0xdde4ee);
+  window._sceneGrid.position.y = globalMin.y - cy; // grid 貼在模型底部
+  scene3d.add(window._sceneGrid);
 
   document.getElementById('canvas3d-wrap').classList.add('active');
   // Reset loading div styling in case it was modified

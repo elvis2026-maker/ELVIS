@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V13.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V14.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES -->
-<!-- v0.0.11: ReadStepFile / ReadIgesFile 綁定最完整的穩定版 -->
-<script src="https://unpkg.com/occt-import-js@0.0.11/dist/occt-import-js.js"></script>
+<!-- occt-import-js: 不用靜態 script tag，改用動態 fetch + ArrayBuffer 載入 -->
+<!-- 這樣可以繞過 CDN MIME type 不正確導致 WASM 只有基礎 runtime 的問題 -->
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
@@ -472,7 +471,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V13.0</div>
+    <div class="version-badge">V14.0</div>
   </div>
 </header>
 
@@ -596,7 +595,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V13.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V14.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1089,60 +1088,80 @@ async function getOCCT(){
     return new Promise((res)=>{ occtLoadCallbacks.push(res); });
   }
   occtLoading = true;
-  show3DLoading('載入 Open CASCADE 引擎（首次約需 10–30 秒）…');
+  show3DLoading('載入 Open CASCADE 引擎中…');
 
-  // v0.0.9 WASM 檔案路徑（unpkg）
-  const wasmBase = 'https://unpkg.com/occt-import-js@0.0.11/dist/';
+  // 版本清單：由新到舊逐一嘗試
+  const versions = ['0.0.23', '0.0.21', '0.0.18', '0.0.11'];
+  const cdns = ['https://unpkg.com', 'https://cdn.jsdelivr.net/npm'];
 
-  // 嘗試載入：優先 unpkg，備用 jsdelivr
-  const tryLoad = async (base) => {
-    if(typeof occtimportjs === 'undefined'){
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = base + 'occt-import-js.js';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-    }
-    const inst = await occtimportjs({
-      locateFile: (path) => base + path,
-      mainScriptUrlOrBlob: base + 'occt-import-js.js'
-    });
-    // 驗證關鍵方法是否存在
-    if (!inst || typeof inst.ReadStepFile !== 'function') {
-      throw new Error('ReadStepFile 未綁定，WASM 初始化不完整');
-    }
-    return inst;
-  };
+  for(const ver of versions){
+    for(const cdn of cdns){
+      const base = `${cdn}/occt-import-js@${ver}/dist/`;
+      const jsUrl   = base + 'occt-import-js.js';
+      const wasmUrl = base + 'occt-import-js.wasm';
+      try {
+        show3DLoading(`嘗試載入 v${ver} (${cdn.includes('unpkg')?'unpkg':'jsdelivr'})…`);
 
-  const cdnList = [
-    'https://unpkg.com/occt-import-js@0.0.11/dist/',
-    'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.11/dist/'
-  ];
+        // ── Step 1: 用 fetch 取得 JS 原始碼，注入 blob URL 避免 locateFile 問題 ──
+        const jsRes = await fetch(jsUrl);
+        if(!jsRes.ok) throw new Error(`JS fetch failed: ${jsRes.status}`);
+        let jsSrc = await jsRes.text();
 
-  for(const base of cdnList){
-    try {
-      show3DLoading('載入 Open CASCADE 引擎…（來源：' + base.split('/')[2] + '）');
-      occtInstance = await tryLoad(base);
-      if(occtInstance){
+        // ── Step 2: 預先 fetch WASM 為 ArrayBuffer，轉成 blob URL ──
+        // 關鍵：自訂 Content-Type 為 application/wasm，繞過 CDN MIME 問題
+        show3DLoading(`下載 WASM 二進位 v${ver}…`);
+        const wasmRes = await fetch(wasmUrl);
+        if(!wasmRes.ok) throw new Error(`WASM fetch failed: ${wasmRes.status}`);
+        const wasmBuf = await wasmRes.arrayBuffer();
+        const wasmBlob = new Blob([wasmBuf], {type: 'application/wasm'});
+        const wasmBlobUrl = URL.createObjectURL(wasmBlob);
+
+        // ── Step 3: 把 JS 裡的 .wasm 路徑替換成 blob URL ──
+        // Emscripten 在 JS 裡有一個 locateFile 或直接硬編碼的 wasm 檔名
+        jsSrc = jsSrc.replace(/["']occt-import-js\.wasm["']/g, `"${wasmBlobUrl}"`);
+
+        // ── Step 4: 用 blob 執行 JS，確保 occtimportjs 全域函數可用 ──
+        const jsBlob = new Blob([jsSrc], {type: 'application/javascript'});
+        const jsBlobUrl = URL.createObjectURL(jsBlob);
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = jsBlobUrl;
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        URL.revokeObjectURL(jsBlobUrl);
+
+        // ── Step 5: 初始化，直接傳入 wasmBinary 跳過再次 fetch ──
+        show3DLoading(`初始化 OCCT 引擎 v${ver}…`);
+        const inst = await occtimportjs({
+          locateFile: () => wasmBlobUrl,
+          wasmBinary: wasmBuf   // 直接給 ArrayBuffer，100% 繞過 MIME 問題
+        });
+
+        if(!inst || typeof inst.ReadStepFile !== 'function'){
+          URL.revokeObjectURL(wasmBlobUrl);
+          throw new Error(`ReadStepFile 未綁定，可用方法: ${Object.keys(inst||{}).slice(0,5).join(',')}`);
+        }
+
+        console.log(`[OCCT] v${ver} 載入成功！可用方法數: ${Object.keys(inst).length}`);
+        occtInstance = inst;
         occtLoading = false;
-        console.log('[OCCT] 引擎載入成功 from', base,
-          '可用方法:', Object.keys(occtInstance).filter(k=>typeof occtInstance[k]==='function').slice(0,8));
         occtLoadCallbacks.forEach(cb => cb(occtInstance));
         occtLoadCallbacks = [];
         return occtInstance;
+
+      } catch(err){
+        console.warn(`[OCCT] v${ver} @ ${cdn} 失敗:`, err.message || err);
       }
-    } catch(err){
-      console.warn('[OCCT] 從', base, '載入失敗:', err.message || err);
     }
   }
 
-  // 所有來源都失敗
+  // 全部失敗
   occtLoading = false;
   occtLoadCallbacks.forEach(cb => cb(null));
   occtLoadCallbacks = [];
-  console.error('[OCCT] 所有 CDN 來源均載入失敗');
+  console.error('[OCCT] 所有版本/CDN 均失敗');
   return null;
 }
 
@@ -1166,11 +1185,11 @@ async function loadOCCTFile(file, ext){
 
   let result;
   try {
-    // v0.0.9 API: ReadStepFile / ReadIgesFile 只接受 1 個參數（Uint8Array）
+    // 官方 API: ReadStepFile(Uint8Array, params|null)
     if(['stp','step'].includes(ext)){
-      result = occt.ReadStepFile(uint8);
+      result = occt.ReadStepFile(uint8, null);
     } else {
-      result = occt.ReadIgesFile(uint8);
+      result = occt.ReadIgesFile(uint8, null);
     }
     console.log('[OCCT] parse result keys:', Object.keys(result),
       'success:', result?.success, 'meshes:', result?.meshes?.length);

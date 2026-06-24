@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V11.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V12.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES -->
-<!-- 使用 unpkg 載入 v0.0.9 (最廣泛測試的穩定版) -->
-<script src="https://unpkg.com/occt-import-js@0.0.9/dist/occt-import-js.js"></script>
+<!-- v0.0.11: ReadStepFile / ReadIgesFile 綁定最完整的穩定版 -->
+<script src="https://unpkg.com/occt-import-js@0.0.11/dist/occt-import-js.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
@@ -472,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V11.0</div>
+    <div class="version-badge">V12.0</div>
   </div>
 </header>
 
@@ -596,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V11.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V12.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1092,11 +1092,10 @@ async function getOCCT(){
   show3DLoading('載入 Open CASCADE 引擎（首次約需 10–30 秒）…');
 
   // v0.0.9 WASM 檔案路徑（unpkg）
-  const wasmBase = 'https://unpkg.com/occt-import-js@0.0.9/dist/';
+  const wasmBase = 'https://unpkg.com/occt-import-js@0.0.11/dist/';
 
   // 嘗試載入：優先 unpkg，備用 jsdelivr
   const tryLoad = async (base) => {
-    // 動態載入 JS（若尚未載入）
     if(typeof occtimportjs === 'undefined'){
       await new Promise((resolve, reject) => {
         const s = document.createElement('script');
@@ -1106,16 +1105,20 @@ async function getOCCT(){
         document.head.appendChild(s);
       });
     }
-    return await occtimportjs({
+    const inst = await occtimportjs({
       locateFile: (path) => base + path,
-      // 防止 Emscripten 自動偵測路徑失敗
       mainScriptUrlOrBlob: base + 'occt-import-js.js'
     });
+    // 驗證關鍵方法是否存在
+    if (!inst || typeof inst.ReadStepFile !== 'function') {
+      throw new Error('ReadStepFile 未綁定，WASM 初始化不完整');
+    }
+    return inst;
   };
 
   const cdnList = [
-    'https://unpkg.com/occt-import-js@0.0.9/dist/',
-    'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.9/dist/'
+    'https://unpkg.com/occt-import-js@0.0.11/dist/',
+    'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.11/dist/'
   ];
 
   for(const base of cdnList){

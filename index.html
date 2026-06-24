@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V7.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V8.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES (v0.0.36 穩定版) -->
-<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.36/dist/occt-import-js.min.js"></script>
+<!-- occt-import-js: Open CASCADE WebAssembly for STEP/IGES -->
+<!-- 使用 unpkg 載入 v0.0.9 (最廣泛測試的穩定版) -->
+<script src="https://unpkg.com/occt-import-js@0.0.9/dist/occt-import-js.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
@@ -471,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V7.0</div>
+    <div class="version-badge">V8.0</div>
   </div>
 </header>
 
@@ -595,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V7.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V8.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1083,38 +1084,69 @@ let occtLoadCallbacks = [];
 
 async function getOCCT(){
   if(occtInstance) return occtInstance;
-  // 如果正在載入，等待
   if(occtLoading){
     return new Promise((res)=>{ occtLoadCallbacks.push(res); });
   }
   occtLoading = true;
-  show3DLoading('載入 Open CASCADE 引擎（首次約需 10–20 秒）…');
-  try {
-    // 提供 locateFile 讓 WASM 從正確的 CDN 路徑載入
-    const wasmBase = 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.36/dist/';
-    occtInstance = await occtimportjs({
-      locateFile: (path) => wasmBase + path
+  show3DLoading('載入 Open CASCADE 引擎（首次約需 10–30 秒）…');
+
+  // v0.0.9 WASM 檔案路徑（unpkg）
+  const wasmBase = 'https://unpkg.com/occt-import-js@0.0.9/dist/';
+
+  // 嘗試載入：優先 unpkg，備用 jsdelivr
+  const tryLoad = async (base) => {
+    // 動態載入 JS（若尚未載入）
+    if(typeof occtimportjs === 'undefined'){
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = base + 'occt-import-js.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    return await occtimportjs({
+      locateFile: (path) => base + path,
+      // 防止 Emscripten 自動偵測路徑失敗
+      mainScriptUrlOrBlob: base + 'occt-import-js.js'
     });
-    occtLoading = false;
-    console.log('[OCCT] 引擎載入成功, 可用方法:', Object.getOwnPropertyNames(occtInstance).filter(k=>typeof occtInstance[k]==='function'));
-    occtLoadCallbacks.forEach(cb => cb(occtInstance));
-    occtLoadCallbacks = [];
-    return occtInstance;
-  } catch(err){
-    occtLoading = false;
-    occtLoadCallbacks.forEach(cb => cb(null));
-    occtLoadCallbacks = [];
-    console.error('occt-import-js 載入失敗:', err);
-    return null;
+  };
+
+  const cdnList = [
+    'https://unpkg.com/occt-import-js@0.0.9/dist/',
+    'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.9/dist/'
+  ];
+
+  for(const base of cdnList){
+    try {
+      show3DLoading('載入 Open CASCADE 引擎…（來源：' + base.split('/')[2] + '）');
+      occtInstance = await tryLoad(base);
+      if(occtInstance){
+        occtLoading = false;
+        console.log('[OCCT] 引擎載入成功 from', base,
+          '可用方法:', Object.keys(occtInstance).filter(k=>typeof occtInstance[k]==='function').slice(0,8));
+        occtLoadCallbacks.forEach(cb => cb(occtInstance));
+        occtLoadCallbacks = [];
+        return occtInstance;
+      }
+    } catch(err){
+      console.warn('[OCCT] 從', base, '載入失敗:', err.message || err);
+    }
   }
+
+  // 所有來源都失敗
+  occtLoading = false;
+  occtLoadCallbacks.forEach(cb => cb(null));
+  occtLoadCallbacks = [];
+  console.error('[OCCT] 所有 CDN 來源均載入失敗');
+  return null;
 }
 
 async function loadOCCTFile(file, ext){
-  show3DLoading('載入 Open CASCADE 引擎（首次約需 10–20 秒）…');
+  show3DLoading('載入 Open CASCADE 引擎（首次約需 10–30 秒）…');
   const occt = await getOCCT();
   if(!occt){ 
     hide3DLoading();
-    // 顯示友善的失敗訊息在 loading 層
     const loadDiv = document.getElementById('canvas3d-loading');
     const msgSpan = document.getElementById('loading-msg');
     document.getElementById('canvas3d-wrap').classList.add('active');
@@ -1130,11 +1162,14 @@ async function loadOCCTFile(file, ext){
 
   let result;
   try {
+    // v0.0.9 API: ReadStepFile / ReadIgesFile 只接受 Uint8Array
     if(['stp','step'].includes(ext)){
       result = occt.ReadStepFile(uint8, null);
     } else {
       result = occt.ReadIgesFile(uint8, null);
     }
+    console.log('[OCCT] parse result keys:', Object.keys(result),
+      'success:', result?.success, 'meshes:', result?.meshes?.length);
   } catch(err){
     hide3DLoading();
     alert('解析失敗：' + (err.message || err));
@@ -1143,7 +1178,7 @@ async function loadOCCTFile(file, ext){
 
   if(!result || !result.success){
     hide3DLoading();
-    alert('無法解析此 ' + ext.toUpperCase() + ' 檔案（解析引擎回傳失敗）。');
+    alert('無法解析此 ' + ext.toUpperCase() + ' 檔案（解析引擎回傳失敗）。\n請開啟 F12 主控台查看詳情。');
     return;
   }
 
@@ -1156,21 +1191,14 @@ async function loadOCCTFile(file, ext){
   let totalTris = 0;
 
   const meshList = result.meshes || [];
-  console.log('[OCCT] success:', result.success, 'meshes:', meshList.length, 
-              'resultKeys:', Object.keys(result),
-              meshList[0] ? 'mesh0Keys:'+Object.keys(meshList[0]) : 'no meshes');
+  console.log('[OCCT] meshes count:', meshList.length,
+    meshList[0] ? 'mesh[0] keys:' + Object.keys(meshList[0]) : 'no meshes');
 
   // ── SAFE COPY from Emscripten/WASM heap to independent JS heap ──
-  // CRITICAL: Emscripten typed arrays are VIEWS into WASM memory.
-  // After the OCCT call, WASM may reuse that memory.
-  // We MUST copy immediately using Float32Array.from() / Uint32Array.from()
-  // which always allocate a new independent JS array.
   function safeCopyF32(src) {
     if (!src) return null;
-    // Unwrap BufferAttribute-style wrapper {array, itemSize}
     const raw = (src && src.array !== undefined) ? src.array : src;
     if (!raw || raw.length === 0) return null;
-    // Float32Array.from() guarantees a NEW copy on the JS heap
     return Float32Array.from(raw);
   }
   function safeCopyU32(src) {
@@ -1182,28 +1210,24 @@ async function loadOCCTFile(file, ext){
 
   meshList.forEach((m, mi) => {
     try {
-      // ── Extract & copy position (MUST happen before any async gap) ──
+      // v0.0.9 結構: m.attributes.position.array, m.index.array
       const posRaw = m.attributes?.position ?? m.position ?? m.vertices ?? null;
       const posArr = safeCopyF32(posRaw);
 
       if (!posArr || posArr.length < 9) {
-        console.warn('[OCCT] mesh', mi, 'skipped – no position data.',
-          'keys:', Object.keys(m),
-          m.attributes ? 'attrKeys:' + Object.keys(m.attributes) : '');
+        console.warn('[OCCT] mesh', mi, 'skipped – no position data. keys:', Object.keys(m),
+          m.attributes ? 'attrs:' + Object.keys(m.attributes) : 'no attrs');
         return;
       }
 
-      // ── Extract & copy normals ──
       const norRaw = m.attributes?.normal ?? m.normal ?? m.normals ?? null;
       const norArr = safeCopyF32(norRaw);
 
-      // ── Extract & copy index ──
       const idxRaw = m.index ?? m.indices ?? null;
       const idxArr = safeCopyU32(idxRaw);
 
       console.log(`[OCCT] mesh${mi}: pos=${posArr.length} nor=${norArr?.length||0} idx=${idxArr?.length||0}`);
 
-      // ── Build BufferGeometry ──
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
@@ -1218,13 +1242,11 @@ async function loadOCCTFile(file, ext){
         totalTris += posArr.length / 9;
       }
 
-      // Always compute normals if missing or mismatched – needed for lighting
       if (!norArr || norArr.length !== posArr.length) {
         geo.computeVertexNormals();
       }
 
-      // ── Material: MeshStandardMaterial is more robust than Phong ──
-      let color = new THREE.Color(0x4d9ecf); // default steel blue
+      let color = new THREE.Color(0x4d9ecf);
       if (m.color && m.color.length >= 3) {
         color.setRGB(m.color[0], m.color[1], m.color[2]);
       }

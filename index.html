@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V9.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V10.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -472,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V9.0</div>
+    <div class="version-badge">V10.0</div>
   </div>
 </header>
 
@@ -596,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V9.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V10.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1194,37 +1194,39 @@ async function loadOCCTFile(file, ext){
   console.log('[OCCT] meshes count:', meshList.length,
     meshList[0] ? 'mesh[0] keys:' + Object.keys(meshList[0]) : 'no meshes');
 
-  // ── SAFE COPY from Emscripten/WASM heap to independent JS heap ──
-  function safeCopyF32(src) {
-    if (!src) return null;
-    const raw = (src && src.array !== undefined) ? src.array : src;
-    if (!raw || raw.length === 0) return null;
-    return Float32Array.from(raw);
+  // ── 從 WASM heap 安全複製資料到 JS heap ──
+  // v0.0.9 結構: m.attributes.position (BufferAttribute: {array, itemSize})
+  //              m.index (BufferAttribute: {array, itemSize})
+  function extractF32(attr) {
+    if (!attr) return null;
+    const arr = (attr.array !== undefined) ? attr.array : attr;
+    if (!arr || arr.length === 0) return null;
+    return new Float32Array(arr);
   }
-  function safeCopyU32(src) {
-    if (!src) return null;
-    const raw = (src && src.array !== undefined) ? src.array : src;
-    if (!raw || raw.length === 0) return null;
-    return Uint32Array.from(raw);
+  function extractU32(attr) {
+    if (!attr) return null;
+    const arr = (attr.array !== undefined) ? attr.array : attr;
+    if (!arr || arr.length === 0) return null;
+    return new Uint32Array(arr);
   }
 
   meshList.forEach((m, mi) => {
     try {
-      // v0.0.9 結構: m.attributes.position.array, m.index.array
-      const posRaw = m.attributes?.position ?? m.position ?? m.vertices ?? null;
-      const posArr = safeCopyF32(posRaw);
+      const posAttr = m.attributes?.position ?? null;
+      const posArr  = extractF32(posAttr);
 
       if (!posArr || posArr.length < 9) {
-        console.warn('[OCCT] mesh', mi, 'skipped – no position data. keys:', Object.keys(m),
-          m.attributes ? 'attrs:' + Object.keys(m.attributes) : 'no attrs');
+        console.warn('[OCCT] mesh', mi, '跳過 – 無 position 資料',
+          'keys:', Object.keys(m),
+          m.attributes ? 'attrs:' + Object.keys(m.attributes) : '');
         return;
       }
 
-      const norRaw = m.attributes?.normal ?? m.normal ?? m.normals ?? null;
-      const norArr = safeCopyF32(norRaw);
+      const norAttr = m.attributes?.normal ?? null;
+      const norArr  = extractF32(norAttr);
 
-      const idxRaw = m.index ?? m.indices ?? null;
-      const idxArr = safeCopyU32(idxRaw);
+      const idxAttr = m.index ?? null;
+      const idxArr  = extractU32(idxAttr);
 
       console.log(`[OCCT] mesh${mi}: pos=${posArr.length} nor=${norArr?.length||0} idx=${idxArr?.length||0}`);
 

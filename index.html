@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V10.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V11.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -472,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V10.0</div>
+    <div class="version-badge">V11.0</div>
   </div>
 </header>
 
@@ -596,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V10.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V11.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -989,8 +989,9 @@ function init3DScene(){
   renderer3d.setPixelRatio(window.devicePixelRatio);
   renderer3d.setSize(canvas.clientWidth, 440);
 
-  const grid = new THREE.GridHelper(10, 20, 0xaabbcc, 0xdde4ee);
-  scene3d.add(grid);
+  // grid 預設大小，載入模型後會重設
+  window._sceneGrid = new THREE.GridHelper(10, 20, 0xaabbcc, 0xdde4ee);
+  scene3d.add(window._sceneGrid);
 
   scene3d.add(new THREE.AmbientLight(0xffffff, 0.6));
   // MeshStandardMaterial needs stronger directional lights
@@ -1273,14 +1274,24 @@ async function loadOCCTFile(file, ext){
   mesh3d = group;
   scene3d.add(mesh3d);
 
+  // ── 將模型置中到原點，相機對準 (0,0,0) ──
   const box = new THREE.Box3().setFromObject(mesh3d);
   if(!box.isEmpty()){
     const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3()).length();
-    camTarget.copy(center);
-    camDist = Math.max(size * 2.0, 0.1);
+    const size   = box.getSize(new THREE.Vector3()).length();
+    // 把整個 group 平移到原點
+    mesh3d.position.sub(center);
+    // 相機 target 固定在原點
+    camTarget.set(0, 0, 0);
+    camDist = Math.max(size * 1.8, 0.1);
     rotX = -0.35; rotY = 0.5;
-    console.log('[OCCT] bbox size:', size.toFixed(3), 'camDist:', camDist.toFixed(3));
+    // 重設 grid 大小配合模型
+    if(window._sceneGrid){ scene3d.remove(window._sceneGrid); }
+    const gSize = Math.ceil(size * 1.2);
+    window._sceneGrid = new THREE.GridHelper(gSize, 20, 0xaabbcc, 0xdde4ee);
+    window._sceneGrid.position.y = box.min.y - center.y; // 貼在模型底部
+    scene3d.add(window._sceneGrid);
+    console.log('[OCCT] bbox size:', size.toFixed(3), 'camDist:', camDist.toFixed(3), 'center:', center);
   } else {
     console.warn('[OCCT] bounding box empty');
   }
@@ -1425,7 +1436,7 @@ function finalize3DGeo(geo, file, fmtLabel){
   hide3DLoading();
 }
 
-function viewer3d_resetCamera(){ if(mesh3d){ const box=new THREE.Box3().setFromObject(mesh3d); if(!box.isEmpty()){ const s=box.getSize(new THREE.Vector3()).length(); camTarget.copy(box.getCenter(new THREE.Vector3())); camDist=s*2.0; } else { camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; } } else { camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; } rotX=-0.35; rotY=0.5; }
+function viewer3d_resetCamera(){ if(mesh3d){ const box=new THREE.Box3().setFromObject(mesh3d); if(!box.isEmpty()){ const s=box.getSize(new THREE.Vector3()).length(); camTarget.set(0,0,0); camDist=s*1.8; } else { camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; } } else { camTarget.set(0,0,0); camDist=CAMERA_DIST_DEFAULT; } rotX=-0.35; rotY=0.5; }
 function viewer3d_toggleWire(){
   if(!mesh3d) return;
   isWireframe=!isWireframe;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V18.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V19.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -472,7 +472,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V18.0</div>
+    <div class="version-badge">V19.0</div>
   </div>
 </header>
 
@@ -596,7 +596,7 @@ footer strong { color: var(--cyan); }
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V18.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V19.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1657,23 +1657,47 @@ async function load2DFileObj(file){
   if(!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
 
-  // 智慧編碼偵測：台灣 AutoCAD DXF 通常是 Big5(CP950)，但也有 UTF-8
+  // 智慧編碼偵測：先讀 $DWGCODEPAGE 決定編碼，再整體解碼
   async function readDXFText(file){
     const buf = await file.arrayBuffer();
-    // 先嘗試 UTF-8
-    try {
-      const utfText = new TextDecoder('utf-8', {fatal: true}).decode(buf);
-      // 如果 UTF-8 成功且含中文，直接用
-      return utfText;
-    } catch(e) {
-      // UTF-8 失敗，改用 Big5 (CP950)
+    const bytes = new Uint8Array(buf);
+
+    // Step 1: 先用 latin-1 讀取前 4KB，找 $DWGCODEPAGE
+    const probe = new TextDecoder('latin1').decode(bytes.slice(0, 4096));
+    let encoding = 'utf-8'; // 預設
+
+    // DXF 裡 ANSI_936=GBK/簡體, ANSI_950=Big5/繁體, UTF-8=UTF-8
+    const codePageMatch = probe.match(/\$DWGCODEPAGE[\s\S]{0,30}?(ANSI_\d+|UTF-?8)/i);
+    if(codePageMatch){
+      const cp = codePageMatch[1].toUpperCase().replace('-','');
+      if(cp === 'ANSI_950') encoding = 'big5';
+      else if(cp === 'ANSI_936') encoding = 'gbk';
+      else if(cp === 'ANSI_932') encoding = 'shift-jis';
+      else if(cp.startsWith('UTF')) encoding = 'utf-8';
+      else encoding = 'big5'; // 台灣 AutoCAD 預設
+    } else {
+      // 無 CODEPAGE 宣告：檢查是否有 BOM 或高位元 byte
+      // 若有非 ASCII bytes 且無 BOM，台灣環境通常是 Big5
+      const hasBOM = (bytes[0]===0xEF && bytes[1]===0xBB && bytes[2]===0xBF);
+      if(hasBOM){
+        encoding = 'utf-8';
+      } else {
+        // 試 UTF-8 strict，失敗就用 big5
+        try {
+          const t = new TextDecoder('utf-8', {fatal:true}).decode(buf);
+          // UTF-8 成功，但仍需確認——若含亂碼式問號則改 big5
+          encoding = 'utf-8';
+          return t;
+        } catch(e){
+          encoding = 'big5';
+        }
+      }
     }
+
     try {
-      return new TextDecoder('big5').decode(buf);
-    } catch(e2) {
-      // 最後嘗試 GBK（簡體中文）
-      try { return new TextDecoder('gbk').decode(buf); }
-      catch(e3) { return new TextDecoder('utf-8', {fatal:false}).decode(buf); }
+      return new TextDecoder(encoding, {fatal:false}).decode(buf);
+    } catch(e){
+      return new TextDecoder('utf-8', {fatal:false}).decode(buf);
     }
   }
   
@@ -1807,19 +1831,39 @@ function getDXFBounds(entities){
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   entities.forEach(e=>{
     const d=e.data;
-    const gv=(code,idx=0)=>parseFloat(d[code]&&d[code][idx]||0);
+    const gv=(code,idx=0)=>{const v=parseFloat(d[code]&&d[code][idx]); return isNaN(v)?0:v;};
     const upd=(x,y)=>{
-      if(!isNaN(x)&&!isNaN(y)){
+      if(isFinite(x)&&isFinite(y)&&!isNaN(x)&&!isNaN(y)){
         minX=Math.min(minX,x); maxX=Math.max(maxX,x);
         minY=Math.min(minY,y); maxY=Math.max(maxY,y);
       }
     };
-    if(e.type==='LINE'){ upd(gv(10),gv(20)); upd(gv(11),gv(21)); }
-    else if(e.type==='CIRCLE'||e.type==='ARC'){ const r=gv(40); upd(gv(10)+r,gv(20)+r); upd(gv(10)-r,gv(20)-r); }
-    else if(e.type==='LWPOLYLINE'){ (d[10]||[]).forEach((x,i)=>upd(parseFloat(x),parseFloat((d[20]||[])[i]||0))); }
+    if(e.type==='LINE'){
+      upd(gv(10),gv(20)); upd(gv(11),gv(21));
+    } else if(e.type==='CIRCLE'){
+      const r=gv(40);
+      upd(gv(10)+r,gv(20)+r); upd(gv(10)-r,gv(20)-r);
+    } else if(e.type==='ARC'){
+      const r=gv(40);
+      upd(gv(10)+r,gv(20)+r); upd(gv(10)-r,gv(20)-r);
+    } else if(e.type==='LWPOLYLINE'||e.type==='POLYLINE'||e.type==='SPLINE'){
+      (d[10]||[]).forEach((x,i)=>upd(parseFloat(x),parseFloat((d[20]||[])[i]||0)));
+    } else if(e.type==='ELLIPSE'){
+      const majX=Math.abs(gv(11)), majY=Math.abs(gv(21));
+      const maj=Math.sqrt(majX*majX+majY*majY);
+      upd(gv(10)+maj,gv(20)+maj); upd(gv(10)-maj,gv(20)-maj);
+    } else if(e.type==='TEXT'||e.type==='MTEXT'){
+      upd(gv(10),gv(20));
+    } else if(e.type==='INSERT'){
+      upd(gv(10),gv(20));
+    } else if(e.type==='POINT'){
+      upd(gv(10),gv(20));
+    }
   });
-  if(minX===Infinity){ minX=0; maxX=100; minY=0; maxY=100; }
-  return {minX,maxX,minY,maxY};
+  if(!isFinite(minX)||minX===Infinity){ minX=0; maxX=297; minY=0; maxY=210; }
+  // Add 5% padding to bounds
+  const pw=(maxX-minX)*0.05, ph=(maxY-minY)*0.05;
+  return {minX:minX-pw, maxX:maxX+pw, minY:minY-ph, maxY:maxY+ph};
 }
 
 function init2DCanvas(file){
@@ -1959,14 +2003,17 @@ function drawDXF2D(){
       let txt=(d[1]&&d[1][0])||'';
       // Clean MTEXT control codes: \P=newline, {\f...} font switch, %%d=°, %%p=±, %%c=⌀
       txt = txt
-        .replace(/\\P/g, ' ')                        // paragraph break → space
-        .replace(/\{\\[^}]*\}/g, '')                  // {font/format codes}
-        .replace(/\\[A-Za-z]\d*(\.\d+)?;?/g, '')     // \L \O \C3 etc.
+        .replace(/\{\\[fFcCpPhHlLoOwWqQaAbBiIsStT][^}]*\}/g, '')  // {font/format codes}
+        .replace(/\\[fFcCpPhHlLoOwWqQaAbBiIsStT]\d*(\.\d+)?(x\d+)?;?/g, '') // inline format codes
+        .replace(/\\P/gi, ' ')                       // paragraph break → space
+        .replace(/\\~/g, ' ')                        // non-breaking space
+        .replace(/\\\|/g, '')                        // stacking separator
         .replace(/%%[dD]/g, '°')
         .replace(/%%[pP]/g, '±')
         .replace(/%%[cC]/g, '⌀')
         .replace(/%%[uU]/g, '')
         .replace(/%%[oO]/g, '')
+        .replace(/[{}]/g, '')                        // remove remaining braces
         .trim();
       if(!txt) return;
       const h = Math.max(gv(40)||12, 5) * dxf2dScale;
@@ -2017,7 +2064,29 @@ async function convertDxf2Pdf(){
   btn.disabled = true;
   showStatus('dxf2pdf-status','processing','解析 DXF 中…','正在讀取圖面資料',20);
 
-  const text = await dxf2pdfFile.text();
+  // 使用與 Viewer 相同的智慧編碼偵測
+  const buf = await dxf2pdfFile.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let text;
+  const probe = new TextDecoder('latin1').decode(bytes.slice(0, 4096));
+  const codePageMatch = probe.match(/\$DWGCODEPAGE[\s\S]{0,30}?(ANSI_\d+|UTF-?8)/i);
+  let encoding = 'utf-8';
+  if(codePageMatch){
+    const cp = codePageMatch[1].toUpperCase().replace('-','');
+    if(cp==='ANSI_950') encoding='big5';
+    else if(cp==='ANSI_936') encoding='gbk';
+    else if(cp.startsWith('UTF')) encoding='utf-8';
+    else encoding='big5';
+  } else {
+    const hasBOM=(bytes[0]===0xEF&&bytes[1]===0xBB&&bytes[2]===0xBF);
+    if(!hasBOM){
+      try{ new TextDecoder('utf-8',{fatal:true}).decode(buf); encoding='utf-8'; }
+      catch(e){ encoding='big5'; }
+    }
+  }
+  try{ text=new TextDecoder(encoding,{fatal:false}).decode(buf); }
+  catch(e){ text=new TextDecoder('utf-8',{fatal:false}).decode(buf); }
+
   const parsed = parseDXF(text);
   showStatus('dxf2pdf-status','processing','繪製圖面…','計算邊界與比例',55);
 
@@ -2087,13 +2156,18 @@ async function convertDxf2Pdf(){
     } else if(e.type==='TEXT'||e.type==='MTEXT'){
       let txt=(d[1]&&d[1][0])||'';
       txt = txt
-        .replace(/\\P/g, ' ')
-        .replace(/\{\\[^}]*\}/g, '')
-        .replace(/\\[A-Za-z]\d*(\.\d+)?;?/g, '')
+        .replace(/\{\\[fFcCpPhHlLoOwWqQaAbBiIsStT][^}]*\}/g, '')
+        .replace(/\\[fFcCpPhHlLoOwWqQaAbBiIsStT]\d*(\.\d+)?(x\d+)?;?/g, '')
+        .replace(/\\P/gi, ' ')
+        .replace(/\\~/g, ' ')
         .replace(/%%[dD]/g, '°').replace(/%%[pP]/g, '±').replace(/%%[cC]/g, '⌀')
+        .replace(/[{}]/g, '')
         .trim();
       if(!txt) return;
-      const h=Math.max((gv(40)||3)*scale,8);
+      // gv(40) is text height in DXF drawing units; multiply by scale then clamp
+      const rawH = gv(40);
+      const scaledH = (rawH > 0 ? rawH : (dw / 80)) * scale; // fallback: ~1/80 of drawing width
+      const h = Math.min(Math.max(scaledH, 10), 60); // clamp 10–60px on canvas
       ctx.save();
       ctx.fillStyle='#1a2a3a'; ctx.font=h+'px "Noto Sans TC", Arial';
       ctx.fillText(txt.substring(0,80), tx(gv(10)), ty(gv(20)));

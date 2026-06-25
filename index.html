@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V45.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V46.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -868,7 +868,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V45.0</div>
+    <div class="version-badge">V46.0</div>
   </div>
 </header>
 
@@ -1289,7 +1289,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;MIS 轉檔專屬系統 V45.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
+  © 2026 &nbsp;MIS 轉檔專屬系統 V46.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
   <script>
     (function(){
       const d = new Date('2026-06-25'); // 自動更新：每次修改此檔案時會更新為當天日期
@@ -2225,22 +2225,38 @@ P/N 1003-C</textarea>
             <span id="wm-stamp-opacity-val" style="font-size:12px;color:var(--silver3);font-family:'Share Tech Mono',monospace;">80%</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;">
-            <div class="wm-label">位置</div>
-            <select id="wm-stamp-pos" class="wm-select" onchange="wmRender()">
+            <div class="wm-label">預設位置</div>
+            <select id="wm-stamp-pos" class="wm-select" onchange="wmStampPosChange()">
               <option value="br">右下角</option>
               <option value="bl">左下角</option>
               <option value="tr">右上角</option>
               <option value="tl">左上角</option>
               <option value="center">正中央</option>
             </select>
+            <span style="font-size:10px;color:var(--silver3);font-family:'Share Tech Mono',monospace;margin-top:2px;">
+              💡 預覽上可拖曳印章
+            </span>
           </div>
         </div>
       </div>
+      <!-- 預覽（最大化，移除 PDF 說明）-->
+      <div class="wm-preview-wrap" id="wm-preview-wrap" style="position:relative;min-height:300px;max-height:60vh;overflow:auto;background:#1a1a2e;margin-bottom:10px;">
         <div class="wm-placeholder" id="wm-placeholder">
           <div class="wm-placeholder-icon">💧</div>
           <div>請先上傳圖片或 PDF 檔案</div>
         </div>
-        <canvas id="wm-preview-canvas" style="display:none;"></canvas>
+        <!-- 主預覽 canvas -->
+        <canvas id="wm-preview-canvas" style="display:none;max-width:100%;height:auto;"></canvas>
+        <!-- 印章拖曳覆蓋層（顯示印章可拖動的虛線框） -->
+        <div id="wm-stamp-overlay" style="display:none;position:absolute;cursor:move;border:2px dashed rgba(14,165,233,0.7);
+             border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,0.3);
+             user-select:none;touch-action:none;"
+             title="拖曳移動印章位置">
+          <img id="wm-stamp-preview-img" style="width:100%;height:100%;object-fit:contain;pointer-events:none;display:block;">
+          <div style="position:absolute;top:-20px;left:0;font-size:10px;color:#0EA5E9;
+                      white-space:nowrap;background:rgba(0,0,0,0.55);padding:1px 5px;border-radius:3px;
+                      font-family:'Share Tech Mono',monospace;">拖曳移動</div>
+        </div>
       </div>
 
       <!-- 動作按鈕 -->
@@ -2248,10 +2264,6 @@ P/N 1003-C</textarea>
         <button class="btn btn-sky" id="wm-dl-btn" onclick="wmDownload()" disabled>⬇ 下載加浮水印圖片</button>
         <button class="btn btn-sky" id="wm-pdf-dl-btn" onclick="wmDownloadPdf()" disabled style="display:none;">⬇ 下載加浮水印 PDF（全部頁）</button>
         <button class="btn-sky-outline" onclick="wmReset()">↩ 重置</button>
-      </div>
-
-      <div class="limit-note" style="margin-top:8px;">
-        <strong>📌 PDF 說明：</strong>PDF 採用 jsPDF 逐頁將頁面渲染為圖片後加入浮水印，再合併輸出為新 PDF。複雜向量 PDF 建議先用圖片模式確認效果。
       </div>
 
     </div>
@@ -4701,7 +4713,8 @@ function encodeEAN13(digits){
 
 function downloadQR(type){
   const canvas=document.getElementById(type==='bar'?'bar-canvas':'qr-canvas');
-  const fname=type==='bar'?'barcode.png':'qrcode.png';
+  const stamp=_nowStamp();
+  const fname=type==='bar'?`barcode_${stamp}.png`:`qrcode_${stamp}.png`;
   const a=document.createElement('a');
   a.href=canvas.toDataURL('image/png');
   a.download=fname; a.click();
@@ -4787,7 +4800,7 @@ async function downloadBatchZip(){
   });
   const blob=await zip.generateAsync({type:'blob'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='barcodes_batch.zip'; a.click();
+  a.download=`barcodes_batch_${_nowStamp()}.zip`; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),5000);
 }
 
@@ -4923,6 +4936,8 @@ async function wmRender(){
   canvas.getContext('2d').drawImage(out,0,0);
   placeholder.style.display='none';
   canvas.style.display='block';
+  // 更新拖曳覆蓋層
+  requestAnimationFrame(_updateStampOverlay);
 }
 
 function _applyWatermark(srcCanvas,txt,mode,fs,angle,opacity,color,stampImg,stampParams){
@@ -4986,8 +5001,17 @@ function wmApplyPreset(){
   if(v){ document.getElementById('wm-text').value=v; wmRender(); }
 }
 
+/* ── 日期時間字串 YYYYMMDD_HHMMSS ── */
+function _nowStamp(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
+
 /* ── 印章圖檔載入 ── */
 let _wmStampImg = null;
+// 拖曳位置（正規化：0~1，相對圖面比例）
+let _stampNX = null, _stampNY = null; // null = 用 select 的預設值
 
 function wmLoadStamp(e){
   const file = e.target.files[0];
@@ -4997,9 +5021,13 @@ function wmLoadStamp(e){
     const img = new Image();
     img.onload = function(){
       _wmStampImg = img;
+      // 更新拖曳覆蓋層的圖片
+      const pi = document.getElementById('wm-stamp-preview-img');
+      if(pi) pi.src = ev.target.result;
       document.getElementById('wm-stamp-name').textContent = file.name;
       document.getElementById('wm-stamp-clear-btn').style.display = 'inline-flex';
       document.getElementById('wm-stamp-settings').style.display = 'flex';
+      _stampNX = null; _stampNY = null; // 重置到預設位置
       wmRender();
     };
     img.src = ev.target.result;
@@ -5009,47 +5037,168 @@ function wmLoadStamp(e){
 
 function wmClearStamp(){
   _wmStampImg = null;
+  _stampNX = null; _stampNY = null;
   document.getElementById('wm-stamp-input').value = '';
   document.getElementById('wm-stamp-name').textContent = '';
   document.getElementById('wm-stamp-clear-btn').style.display = 'none';
   document.getElementById('wm-stamp-settings').style.display = 'none';
+  const ov = document.getElementById('wm-stamp-overlay');
+  if(ov) ov.style.display = 'none';
   wmRender();
 }
 
-/* ── 取得印章參數 ── */
+function wmStampPosChange(){
+  _stampNX = null; _stampNY = null; // 清除拖曳位置，回到 select 預設
+  wmRender();
+}
+
+/* ── 取得印章參數（考慮拖曳位置）── */
 function _getStampParams(){
   return {
     size    : parseInt(document.getElementById('wm-stamp-size')?.value||25)/100,
     opacity : parseInt(document.getElementById('wm-stamp-opacity')?.value||80)/100,
     pos     : document.getElementById('wm-stamp-pos')?.value||'br',
+    nx      : _stampNX,   // 拖曳後的正規化 X（0~1），null = 用 pos
+    ny      : _stampNY,   // 拖曳後的正規化 Y（0~1），null = 用 pos
   };
 }
 
 /* ── 疊加印章到 canvas ── */
 function _applyStamp(ctx, stampImg, params, W, H){
   if(!stampImg) return;
-  const {size, opacity, pos} = params;
+  const {size, opacity, pos, nx, ny} = params;
   const margin = Math.min(W, H) * 0.03;
   const sw = W * size;
   const sh = sw * (stampImg.height / stampImg.width);
   let sx, sy;
-  if(pos==='br')     { sx=W-sw-margin; sy=H-sh-margin; }
-  else if(pos==='bl'){ sx=margin;      sy=H-sh-margin; }
-  else if(pos==='tr'){ sx=W-sw-margin; sy=margin; }
-  else if(pos==='tl'){ sx=margin;      sy=margin; }
-  else               { sx=(W-sw)/2;    sy=(H-sh)/2; } // center
+  if(nx !== null && ny !== null){
+    // 拖曳位置（nx,ny 是印章左上角的正規化座標）
+    sx = nx * W;
+    sy = ny * H;
+  } else {
+    // 預設 preset 位置
+    if(pos==='br')     { sx=W-sw-margin; sy=H-sh-margin; }
+    else if(pos==='bl'){ sx=margin;      sy=H-sh-margin; }
+    else if(pos==='tr'){ sx=W-sw-margin; sy=margin; }
+    else if(pos==='tl'){ sx=margin;      sy=margin; }
+    else               { sx=(W-sw)/2;    sy=(H-sh)/2; }
+  }
   ctx.save();
   ctx.globalAlpha = opacity;
   ctx.drawImage(stampImg, sx, sy, sw, sh);
   ctx.restore();
 }
 
+/* ── 更新拖曳覆蓋層位置（配合 canvas 顯示尺寸）── */
+function _updateStampOverlay(){
+  const ov = document.getElementById('wm-stamp-overlay');
+  const canvas = document.getElementById('wm-preview-canvas');
+  if(!ov || !canvas || !_wmStampImg || canvas.style.display==='none') return;
+
+  const params = _getStampParams();
+  const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+  if(!cw || !ch) return;
+
+  // canvas 實際畫素 vs 顯示尺寸的縮放比
+  const scaleX = cw / canvas.width;
+  const scaleY = ch / canvas.height;
+
+  const sw = canvas.width * params.size;
+  const sh = sw * (_wmStampImg.height / _wmStampImg.width);
+  const margin = Math.min(canvas.width, canvas.height) * 0.03;
+
+  let sx, sy;
+  const {pos, nx, ny} = params;
+  if(nx !== null && ny !== null){
+    sx = nx * canvas.width;
+    sy = ny * canvas.height;
+  } else {
+    if(pos==='br')     { sx=canvas.width-sw-margin; sy=canvas.height-sh-margin; }
+    else if(pos==='bl'){ sx=margin;                 sy=canvas.height-sh-margin; }
+    else if(pos==='tr'){ sx=canvas.width-sw-margin; sy=margin; }
+    else if(pos==='tl'){ sx=margin;                 sy=margin; }
+    else               { sx=(canvas.width-sw)/2;   sy=(canvas.height-sh)/2; }
+  }
+
+  // 轉換到顯示座標
+  const canvasRect = canvas.getBoundingClientRect();
+  const wrapRect   = document.getElementById('wm-preview-wrap').getBoundingClientRect();
+  const offLeft = canvasRect.left - wrapRect.left;
+  const offTop  = canvasRect.top  - wrapRect.top + document.getElementById('wm-preview-wrap').scrollTop;
+
+  ov.style.display = 'block';
+  ov.style.left    = (offLeft + sx * scaleX) + 'px';
+  ov.style.top     = (offTop  + sy * scaleY) + 'px';
+  ov.style.width   = (sw * scaleX) + 'px';
+  ov.style.height  = (sh * scaleY) + 'px';
+  ov.style.opacity = params.opacity;
+}
+
+/* ── 拖曳印章 ── */
+(function(){
+  let dragging=false, startX=0, startY=0, origNX=0, origNY=0;
+  document.addEventListener('DOMContentLoaded',()=>{
+    const ov = document.getElementById('wm-stamp-overlay');
+    if(!ov) return;
+
+    function startDrag(ex, ey){
+      dragging=true;
+      startX=ex; startY=ey;
+      const params=_getStampParams();
+      const canvas=document.getElementById('wm-preview-canvas');
+      if(!canvas||!canvas.width) return;
+      const size=params.size;
+      const sw=canvas.width*size, sh=sw*(_wmStampImg?.height||1)/(_wmStampImg?.width||1);
+      const margin=Math.min(canvas.width,canvas.height)*0.03;
+      const pos=params.pos;
+      let cx,cy;
+      if(params.nx!==null){ cx=params.nx*canvas.width; cy=params.ny*canvas.height; }
+      else if(pos==='br'){ cx=canvas.width-sw-margin; cy=canvas.height-sh-margin; }
+      else if(pos==='bl'){ cx=margin; cy=canvas.height-sh-margin; }
+      else if(pos==='tr'){ cx=canvas.width-sw-margin; cy=margin; }
+      else if(pos==='tl'){ cx=margin; cy=margin; }
+      else { cx=(canvas.width-sw)/2; cy=(canvas.height-sh)/2; }
+      origNX=cx/canvas.width; origNY=cy/canvas.height;
+    }
+
+    function doDrag(ex, ey){
+      if(!dragging) return;
+      const canvas=document.getElementById('wm-preview-canvas');
+      if(!canvas||!canvas.width) return;
+      const scaleX=canvas.offsetWidth/canvas.width;
+      const scaleY=canvas.offsetHeight/canvas.height;
+      const dx=(ex-startX)/scaleX/canvas.width;
+      const dy=(ey-startY)/scaleY/canvas.height;
+      const newNX=Math.max(0,Math.min(1-_getStampParams().size, origNX+dx));
+      const newNY=Math.max(0,Math.min(1, origNY+dy));
+      _stampNX=newNX; _stampNY=newNY;
+      _updateStampOverlay();
+    }
+
+    function endDrag(){
+      if(!dragging) return;
+      dragging=false;
+      wmRender(); // 重繪 canvas 到拖曳後的位置
+    }
+
+    ov.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX, e.clientY); });
+    document.addEventListener('mousemove', e=>{ if(dragging) doDrag(e.clientX, e.clientY); });
+    document.addEventListener('mouseup', endDrag);
+
+    // 觸控支援
+    ov.addEventListener('touchstart', e=>{ e.preventDefault(); startDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+    document.addEventListener('touchmove', e=>{ if(dragging) doDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+    document.addEventListener('touchend', endDrag);
+  });
+})();
+
 function wmDownload(){
   const canvas=document.getElementById('wm-preview-canvas');
   if(!canvas||canvas.style.display==='none') return;
   const ext=(_wmFile?.name||'image').split('.').pop().toLowerCase();
   const mime=ext==='png'?'image/png':'image/jpeg';
-  const name=(_wmFile?.name||'watermarked').replace(/\.[^.]+$/,'')+'_watermarked.'+ext;
+  const base=(_wmFile?.name||'watermarked').replace(/\.[^.]+$/,'');
+  const name=`${base}_wm_${_nowStamp()}.${ext}`;
   const a=document.createElement('a');
   a.href=canvas.toDataURL(mime,0.92); a.download=name; a.click();
 }
@@ -5086,8 +5235,8 @@ async function wmDownloadPdf(){
       }
       pdf.addImage(imgData,'JPEG',0,0,mmW,mmH);
     }
-    const name=(_wmFile?.name||'document').replace(/\.pdf$/i,'')+'_watermarked.pdf';
-    pdf.save(name);
+    const base=(_wmFile?.name||'document').replace(/\.pdf$/i,'');
+    pdf.save(`${base}_wm_${_nowStamp()}.pdf`);
   } catch(e){
     alert('⚠ PDF 輸出失敗：'+e.message);
   }
@@ -5096,7 +5245,7 @@ async function wmDownloadPdf(){
 
 function wmReset(){
   _wmFile=null; _wmImgEl=null; _wmPdfDoc=null; _wmPdfPage=1; _wmPdfPageCount=0; _wmMode='image';
-  _wmStampImg=null;
+  _wmStampImg=null; _stampNX=null; _stampNY=null;
   document.getElementById('wm-preview-canvas').style.display='none';
   document.getElementById('wm-placeholder').style.display='flex';
   document.getElementById('wm-info-bar').classList.remove('show');
@@ -5108,6 +5257,8 @@ function wmReset(){
   document.getElementById('wm-stamp-name').textContent='';
   document.getElementById('wm-stamp-clear-btn').style.display='none';
   document.getElementById('wm-stamp-settings').style.display='none';
+  const ov=document.getElementById('wm-stamp-overlay');
+  if(ov) ov.style.display='none';
 }
 </script>
 </body>

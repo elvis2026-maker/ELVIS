@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V44.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V45.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -868,14 +868,76 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V44.0</div>
+    <div class="version-badge">V45.0</div>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
-  <h1>免安裝 線上看<span>3D / 2D</span>工程圖檔<br><span>圖片 / 文書</span>處理及<span>PDF</span>格式轉換<br><span>QR條碼</span>產生及<span>浮水印</span>工具</h1>
-  <p class="hero-sub">全線上辦公室利器，工程圖 · 文件 · 圖片 · 生產工具一站搞定，資料純本地處理零外流</p>
+  <h1 style="font-size:clamp(20px,3.2vw,36px);font-weight:900;line-height:1.3;margin-bottom:18px;color:var(--silver);">
+    免安裝・純本地・零外流
+  </h1>
+  <p class="hero-sub" style="font-size:15px;margin-bottom:28px;">六大功能一站搞定，所有資料在瀏覽器本機處理，不上傳任何伺服器</p>
+
+  <!-- 六大功能條列 -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px 20px;
+              max-width:960px;margin:0 auto 28px;text-align:left;">
+
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+                background:rgba(0,114,181,0.05);border-radius:9px;border:1px solid rgba(0,114,181,0.12);">
+      <span style="font-size:20px;flex-shrink:0;margin-top:1px;">📐</span>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--silver);margin-bottom:2px;">3D / 2D 工程圖檢視</div>
+        <div style="font-size:12px;color:var(--silver3);line-height:1.5;">STL · OBJ · STP · IGS · DXF · DWG</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+                background:rgba(0,114,181,0.05);border-radius:9px;border:1px solid rgba(0,114,181,0.12);">
+      <span style="font-size:20px;flex-shrink:0;margin-top:1px;">🔄</span>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--silver);margin-bottom:2px;">DXF ⟷ PDF 互轉</div>
+        <div style="font-size:12px;color:var(--silver3);line-height:1.5;">工程圖 DXF 轉 PDF · PDF 轉 DXF</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+                background:rgba(0,114,181,0.05);border-radius:9px;border:1px solid rgba(0,114,181,0.12);">
+      <span style="font-size:20px;flex-shrink:0;margin-top:1px;">🖼️</span>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--silver);margin-bottom:2px;">圖片格式轉換 &amp; 壓縮</div>
+        <div style="font-size:12px;color:var(--silver3);line-height:1.5;">JPG · PNG · WEBP · 批次壓縮</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+                background:rgba(0,114,181,0.05);border-radius:9px;border:1px solid rgba(0,114,181,0.12);">
+      <span style="font-size:20px;flex-shrink:0;margin-top:1px;">📄</span>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--silver);margin-bottom:2px;">文書 / PDF 工具</div>
+        <div style="font-size:12px;color:var(--silver3);line-height:1.5;">Word · Excel · PPT 轉 PDF · 合併分割</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+                background:rgba(0,114,181,0.05);border-radius:9px;border:1px solid rgba(0,114,181,0.12);">
+      <span style="font-size:20px;flex-shrink:0;margin-top:1px;">▦</span>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--silver);margin-bottom:2px;">QR 條碼產生器</div>
+        <div style="font-size:12px;color:var(--silver3);line-height:1.5;">單碼 · 批次 · 自訂顏色 · 下載 PNG</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+                background:rgba(0,114,181,0.05);border-radius:9px;border:1px solid rgba(0,114,181,0.12);">
+      <span style="font-size:20px;flex-shrink:0;margin-top:1px;">💧</span>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--silver);margin-bottom:2px;">浮水印工具</div>
+        <div style="font-size:12px;color:var(--silver3);line-height:1.5;">圖片 / PDF · 文字 + 印章圖檔疊加</div>
+      </div>
+    </div>
+
+  </div>
   <div class="hero-divider"></div>
 </section>
 
@@ -1227,7 +1289,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;MIS 轉檔專屬系統 V44.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
+  © 2026 &nbsp;MIS 轉檔專屬系統 V45.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
   <script>
     (function(){
       const d = new Date('2026-06-25'); // 自動更新：每次修改此檔案時會更新為當天日期
@@ -1905,7 +1967,7 @@ footer strong { color: var(--cyan); }
           <div>
             <div class="qr-label">輸入內容（文字 / URL / 料號）</div>
             <input type="text" class="qr-input" id="qr-text-input" placeholder="例：P/N 1234-A  或  https://example.com"
-                   oninput="renderQR()" value="瑞能電子 P/N 1234-A">
+                   oninput="renderQR()" value="XXX-123456">
           </div>
         </div>
         <div class="qr-options">
@@ -2128,8 +2190,52 @@ P/N 1003-C</textarea>
         </div>
       </div>
 
-      <!-- 預覽 -->
-      <div class="wm-preview-wrap" id="wm-preview-wrap">
+      <!-- 印章圖檔上傳（選用） -->
+      <div class="wm-row" style="align-items:flex-start;gap:12px;margin-top:4px;">
+        <div class="wm-col" style="flex:2;min-width:200px;">
+          <div class="wm-label">🔖 印章圖檔（選用，疊加在浮水印上）</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+                   background:rgba(14,165,233,0.07);border:1px solid rgba(14,165,233,0.28);
+                   border-radius:7px;padding:6px 14px;font-size:13px;color:var(--cyan2);
+                   transition:background .18s;" onmouseover="this.style.background='rgba(14,165,233,0.14)'"
+                   onmouseout="this.style.background='rgba(14,165,233,0.07)'">
+              📁 選取印章圖片
+              <input type="file" id="wm-stamp-input" accept="image/*" onchange="wmLoadStamp(event)"
+                     style="display:none;">
+            </label>
+            <button class="btn-sky-outline" onclick="wmClearStamp()" id="wm-stamp-clear-btn"
+                    style="display:none;padding:6px 12px;font-size:12px;">✕ 移除印章</button>
+            <span id="wm-stamp-name" style="font-size:12px;color:var(--silver3);"></span>
+          </div>
+        </div>
+        <div class="wm-col" id="wm-stamp-settings" style="display:none;flex:3;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;">
+            <div class="wm-label">印章大小</div>
+            <input type="range" id="wm-stamp-size" min="5" max="80" value="25"
+                   oninput="wmRender();document.getElementById('wm-stamp-size-val').textContent=this.value+'%'"
+                   style="padding:6px 0;border:none;background:none;">
+            <span id="wm-stamp-size-val" style="font-size:12px;color:var(--silver3);font-family:'Share Tech Mono',monospace;">25%</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;">
+            <div class="wm-label">透明度</div>
+            <input type="range" id="wm-stamp-opacity" min="10" max="100" value="80"
+                   oninput="wmRender();document.getElementById('wm-stamp-opacity-val').textContent=this.value+'%'"
+                   style="padding:6px 0;border:none;background:none;">
+            <span id="wm-stamp-opacity-val" style="font-size:12px;color:var(--silver3);font-family:'Share Tech Mono',monospace;">80%</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;">
+            <div class="wm-label">位置</div>
+            <select id="wm-stamp-pos" class="wm-select" onchange="wmRender()">
+              <option value="br">右下角</option>
+              <option value="bl">左下角</option>
+              <option value="tr">右上角</option>
+              <option value="tl">左上角</option>
+              <option value="center">正中央</option>
+            </select>
+          </div>
+        </div>
+      </div>
         <div class="wm-placeholder" id="wm-placeholder">
           <div class="wm-placeholder-icon">💧</div>
           <div>請先上傳圖片或 PDF 檔案</div>
@@ -4811,14 +4917,15 @@ async function wmRender(){
     await page.render({canvasContext:srcCanvas.getContext('2d'),viewport:vp}).promise;
   } else return;
 
-  const out=_applyWatermark(srcCanvas,wmTxt,mode,fs,angle,opacity,color);
+  const stampParams = _getStampParams();
+  const out=_applyWatermark(srcCanvas,wmTxt,mode,fs,angle,opacity,color,_wmStampImg,stampParams);
   canvas.width=out.width; canvas.height=out.height;
   canvas.getContext('2d').drawImage(out,0,0);
   placeholder.style.display='none';
   canvas.style.display='block';
 }
 
-function _applyWatermark(srcCanvas,txt,mode,fs,angle,opacity,color){
+function _applyWatermark(srcCanvas,txt,mode,fs,angle,opacity,color,stampImg,stampParams){
   const out=document.createElement('canvas');
   out.width=srcCanvas.width; out.height=srcCanvas.height;
   const ctx=out.getContext('2d');
@@ -4865,12 +4972,76 @@ function _applyWatermark(srcCanvas,txt,mode,fs,angle,opacity,color){
     }
   }
   ctx.restore();
+
+  // ── 疊加印章圖檔（在浮水印文字之上）──
+  if(stampImg && stampParams){
+    _applyStamp(ctx, stampImg, stampParams, out.width, out.height);
+  }
+
   return out;
 }
 
 function wmApplyPreset(){
   const v=document.getElementById('wm-presets').value;
   if(v){ document.getElementById('wm-text').value=v; wmRender(); }
+}
+
+/* ── 印章圖檔載入 ── */
+let _wmStampImg = null;
+
+function wmLoadStamp(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      _wmStampImg = img;
+      document.getElementById('wm-stamp-name').textContent = file.name;
+      document.getElementById('wm-stamp-clear-btn').style.display = 'inline-flex';
+      document.getElementById('wm-stamp-settings').style.display = 'flex';
+      wmRender();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function wmClearStamp(){
+  _wmStampImg = null;
+  document.getElementById('wm-stamp-input').value = '';
+  document.getElementById('wm-stamp-name').textContent = '';
+  document.getElementById('wm-stamp-clear-btn').style.display = 'none';
+  document.getElementById('wm-stamp-settings').style.display = 'none';
+  wmRender();
+}
+
+/* ── 取得印章參數 ── */
+function _getStampParams(){
+  return {
+    size    : parseInt(document.getElementById('wm-stamp-size')?.value||25)/100,
+    opacity : parseInt(document.getElementById('wm-stamp-opacity')?.value||80)/100,
+    pos     : document.getElementById('wm-stamp-pos')?.value||'br',
+  };
+}
+
+/* ── 疊加印章到 canvas ── */
+function _applyStamp(ctx, stampImg, params, W, H){
+  if(!stampImg) return;
+  const {size, opacity, pos} = params;
+  const margin = Math.min(W, H) * 0.03;
+  const sw = W * size;
+  const sh = sw * (stampImg.height / stampImg.width);
+  let sx, sy;
+  if(pos==='br')     { sx=W-sw-margin; sy=H-sh-margin; }
+  else if(pos==='bl'){ sx=margin;      sy=H-sh-margin; }
+  else if(pos==='tr'){ sx=W-sw-margin; sy=margin; }
+  else if(pos==='tl'){ sx=margin;      sy=margin; }
+  else               { sx=(W-sw)/2;    sy=(H-sh)/2; } // center
+  ctx.save();
+  ctx.globalAlpha = opacity;
+  ctx.drawImage(stampImg, sx, sy, sw, sh);
+  ctx.restore();
 }
 
 function wmDownload(){
@@ -4894,6 +5065,7 @@ async function wmDownloadPdf(){
   const angle  =parseInt(document.getElementById('wm-angle').value)||(-30);
   const opacity=(parseInt(document.getElementById('wm-opacity').value)||20)/100;
   const color  =document.getElementById('wm-color').value||'#cc0000';
+  const stampParams = _getStampParams();
 
   try{
     const {jsPDF}=window.jspdf;
@@ -4904,7 +5076,7 @@ async function wmDownloadPdf(){
       const sc=document.createElement('canvas');
       sc.width=vp.width; sc.height=vp.height;
       await page.render({canvasContext:sc.getContext('2d'),viewport:vp}).promise;
-      const wm=_applyWatermark(sc,wmTxt,mode,fs,angle,opacity,color);
+      const wm=_applyWatermark(sc,wmTxt,mode,fs,angle,opacity,color,_wmStampImg,stampParams);
       const imgData=wm.toDataURL('image/jpeg',0.90);
       const mmW=vp.width/2*0.264583, mmH=vp.height/2*0.264583;
       if(!pdf){
@@ -4924,6 +5096,7 @@ async function wmDownloadPdf(){
 
 function wmReset(){
   _wmFile=null; _wmImgEl=null; _wmPdfDoc=null; _wmPdfPage=1; _wmPdfPageCount=0; _wmMode='image';
+  _wmStampImg=null;
   document.getElementById('wm-preview-canvas').style.display='none';
   document.getElementById('wm-placeholder').style.display='flex';
   document.getElementById('wm-info-bar').classList.remove('show');
@@ -4931,6 +5104,10 @@ function wmReset(){
   document.getElementById('wm-dl-btn').disabled=true;
   document.getElementById('wm-pdf-dl-btn').disabled=true;
   document.getElementById('wm-file-input').value='';
+  document.getElementById('wm-stamp-input').value='';
+  document.getElementById('wm-stamp-name').textContent='';
+  document.getElementById('wm-stamp-clear-btn').style.display='none';
+  document.getElementById('wm-stamp-settings').style.display='none';
 }
 </script>
 </body>

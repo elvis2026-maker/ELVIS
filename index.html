@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V38.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V39.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -743,7 +743,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V38.0</div>
+    <div class="version-badge">V39.0</div>
   </div>
 </header>
 
@@ -917,7 +917,14 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V38.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;MIS 轉檔專屬系統 V39.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
+  <script>
+    (function(){
+      const d = new Date('2026-06-25'); // 自動更新：每次修改此檔案時會更新為當天日期
+      document.getElementById('footer-update-date').textContent =
+        d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+    })();
+  </script>
 </footer>
 </div><!-- /.wrap -->
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V48.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V49.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -699,11 +699,31 @@ footer strong { color: var(--cyan); }
 }
 .wm-input:focus, .wm-select:focus { border-color:#0EA5E9; }
 .wm-preview-wrap {
-  position:relative; border-radius:10px; overflow:hidden;
-  border:1px solid rgba(14,165,233,0.2); margin-bottom:14px; background:#f8f9fa;
-  min-height:200px; display:flex; align-items:center; justify-content:center;
+  position:relative;
+  overflow:hidden;
+  background:#1a1a2e;
+  border-radius:8px;
+  cursor:grab;
 }
-#wm-preview-canvas { max-width:100%; max-height:420px; display:block; border-radius:8px; }
+.wm-preview-wrap.panning { cursor:grabbing; }
+#wm-zoom-hint {
+  position:absolute;
+  bottom:8px; right:10px;
+  font-size:10px;
+  color:rgba(14,165,233,0.6);
+  pointer-events:none;
+  font-family:'Share Tech Mono',monospace;
+  z-index:10;
+  background:rgba(0,0,0,0.35);
+  padding:2px 7px;
+  border-radius:4px;
+}
+#wm-zoom-inner {
+  position:absolute;
+  transform-origin:0 0;
+  transition:none;
+}
+#wm-preview-canvas { display:block; }
 .wm-placeholder {
   display:flex; flex-direction:column; align-items:center; gap:10px;
   color:var(--silver3); font-size:14px; padding:40px;
@@ -868,7 +888,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V48.0</div>
+    <div class="version-badge">V49.0</div>
   </div>
 </header>
 
@@ -1394,7 +1414,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;MIS 轉檔專屬系統 V48.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
+  © 2026 &nbsp;MIS 轉檔專屬系統 V49.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
   <script>
     (function(){
       const d = new Date('2026-06-25'); // 自動更新：每次修改此檔案時會更新為當天日期
@@ -2249,7 +2269,7 @@ P/N 1003-C</textarea>
           style="font-size:12px;padding:2px 8px;border:1px solid rgba(14,165,233,0.3);border-radius:5px;
                  background:#fff;color:var(--silver);font-family:inherit;cursor:pointer;">
           <option value="all">全部頁</option>
-          <option value="current">僅此頁</option>
+          <option value="current" selected>僅此頁</option>
           <option value="custom">自訂頁碼</option>
         </select>
         <span id="wm-stamp-scope-custom" style="display:none;">
@@ -2360,23 +2380,26 @@ P/N 1003-C</textarea>
         </div>
       </div>
       <!-- 預覽（最大化，移除 PDF 說明）-->
-      <div class="wm-preview-wrap" id="wm-preview-wrap" style="position:relative;min-height:300px;max-height:60vh;overflow:auto;background:#1a1a2e;margin-bottom:10px;">
-        <div class="wm-placeholder" id="wm-placeholder">
-          <div class="wm-placeholder-icon">💧</div>
-          <div>請先上傳圖片或 PDF 檔案</div>
+      <div class="wm-preview-wrap" id="wm-preview-wrap" style="min-height:300px;max-height:60vh;margin-bottom:10px;">
+        <div id="wm-zoom-inner">
+          <div class="wm-placeholder" id="wm-placeholder">
+            <div class="wm-placeholder-icon">💧</div>
+            <div>請先上傳圖片或 PDF 檔案</div>
+          </div>
+          <!-- 主預覽 canvas -->
+          <canvas id="wm-preview-canvas" style="display:none;"></canvas>
+          <!-- 印章拖曳覆蓋層（顯示印章可拖動的虛線框） -->
+          <div id="wm-stamp-overlay" style="display:none;position:absolute;cursor:move;border:2px dashed rgba(14,165,233,0.7);
+               border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,0.3);
+               user-select:none;touch-action:none;"
+               title="拖曳移動印章位置">
+            <img id="wm-stamp-preview-img" style="width:100%;height:100%;object-fit:contain;pointer-events:none;display:block;">
+            <div style="position:absolute;top:-20px;left:0;font-size:10px;color:#0EA5E9;
+                        white-space:nowrap;background:rgba(0,0,0,0.55);padding:1px 5px;border-radius:3px;
+                        font-family:'Share Tech Mono',monospace;">拖曳移動</div>
+          </div>
         </div>
-        <!-- 主預覽 canvas -->
-        <canvas id="wm-preview-canvas" style="display:none;max-width:100%;height:auto;"></canvas>
-        <!-- 印章拖曳覆蓋層（顯示印章可拖動的虛線框） -->
-        <div id="wm-stamp-overlay" style="display:none;position:absolute;cursor:move;border:2px dashed rgba(14,165,233,0.7);
-             border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,0.3);
-             user-select:none;touch-action:none;"
-             title="拖曳移動印章位置">
-          <img id="wm-stamp-preview-img" style="width:100%;height:100%;object-fit:contain;pointer-events:none;display:block;">
-          <div style="position:absolute;top:-20px;left:0;font-size:10px;color:#0EA5E9;
-                      white-space:nowrap;background:rgba(0,0,0,0.55);padding:1px 5px;border-radius:3px;
-                      font-family:'Share Tech Mono',monospace;">拖曳移動</div>
-        </div>
+        <div id="wm-zoom-hint">滾輪縮放 ｜ 拖曳平移 ｜ 雙擊還原</div>
       </div>
 
       <!-- 動作按鈕 -->
@@ -2428,7 +2451,7 @@ P/N 1003-C</textarea>
     const hDiff = window.outerHeight - window.innerHeight > threshold;
     if((wDiff || hDiff) && !devtoolsOpen){
       devtoolsOpen = true;
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#F5F7FA;font-family:\'Noto Sans TC\',sans-serif;"><div style="text-align:center;"><div style="font-size:48px;margin-bottom:16px;">🔒</div><div style="font-size:20px;font-weight:900;color:#1A2840;margin-bottom:8px;">此系統僅供瑞能電子內部使用</div><div style="font-size:13px;color:#6B7E96;">請關閉開發者工具後重新整理頁面</div></div></div>';
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#F5F7FA;font-family:\'Noto Sans TC\',sans-serif;"><div style="text-align:center;"><div style="font-size:48px;margin-bottom:16px;">🔒</div><div style="font-size:20px;font-weight:900;color:#1A2840;margin-bottom:8px;">此系統僅為Elvis Liu開發使用</div><div style="font-size:13px;color:#6B7E96;">請關閉開發者工具後重新整理頁面</div></div></div>';
     }
     if(!wDiff && !hDiff && devtoolsOpen){
       devtoolsOpen = false;
@@ -4992,7 +5015,7 @@ function wmLoadImage(file){
       document.getElementById('wm-dl-btn').disabled=false;
       document.getElementById('wm-dl-btn').style.display='';
       document.getElementById('wm-pdf-dl-btn').style.display='none';
-      wmRender();
+      wmRender(true);
     };
     _wmImgEl.src=ev.target.result;
   };
@@ -5016,7 +5039,7 @@ async function wmLoadPdf(file){
     document.getElementById('wm-dl-btn').style.display='none';
     document.getElementById('wm-pdf-dl-btn').style.display='';
     document.getElementById('wm-pdf-dl-btn').disabled=false;
-    wmRender();
+    wmRender(true);
   } catch(e){
     alert('⚠ PDF 載入失敗：'+e.message);
   }
@@ -5025,7 +5048,7 @@ async function wmLoadPdf(file){
 function wmPdfPrevPage(){ if(_wmPdfPage>1){ _wmPdfPage--; document.getElementById('wm-pdf-cur').textContent=_wmPdfPage; wmRender(); } }
 function wmPdfNextPage(){ if(_wmPdfPage<_wmPdfPageCount){ _wmPdfPage++; document.getElementById('wm-pdf-cur').textContent=_wmPdfPage; wmRender(); } }
 
-async function wmRender(){
+async function wmRender(doFit){
   const canvas=document.getElementById('wm-preview-canvas');
   const placeholder=document.getElementById('wm-placeholder');
   if(!_wmImgEl && !_wmPdfDoc){ return; }
@@ -5056,6 +5079,8 @@ async function wmRender(){
   canvas.getContext('2d').drawImage(out,0,0);
   placeholder.style.display='none';
   canvas.style.display='block';
+  // 首次載入 fit，之後換頁/調參數不重置縮放
+  if(doFit && window._wmZoomFit) requestAnimationFrame(window._wmZoomFit);
   // 更新拖曳覆蓋層
   requestAnimationFrame(_updateStampOverlay);
 }
@@ -5240,11 +5265,11 @@ function _updateStampOverlay(){
     else               { sx=(canvas.width-sw)/2;   sy=(canvas.height-sh)/2; }
   }
 
-  // 轉換到顯示座標
+  // 轉換到顯示座標（wrap 現在用 transform 平移/縮放，用 getBoundingClientRect 取實際位置）
   const canvasRect = canvas.getBoundingClientRect();
   const wrapRect   = document.getElementById('wm-preview-wrap').getBoundingClientRect();
   const offLeft = canvasRect.left - wrapRect.left;
-  const offTop  = canvasRect.top  - wrapRect.top + document.getElementById('wm-preview-wrap').scrollTop;
+  const offTop  = canvasRect.top  - wrapRect.top;
 
   ov.style.display = 'block';
   ov.style.left    = (offLeft + sx * scaleX) + 'px';
@@ -5415,7 +5440,138 @@ function wmReset(){
   document.getElementById('wm-stamp-settings').style.display='none';
   const ov=document.getElementById('wm-stamp-overlay');
   if(ov) ov.style.display='none';
+  // 重置縮放平移
+  _wmZoomReset();
 }
+
+/* ── 預覽區縮放/平移 ── */
+(function(){
+  let _z=1, _px=0, _py=0;
+  let _panning=false, _pStartX=0, _pStartY=0, _pOriginX=0, _pOriginY=0;
+  let _pinching=false, _pinchDist0=1, _pinchZ0=1;
+
+  function _inner(){ return document.getElementById('wm-zoom-inner'); }
+  function _wrap(){  return document.getElementById('wm-preview-wrap'); }
+
+  function _applyTransform(){
+    const inner=_inner();
+    if(!inner) return;
+    inner.style.transform=`translate(${_px}px,${_py}px) scale(${_z})`;
+  }
+
+  // 重置：回到 fit 狀態（置中＋完整顯示）
+  window._wmZoomReset=function(){
+    _z=1; _px=0; _py=0;
+    const inner=_inner();
+    if(inner) inner.style.transform='';
+  };
+
+  // 載入檔案後自動 fit：讓 canvas 完整顯示在 wrap 內，並置中
+  window._wmZoomFit=function(){
+    const inner=_inner();
+    const wrap=_wrap();
+    const canvas=document.getElementById('wm-preview-canvas');
+    if(!inner||!wrap||!canvas) return;
+
+    // 取 canvas 原始像素尺寸（canvas 本身無 CSS width/height，用 width/height 屬性）
+    const cw=canvas.width, ch=canvas.height;
+    if(!cw||!ch) return;
+
+    const ww=wrap.clientWidth  || wrap.offsetWidth  || 600;
+    const wh=wrap.clientHeight || wrap.offsetHeight || 400;
+
+    // 留 16px padding
+    const pad=16;
+    const fitZ=Math.min((ww-pad*2)/cw, (wh-pad*2)/ch, 1); // 最大不超過 1:1
+    _z = fitZ;
+
+    // 置中偏移：讓縮放後的 canvas 在 wrap 正中央
+    _px = (ww - cw*_z) / 2;
+    _py = (wh - ch*_z) / 2;
+
+    _applyTransform();
+  };
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const wrap=_wrap();
+    if(!wrap) return;
+
+    // ── 滾輪縮放（以滑鼠位置為中心）──
+    wrap.addEventListener('wheel',e=>{
+      e.preventDefault();
+      const inner=_inner();
+      if(!inner) return;
+      const rect=wrap.getBoundingClientRect();
+      const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+      const delta=e.deltaY<0?1.12:1/1.12;
+      const newZ=Math.max(0.2, Math.min(10, _z*delta));
+      _px = mx - (mx - _px)*newZ/_z;
+      _py = my - (my - _py)*newZ/_z;
+      _z=newZ;
+      _applyTransform();
+    },{passive:false});
+
+    // ── 滑鼠拖曳平移 ──
+    wrap.addEventListener('mousedown',e=>{
+      if(e.target.closest('#wm-stamp-overlay')) return;
+      _panning=true;
+      _pStartX=e.clientX; _pStartY=e.clientY;
+      _pOriginX=_px; _pOriginY=_py;
+      wrap.classList.add('panning');
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove',e=>{
+      if(!_panning) return;
+      _px=_pOriginX+(e.clientX-_pStartX);
+      _py=_pOriginY+(e.clientY-_pStartY);
+      _applyTransform();
+    });
+    document.addEventListener('mouseup',()=>{
+      if(!_panning) return;
+      _panning=false;
+      _wrap()?.classList.remove('panning');
+    });
+
+    // ── 雙擊 → 回 fit ──
+    wrap.addEventListener('dblclick',e=>{
+      if(e.target.closest('#wm-stamp-overlay')) return;
+      window._wmZoomFit();
+    });
+
+    // ── 觸控雙指縮放 ──
+    wrap.addEventListener('touchstart',e=>{
+      if(e.touches.length===2){
+        _pinching=true;
+        _pinchDist0=Math.hypot(
+          e.touches[0].clientX-e.touches[1].clientX,
+          e.touches[0].clientY-e.touches[1].clientY);
+        _pinchZ0=_z;
+      } else if(e.touches.length===1 && !e.target.closest('#wm-stamp-overlay')){
+        _panning=true;
+        _pStartX=e.touches[0].clientX; _pStartY=e.touches[0].clientY;
+        _pOriginX=_px; _pOriginY=_py;
+      }
+    },{passive:true});
+    wrap.addEventListener('touchmove',e=>{
+      if(_pinching && e.touches.length===2){
+        e.preventDefault();
+        const dist=Math.hypot(
+          e.touches[0].clientX-e.touches[1].clientX,
+          e.touches[0].clientY-e.touches[1].clientY);
+        _z=Math.max(0.2,Math.min(10,_pinchZ0*(dist/_pinchDist0)));
+        _applyTransform();
+      } else if(_panning && e.touches.length===1 && !_pinching){
+        e.preventDefault();
+        _px=_pOriginX+(e.touches[0].clientX-_pStartX);
+        _py=_pOriginY+(e.touches[0].clientY-_pStartY);
+        _applyTransform();
+      }
+    },{passive:false});
+    wrap.addEventListener('touchend',()=>{
+      _pinching=false; _panning=false;
+    });
+  });
+})();
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V37.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V38.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -743,7 +743,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V37.0</div>
+    <div class="version-badge">V38.0</div>
   </div>
 </header>
 
@@ -917,7 +917,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V37.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V38.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1473,17 +1473,31 @@ footer strong { color: var(--cyan); }
         <button class="img-tool-btn" onclick="clearDrawLayer()">🗑 清除塗鴉</button>
       </div>
 
-      <!-- 文字輸入浮動框（絕對定位，js 控制位置） -->
+      <!-- 文字輸入浮動框（可移動文字物件）-->
       <div id="img-text-overlay" style="position:fixed;">
-        <input type="text" id="draw-text-input" placeholder="輸入文字…" autofocus>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:11px;color:var(--silver3);font-weight:600;">✏ 文字內容</span>
+          <span id="txt-obj-id-badge" style="font-size:10px;color:var(--accent);font-family:'Share Tech Mono',monospace;"></span>
+        </div>
+        <input type="text" id="draw-text-input" placeholder="輸入文字…">
         <div class="ov-row">
+          <label style="font-size:11px;color:var(--silver3);">大小</label>
           <select id="draw-text-size">
             <option value="14">14px</option><option value="18">18px</option>
             <option value="24" selected>24px</option><option value="32">32px</option>
             <option value="48">48px</option><option value="64">64px</option>
+            <option value="80">80px</option><option value="96">96px</option>
           </select>
-          <button onclick="commitDrawText()">✔ 確定</button>
+          <label style="font-size:11px;color:var(--silver3);">粗體</label>
+          <input type="checkbox" id="draw-text-bold" checked style="accent-color:var(--accent);">
+        </div>
+        <div class="ov-row" style="margin-top:4px;">
+          <button onclick="commitDrawText()" style="flex:1;">✔ 確定</button>
+          <button id="txt-delete-btn" onclick="deleteSelectedText()" style="background:#e74c3c;border-color:#e74c3c;display:none;">🗑 刪除</button>
           <button class="cancel-btn" onclick="cancelDrawText()">✕ 取消</button>
+        </div>
+        <div style="font-size:10px;color:var(--silver3);margin-top:4px;line-height:1.5;">
+          💡 拖曳文字可移動位置 · 雙擊可重新編輯
         </div>
       </div>
 
@@ -3009,9 +3023,9 @@ let _imgDrawMode   = false;
 let _drawTool      = 'pen';   // 'pen' | 'eraser' | 'text'
 let _drawColor     = '#E05A1A';
 let _drawSize      = 4;
-let _drawCanvas    = null;    // 疊加層 canvas（不影響 _imgBase）
+let _drawCanvas    = null;    // 疊加層 canvas
 let _drawCtx       = null;
-let _drawPending   = null;    // 待放文字的座標 {x,y}
+let _drawPending   = null;    // 待放文字的座標 {x,y}（新增模式）
 
 function loadImgEditor(e){ loadImgEditorFile(e.target.files[0]); }
 function imgEditorDrop(e){
@@ -3161,8 +3175,10 @@ function imgReset(){
   document.getElementById('img-crop-btn').classList.remove('active');
   ['img-brightness','img-contrast','img-saturation'].forEach(id => { document.getElementById(id).value = 0; });
   ['brightness','contrast','saturation'].forEach(k => document.getElementById('img-'+k+'-val').textContent = '0');
-  // 也清除塗鴉層
+  // 也清除塗鴉層與文字物件
   if(_drawCtx && _drawCanvas) _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
+  if(_strokeCtx && _strokeCanvas) _strokeCtx.clearRect(0,0,_strokeCanvas.width,_strokeCanvas.height);
+  _txtObjs = []; _txtSelId = null; _txtEditId = null;
   _rebuildBase(); // rebuild from original source
   _renderImgCanvas();
 }
@@ -3342,10 +3358,21 @@ function imgDownload(){
 }
 
 /* ══════════════════════════════════════════
-   塗鴉模式 (Draw / Graffiti Mode)
-   ── 疊加在 img-draw-canvas（透明層）上
-   ── flattenDrawLayer() 才真正寫入 _imgBase
+   塗鴉模式 V38 — 文字物件系統
+   ── 畫筆/橡皮擦：直接繪在 _drawCanvas（點陣）
+   ── 文字：以物件陣列管理，可移動、雙擊編輯、刪除
+   ── flattenDrawLayer() 才一次性寫入 _imgBase
 ══════════════════════════════════════════ */
+
+/* ─── 狀態 ─── */
+let _txtObjs      = [];    // [{id,x,y,text,size,bold,color}, ...]
+let _txtSelId     = null;  // 目前選中的文字物件 id
+let _txtEditId    = null;  // 正在編輯（overlay開著）的 id，null=新增
+let _txtDragging  = false;
+let _txtDragOffX  = 0, _txtDragOffY = 0;
+let _txtIdCounter = 0;
+
+/* ─── Draw canvas init ─── */
 function _initDrawCanvas(){
   const base = document.getElementById('img-editor-canvas');
   _drawCanvas = document.getElementById('img-draw-canvas');
@@ -3354,13 +3381,20 @@ function _initDrawCanvas(){
   _drawCtx = _drawCanvas.getContext('2d');
   _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
   _drawCanvas.style.display = 'block';
+  // 保留既有文字物件的重繪
+  _redrawTextObjs();
 }
 
+/* ─── Toggle draw mode ─── */
 function toggleImgDraw(){
-  // 如果裁切模式開著，先關掉
-  if(_imgCropMode){ _imgCropMode=false; document.getElementById('img-crop-btn').classList.remove('active'); document.getElementById('img-editor-canvas').style.cursor='default'; _imgCropRect=null; _renderImgCanvas(); }
+  if(_imgCropMode){
+    _imgCropMode=false;
+    document.getElementById('img-crop-btn').classList.remove('active');
+    document.getElementById('img-editor-canvas').style.cursor='default';
+    _imgCropRect=null; _renderImgCanvas();
+  }
   _imgDrawMode = !_imgDrawMode;
-  const btn = document.getElementById('img-draw-btn');
+  const btn   = document.getElementById('img-draw-btn');
   const panel = document.getElementById('img-draw-panel');
   btn.classList.toggle('draw-active', _imgDrawMode);
   if(_imgDrawMode){
@@ -3370,33 +3404,104 @@ function toggleImgDraw(){
   } else {
     panel.classList.remove('show');
     cancelDrawText();
-    if(_drawCanvas){ _drawCanvas.style.display='none'; }
+    if(_drawCanvas) _drawCanvas.style.display='none';
   }
 }
 
+/* ─── Tool / colour / size selectors ─── */
 function setDrawTool(t){
   _drawTool = t;
-  ['pen','eraser','text'].forEach(id => {
+  ['pen','eraser','text'].forEach(id=>{
     document.getElementById('draw-tool-'+id).classList.toggle('sel', id===t);
   });
-  if(_drawCanvas) _drawCanvas.style.cursor = t==='text' ? 'text' : t==='eraser' ? 'cell' : 'crosshair';
+  if(_drawCanvas){
+    _drawCanvas.style.cursor = t==='text' ? 'text' : t==='eraser' ? 'cell' : 'crosshair';
+  }
+  // 切走文字工具時取消 selection
+  if(t !== 'text'){ _txtSelId = null; _redrawTextObjs(); }
 }
 function setDrawColor(el){
   _drawColor = el.dataset.color;
-  document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.draw-color-btn').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('draw-custom-color').value = _drawColor;
 }
 function setDrawColorHex(hex){
   _drawColor = hex;
-  document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.draw-color-btn').forEach(b=>b.classList.remove('sel'));
 }
 function setDrawSize(v){
   _drawSize = parseInt(v);
   document.getElementById('draw-size-val').textContent = v+'px';
 }
 
-// ── 塗鴉滑鼠事件 ──
+/* ─── 重繪所有文字物件到 draw canvas ─── */
+function _redrawTextObjs(){
+  if(!_drawCtx) return;
+  // 先清除畫筆筆跡以外的「文字區域」— 實際上我們把文字物件獨立渲染
+  // 策略：保留點陣筆跡（存在_strokeCanvas），文字在 _drawCanvas 最上層重繪
+  // 簡化版：直接在 _drawCanvas 上方重繪文字（文字獨立蓋在上面）
+  // 清掉舊文字（重繪全部）
+  _redrawStrokes(); // 先還原筆跡底層
+  _txtObjs.forEach(obj=>{
+    _renderOneTextObj(obj, obj.id === _txtSelId);
+  });
+}
+
+// 重繪筆跡底層（從 _strokeCanvas 複製）
+function _redrawStrokes(){
+  if(!_drawCtx || !_strokeCanvas) return;
+  _drawCtx.clearRect(0,0,_drawCanvas.width,_drawCanvas.height);
+  _drawCtx.drawImage(_strokeCanvas, 0, 0);
+}
+
+function _renderOneTextObj(obj, selected){
+  const ctx = _drawCtx;
+  const bold = obj.bold ? 'bold ' : '';
+  ctx.font = `${bold}${obj.size}px 'Noto Sans TC', sans-serif`;
+  ctx.textBaseline = 'top';
+
+  // 計算文字尺寸
+  const metrics = ctx.measureText(obj.text);
+  const tw = metrics.width;
+  const th = obj.size * 1.25;
+
+  if(selected){
+    // 選中外框
+    ctx.save();
+    ctx.strokeStyle = '#0072B5';
+    ctx.lineWidth = Math.max(1.5, _drawCanvas.width/600);
+    ctx.setLineDash([5,3]);
+    ctx.strokeRect(obj.x - 4, obj.y - 4, tw + 8, th + 8);
+    ctx.setLineDash([]);
+    // 刪除小按鈕（右上角紅叉，僅視覺提示，實際由 overlay 刪除）
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillRect(obj.x + tw + 4, obj.y - 10, 14, 14);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold 10px sans-serif`;
+    ctx.fillText('×', obj.x + tw + 7, obj.y - 9);
+    // 移動提示游標
+    ctx.restore();
+    ctx.font = `${bold}${obj.size}px 'Noto Sans TC', sans-serif`;
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = obj.color;
+  ctx.textBaseline = 'top';
+  ctx.fillText(obj.text, obj.x, obj.y);
+}
+
+/* ─── 筆跡專用 canvas（底層，不受文字重繪影響）─── */
+let _strokeCanvas = null, _strokeCtx = null;
+function _ensureStrokeCanvas(){
+  if(_strokeCanvas) return;
+  _strokeCanvas = document.createElement('canvas');
+  _strokeCanvas.width  = _drawCanvas.width;
+  _strokeCanvas.height = _drawCanvas.height;
+  _strokeCtx = _strokeCanvas.getContext('2d');
+}
+
+/* ─── 滑鼠事件：畫筆、橡皮擦、文字點選/拖曳 ─── */
 let _drawAttached = false;
 function _attachDrawEvents(){
   if(_drawAttached) return;
@@ -3405,107 +3510,240 @@ function _attachDrawEvents(){
   let painting=false, lx=0, ly=0;
 
   function getPos(e){
-    const r = dc.getBoundingClientRect();
+    const r  = dc.getBoundingClientRect();
     const sx = dc.width  / r.width;
     const sy = dc.height / r.height;
     const src = e.touches ? e.touches[0] : e;
-    return { x:(src.clientX - r.left)*sx, y:(src.clientY - r.top)*sy };
+    return { x:(src.clientX-r.left)*sx, y:(src.clientY-r.top)*sy,
+             cx: src.clientX, cy: src.clientY };
+  }
+
+  /* 判斷點擊是否命中某文字物件 */
+  function hitText(x, y){
+    // 反向遍歷（最上層優先）
+    for(let i=_txtObjs.length-1; i>=0; i--){
+      const obj = _txtObjs[i];
+      if(!_drawCtx) continue;
+      const bold = obj.bold ? 'bold ' : '';
+      _drawCtx.font = `${bold}${obj.size}px 'Noto Sans TC', sans-serif`;
+      const tw = _drawCtx.measureText(obj.text).width;
+      const th = obj.size * 1.25;
+      // 放大 hit area 8px 讓使用者好點選
+      if(x >= obj.x-8 && x <= obj.x+tw+8 && y >= obj.y-8 && y <= obj.y+th+8){
+        return obj;
+      }
+    }
+    return null;
   }
 
   function startDraw(e){
     if(!_imgDrawMode) return;
     e.preventDefault();
-    const {x,y} = getPos(e);
+    const {x,y,cx,cy} = getPos(e);
+
     if(_drawTool === 'text'){
-      _drawPending = {x,y};
-      showTextOverlay(e.clientX || x, e.clientY || y);
+      // 先檢查是否點到現有文字
+      const hit = hitText(x, y);
+      if(hit){
+        // 選中它
+        _txtSelId = hit.id;
+        _redrawTextObjs();
+        // 準備拖曳
+        _txtDragging = true;
+        _txtDragOffX = x - hit.x;
+        _txtDragOffY = y - hit.y;
+      } else {
+        // 空白處點擊 → 取消選中，開新文字
+        _txtSelId = null;
+        _redrawTextObjs();
+        _txtEditId   = null; // 新增模式
+        _drawPending = {x, y};
+        _openTextOverlay(cx, cy, null);
+      }
       return;
     }
-    painting=true; lx=x; ly=y;
-    _drawCtx.beginPath();
-    _drawCtx.arc(x, y, _drawSize/2, 0, Math.PI*2);
-    _drawCtx.fillStyle = _drawTool==='eraser' ? 'rgba(0,0,0,1)' : _drawColor;
-    if(_drawTool==='eraser') _drawCtx.globalCompositeOperation='destination-out';
-    else _drawCtx.globalCompositeOperation='source-over';
-    _drawCtx.fill();
+
+    // 畫筆 / 橡皮擦
+    _txtSelId = null; _redrawTextObjs();
+    _ensureStrokeCanvas();
+    painting = true; lx = x; ly = y;
+    const ctx = _strokeCtx;
+    ctx.beginPath();
+    ctx.arc(x, y, _drawSize/2, 0, Math.PI*2);
+    ctx.fillStyle = _drawTool==='eraser' ? 'rgba(0,0,0,1)' : _drawColor;
+    ctx.globalCompositeOperation = _drawTool==='eraser' ? 'destination-out' : 'source-over';
+    ctx.fill();
+    _redrawTextObjs();
   }
+
   function moveDraw(e){
-    if(!_imgDrawMode || !painting) return;
+    if(!_imgDrawMode) return;
     e.preventDefault();
     const {x,y} = getPos(e);
-    _drawCtx.globalCompositeOperation = _drawTool==='eraser' ? 'destination-out' : 'source-over';
-    _drawCtx.beginPath();
-    _drawCtx.moveTo(lx, ly);
-    _drawCtx.lineTo(x, y);
-    _drawCtx.strokeStyle = _drawTool==='eraser' ? 'rgba(0,0,0,1)' : _drawColor;
-    _drawCtx.lineWidth   = _drawSize;
-    _drawCtx.lineCap     = 'round';
-    _drawCtx.lineJoin    = 'round';
-    _drawCtx.stroke();
-    lx=x; ly=y;
+
+    // 拖曳文字
+    if(_drawTool==='text' && _txtDragging && _txtSelId !== null){
+      const obj = _txtObjs.find(o=>o.id===_txtSelId);
+      if(obj){ obj.x = x - _txtDragOffX; obj.y = y - _txtDragOffY; }
+      _redrawTextObjs();
+      return;
+    }
+
+    if(!painting) return;
+    _ensureStrokeCanvas();
+    const ctx = _strokeCtx;
+    ctx.globalCompositeOperation = _drawTool==='eraser' ? 'destination-out' : 'source-over';
+    ctx.beginPath();
+    ctx.moveTo(lx, ly); ctx.lineTo(x, y);
+    ctx.strokeStyle = _drawTool==='eraser' ? 'rgba(0,0,0,1)' : _drawColor;
+    ctx.lineWidth  = _drawSize;
+    ctx.lineCap    = 'round'; ctx.lineJoin = 'round';
+    ctx.stroke();
+    lx = x; ly = y;
+    _redrawTextObjs();
   }
-  function endDraw(){ painting=false; _drawCtx.globalCompositeOperation='source-over'; }
+
+  function endDraw(e){
+    painting = false;
+    if(_strokeCtx) _strokeCtx.globalCompositeOperation = 'source-over';
+    if(_txtDragging){ _txtDragging = false; }
+  }
+
+  /* 雙擊：編輯現有文字 */
+  function dblDraw(e){
+    if(!_imgDrawMode || _drawTool!=='text') return;
+    e.preventDefault();
+    const {x,y,cx,cy} = getPos(e);
+    const hit = hitText(x, y);
+    if(hit){
+      _txtSelId  = hit.id;
+      _txtEditId = hit.id;
+      _drawPending = {x: hit.x, y: hit.y};
+      _redrawTextObjs();
+      _openTextOverlay(cx, cy, hit);
+    }
+  }
 
   dc.addEventListener('mousedown',  startDraw);
   dc.addEventListener('mousemove',  moveDraw);
   dc.addEventListener('mouseup',    endDraw);
   dc.addEventListener('mouseleave', endDraw);
+  dc.addEventListener('dblclick',   dblDraw);
   dc.addEventListener('touchstart', startDraw, {passive:false});
   dc.addEventListener('touchmove',  moveDraw,  {passive:false});
   dc.addEventListener('touchend',   endDraw);
 }
 
-// ── 文字工具 ──
-function showTextOverlay(cx, cy){
-  const ov = document.getElementById('img-text-overlay');
+/* ─── 文字 overlay 開啟（新增 or 編輯）─── */
+function _openTextOverlay(cx, cy, existingObj){
+  const ov  = document.getElementById('img-text-overlay');
+  const inp = document.getElementById('draw-text-input');
+  const sz  = document.getElementById('draw-text-size');
+  const bd  = document.getElementById('draw-text-bold');
+  const delBtn = document.getElementById('txt-delete-btn');
+  const badge  = document.getElementById('txt-obj-id-badge');
+
+  if(existingObj){
+    inp.value   = existingObj.text;
+    sz.value    = String(existingObj.size);
+    bd.checked  = existingObj.bold;
+    delBtn.style.display = 'inline-flex';
+    badge.textContent = '#'+existingObj.id;
+  } else {
+    inp.value   = '';
+    sz.value    = '24';
+    bd.checked  = true;
+    delBtn.style.display = 'none';
+    badge.textContent = '新增';
+  }
+
+  // 定位 overlay，避免超出視窗
   ov.classList.add('show');
-  // 定位在點擊位置旁邊，避免超出視窗
-  const margin = 10;
-  let lx = cx + margin;
-  let ty = cy + margin;
-  ov.style.left = lx + 'px';
-  ov.style.top  = ty + 'px';
-  setTimeout(()=>{ document.getElementById('draw-text-input').focus(); }, 50);
+  const margin = 12;
+  let lx = cx + margin, ty = cy + margin;
+  const ow = 280, oh = 130;
+  if(lx + ow > window.innerWidth)  lx = cx - ow - margin;
+  if(ty + oh > window.innerHeight) ty = cy - oh - margin;
+  ov.style.left = Math.max(4, lx) + 'px';
+  ov.style.top  = Math.max(4, ty) + 'px';
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 60);
 }
+
+/* ─── 公開 API：取消、確定、刪除 ─── */
 function cancelDrawText(){
-  const ov = document.getElementById('img-text-overlay');
-  ov.classList.remove('show');
+  document.getElementById('img-text-overlay').classList.remove('show');
   document.getElementById('draw-text-input').value = '';
+  _txtEditId   = null;
   _drawPending = null;
 }
+
 function commitDrawText(){
-  const txt = document.getElementById('draw-text-input').value.trim();
-  if(!txt || !_drawPending || !_drawCtx){ cancelDrawText(); return; }
-  const fontSize = parseInt(document.getElementById('draw-text-size').value) || 24;
-  // 字型大小需對應到 draw canvas 的座標空間
-  _drawCtx.globalCompositeOperation = 'source-over';
-  _drawCtx.font = `bold ${fontSize}px 'Noto Sans TC', sans-serif`;
-  _drawCtx.fillStyle = _drawColor;
-  _drawCtx.textBaseline = 'top';
-  _drawCtx.fillText(txt, _drawPending.x, _drawPending.y);
+  const txt  = document.getElementById('draw-text-input').value.trim();
+  const size = parseInt(document.getElementById('draw-text-size').value) || 24;
+  const bold = document.getElementById('draw-text-bold').checked;
+
+  if(!txt){ cancelDrawText(); return; }
+
+  if(_txtEditId !== null){
+    // 更新既有物件
+    const obj = _txtObjs.find(o=>o.id===_txtEditId);
+    if(obj){ obj.text=txt; obj.size=size; obj.bold=bold; obj.color=_drawColor; }
+  } else {
+    // 新增物件
+    if(!_drawPending) { cancelDrawText(); return; }
+    _txtObjs.push({
+      id: ++_txtIdCounter,
+      x: _drawPending.x, y: _drawPending.y,
+      text: txt, size: size, bold: bold,
+      color: _drawColor
+    });
+    _txtSelId = _txtIdCounter;
+  }
+
+  cancelDrawText();
+  _redrawTextObjs();
+}
+
+function deleteSelectedText(){
+  if(_txtEditId !== null){
+    _txtObjs = _txtObjs.filter(o=>o.id!==_txtEditId);
+    _txtSelId = null;
+  }
+  cancelDrawText();
+  _redrawTextObjs();
+}
+
+/* ─── 合併 / 清除 ─── */
+function flattenDrawLayer(){
+  if(!_imgBase) return;
+  _ensureStrokeCanvas();
+  // 先把文字選取框取消（合併前不要畫選取框）
+  const prevSel = _txtSelId; _txtSelId = null;
+  _redrawStrokes();
+  _txtObjs.forEach(obj => _renderOneTextObj(obj, false));
+
+  const ctx = _imgBase.getContext('2d');
+  ctx.drawImage(_drawCanvas, 0, 0, _imgBase.width, _imgBase.height);
+
+  // 清除兩層
+  _drawCtx.clearRect(0,0,_drawCanvas.width,_drawCanvas.height);
+  _strokeCtx.clearRect(0,0,_strokeCanvas.width,_strokeCanvas.height);
+  _txtObjs = []; _txtSelId = null; _txtEditId = null;
+
+  _renderImgCanvas();
+}
+
+function clearDrawLayer(){
+  if(_drawCtx)   _drawCtx.clearRect(0,0,_drawCanvas.width,_drawCanvas.height);
+  if(_strokeCtx) _strokeCtx.clearRect(0,0,_strokeCanvas.width,_strokeCanvas.height);
+  _txtObjs = []; _txtSelId = null; _txtEditId = null;
   cancelDrawText();
 }
 
-// ── 合併塗鴉層到 _imgBase ──
-function flattenDrawLayer(){
-  if(!_drawCanvas || !_imgBase) return;
-  const ctx = _imgBase.getContext('2d');
-  // draw canvas 尺寸 = display canvas 尺寸，需 scale 回 _imgBase
-  ctx.drawImage(_drawCanvas, 0, 0, _imgBase.width, _imgBase.height);
-  // 清除塗鴉層
-  _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
-  _renderImgCanvas();
-}
-function clearDrawLayer(){
-  if(!_drawCtx) return;
-  _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
-}
-
-// 重置時也清塗鴉層
+/* ─── 重置時也清塗鴉 ─── */
 function closeImgEditor(){
   closeModal('imgEdit-modal');
 }
-
 </script>
 </body>
 </html>

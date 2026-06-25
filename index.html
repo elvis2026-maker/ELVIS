@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V28.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V29.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -85,17 +85,47 @@ body {
 .hero-eyebrow {
   display: inline-block; font-family: 'Share Tech Mono', monospace;
   font-size: 12px; letter-spacing: 0.22em;
-  color: #D4AF37;
-  background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 40%, #2a2a2a 60%, #1a1a1a 100%);
-  border: 1px solid #555;
-  box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(180,150,60,0.18);
-  padding: 7px 24px; border-radius: 4px; margin-bottom: 24px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 0 8px rgba(212,175,55,0.25);
+  color: #2A3A4A;
+  background: linear-gradient(
+    160deg,
+    #D8DEE6 0%,
+    #E8EDF3 12%,
+    #F5F7FA 28%,
+    #FFFFFF 38%,
+    #EEF1F5 50%,
+    #D4DAE2 62%,
+    #BEC5CE 72%,
+    #D0D6DE 82%,
+    #E4E8EE 92%,
+    #D8DEE6 100%
+  );
+  border: 1px solid #A8B4C0;
+  border-top-color: #E8EEF4;
+  border-left-color: #DDE3EB;
+  border-bottom-color: #8A9AAA;
+  border-right-color: #9AAABB;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    inset 1px 0 0 rgba(255,255,255,0.5),
+    inset -1px 0 0 rgba(0,0,0,0.06),
+    0 2px 6px rgba(60,80,100,0.18),
+    0 1px 2px rgba(60,80,100,0.12);
+  padding: 8px 28px; border-radius: 3px; margin-bottom: 24px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 -1px 0 rgba(0,0,0,0.08);
   text-transform: uppercase;
+  position: relative;
+}
+.hero-eyebrow::before {
+  content: '';
+  position: absolute; inset: 3px;
+  border: 1px solid rgba(180,195,210,0.6);
+  border-radius: 1px;
+  pointer-events: none;
 }
 .hero h1 {
-  font-size: clamp(26px, 5vw, 50px); font-weight: 900;
-  line-height: 1.15; color: var(--silver); margin-bottom: 8px;
+  font-size: clamp(22px, 4vw, 42px); font-weight: 900;
+  line-height: 1.25; color: var(--silver); margin-bottom: 8px;
 }
 .hero h1 span {
   background: linear-gradient(90deg, var(--cyan), var(--cyan3));
@@ -534,14 +564,14 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V28.0</div>
+    <div class="version-badge">V29.0</div>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-eyebrow">瑞能電子 · MIS 轉檔專屬網站</div>
-  <h1>工程圖檔<span>線上檢視</span>與<span>格式轉換</span></h1>
+  <h1>免安裝線上看<span>3D / 2D</span>工程圖檔<br>與 <span>PDF</span> 格式轉換</h1>
   <p class="hero-sub">STP · IGS · STL · OBJ · DXF · DWG 本地端直接處理，不上傳至任何第三方伺服器</p>
   <div class="hero-divider"></div>
 </section>
@@ -585,8 +615,8 @@ footer strong { color: var(--cyan); }
     <div class="card-head">
       <div class="card-icon blue">🔷</div>
       <div>
-        <div class="card-num" style="color:var(--cyan);">功能 01 · 3D / 2D VIEWER</div>
-        <div class="card-title">線上檢視工程圖檔</div>
+        <div class="card-num" style="color:var(--cyan);display:none;">3D / 2D VIEWER</div>
+        <div class="card-title">線上看 3D 和 2D 工程圖檔</div>
       </div>
     </div>
     <div class="card-body">
@@ -602,7 +632,7 @@ footer strong { color: var(--cyan); }
       </div>
       <ul class="feature-list">
         <li><span class="dot dot-blue"></span>STL / OBJ：瀏覽器內完整 3D 旋轉、縮放、軸測檢視</li>
-        <li><span class="dot dot-blue"></span><strong style="color:var(--cyan)">STP / STEP / IGS / IGES：瀏覽器本地 3D 解析</strong>（Open CASCADE WebAssembly）</li>
+        <li><span class="dot dot-blue"></span><strong style="color:var(--cyan)">STP / STEP / IGS / IGES：瀏覽器本地 3D 解析</strong></li>
         <li><span class="dot dot-blue"></span>DXF：完整 2D 本地解析，圖元 / 文字 / 尺寸全支援</li>
         <li><span class="dot dot-blue"></span><strong style="color:var(--cyan)">DWG 圖檔線上看：</strong>支援圖層 / BLOCK / 填充完整顯示</li>
       </ul>
@@ -617,7 +647,7 @@ footer strong { color: var(--cyan); }
     <div class="card-head">
       <div class="card-icon red">🔴</div>
       <div>
-        <div class="card-num" style="color:#e74c3c;">功能 02 · FORMAT CONVERT</div>
+        <div class="card-num" style="color:#e74c3c;display:none;">FORMAT CONVERT</div>
         <div class="card-title">圖檔格式轉換</div>
       </div>
     </div>
@@ -646,19 +676,11 @@ footer strong { color: var(--cyan); }
   </div>
 </section>
 
-<!-- Capability notice -->
-<div class="capability-notice">
-  <div class="notice-box">
-    <span class="notice-icon">🛡️</span>
-    <div class="notice-text">
-      <strong>本地端處理說明：</strong>STL、OBJ、STP、IGS、DXF、DWG 檔案在您的瀏覽器內完成所有運算，<strong>零上傳、零外流</strong>。
-      DWG → PDF 採用 mlightcad 向量引擎直接輸出，在預覽器內 Zoom Fit → BG → Export PDF 即可。PDF → DWG 需向量識別技術，目前連結至 4 個已篩選的免費線上服務（首選已實測可用）。
-    </div>
-  </div>
-</div>
+
+
 
 <footer>
-  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V28.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V29.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -950,6 +972,54 @@ footer strong { color: var(--cyan); }
      JAVASCRIPT
 ══════════════════════════════════════════ -->
 <script>
+/* ─────────────────────────────────────────
+   ⚡ 程式碼保護機制
+   防止右鍵、F12、Ctrl+U、Ctrl+S、Ctrl+A
+   注意：此為前端阻擋，無法完全防止有經驗的開發者，
+   但可有效阻止一般使用者直接複製程式碼
+───────────────────────────────────────── */
+(function(){
+  // 禁用右鍵選單
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // 禁用常用快捷鍵
+  document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    const ctrl = e.ctrlKey || e.metaKey;
+
+    // Ctrl+U (檢視原始碼), Ctrl+S (儲存), Ctrl+A (全選), Ctrl+Shift+I/J/C (DevTools)
+    if(ctrl && (k==='u'||k==='s'||k==='a')) { e.preventDefault(); return false; }
+    if(ctrl && e.shiftKey && (k==='i'||k==='j'||k==='c')) { e.preventDefault(); return false; }
+    // F12 (DevTools)
+    if(k==='f12') { e.preventDefault(); return false; }
+  });
+
+  // 禁用選取文字（讓複製更困難）
+  document.addEventListener('selectstart', e => {
+    // 允許在 input/textarea 內選取
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    e.preventDefault();
+  });
+
+  // 偵測 DevTools 開啟（寬度差異法）
+  let devtoolsOpen = false;
+  const threshold = 160;
+  setInterval(()=>{
+    const wDiff = window.outerWidth - window.innerWidth > threshold;
+    const hDiff = window.outerHeight - window.innerHeight > threshold;
+    if((wDiff || hDiff) && !devtoolsOpen){
+      devtoolsOpen = true;
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#F5F7FA;font-family:\'Noto Sans TC\',sans-serif;"><div style="text-align:center;"><div style="font-size:48px;margin-bottom:16px;">🔒</div><div style="font-size:20px;font-weight:900;color:#1A2840;margin-bottom:8px;">此系統僅供瑞能電子內部使用</div><div style="font-size:13px;color:#6B7E96;">請關閉開發者工具後重新整理頁面</div></div></div>';
+    }
+    if(!wDiff && !hDiff && devtoolsOpen){
+      devtoolsOpen = false;
+    }
+  }, 1000);
+
+  // 禁用拖曳選取
+  document.addEventListener('dragstart', e => e.preventDefault());
+})();
+
 /* ─────────────────────────────────────────
    Circuit board background animation
 ───────────────────────────────────────── */

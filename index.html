@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V31.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V32.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -696,7 +696,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V31.0</div>
+    <div class="version-badge">V32.0</div>
   </div>
 </header>
 
@@ -716,7 +716,9 @@ footer strong { color: var(--cyan); }
 <!-- SERVICE CARDS -->
 <section class="services">
   <!-- Card 1: 3D Viewer (藍色系) -->
-  <div class="card card-blue">
+  <div class="card card-blue" onclick="openModal('viewer-modal')" style="cursor:pointer;"
+       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('viewer-modal')"
+       aria-label="開啟圖檔檢視器">
     <div class="card-head">
       <div class="card-icon blue">🔷</div>
       <div>
@@ -742,13 +744,15 @@ footer strong { color: var(--cyan); }
         <li><span class="dot dot-blue"></span><strong style="color:var(--cyan)">DWG 圖檔線上看：</strong>支援圖層 / BLOCK / 填充完整顯示</li>
       </ul>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="openModal('viewer-modal')">🔷 開啟圖檔檢視器</button>
+        <button class="btn btn-primary" onclick="event.stopPropagation();openModal('viewer-modal')">🔷 開啟圖檔檢視器</button>
       </div>
     </div>
   </div>
 
   <!-- Card 2: Convert (紅色系) -->
-  <div class="card card-red">
+  <div class="card card-red" onclick="openModal('convert-modal')" style="cursor:pointer;"
+       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('convert-modal')"
+       aria-label="開啟轉換工具">
     <div class="card-head">
       <div class="card-icon red">🔴</div>
       <div>
@@ -775,7 +779,7 @@ footer strong { color: var(--cyan); }
         <li><span class="dot dot-red"></span>檔案資料不外流，確保設計圖紙安全</li>
       </ul>
       <div class="btn-row">
-        <button class="btn btn-red" onclick="openModal('convert-modal')">🔴 開啟轉換工具</button>
+        <button class="btn btn-red" onclick="event.stopPropagation();openModal('convert-modal')">🔴 開啟轉換工具</button>
       </div>
     </div>
   </div>
@@ -796,7 +800,9 @@ footer strong { color: var(--cyan); }
 <section class="services" style="padding-top:0;">
 
   <!-- Card 3: PDF ↔ WORD 文書轉換 (綠色系) -->
-  <div class="card card-doc">
+  <div class="card card-doc" onclick="openModal('doc-modal')" style="cursor:pointer;"
+       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('doc-modal')"
+       aria-label="開啟文書轉換工具">
     <div class="card-head">
       <div class="card-icon green">📄</div>
       <div>
@@ -820,13 +826,15 @@ footer strong { color: var(--cyan); }
         <li><span class="dot dot-green2"></span>支援中文、表格、圖片等複雜文件格式</li>
       </ul>
       <div class="btn-row">
-        <button class="btn btn-green" onclick="openModal('doc-modal')">📄 開啟文書轉換工具</button>
+        <button class="btn btn-green" onclick="event.stopPropagation();openModal('doc-modal')">📄 開啟文書轉換工具</button>
       </div>
     </div>
   </div>
 
   <!-- Card 4: 圖片線上簡易編輯 (紫色系) -->
-  <div class="card card-img">
+  <div class="card card-img" onclick="openModal('imgEdit-modal')" style="cursor:pointer;"
+       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('imgEdit-modal')"
+       aria-label="開啟圖片編輯器">
     <div class="card-head">
       <div class="card-icon purple">🖼️</div>
       <div>
@@ -849,7 +857,7 @@ footer strong { color: var(--cyan); }
         <li><span class="dot dot-purple"></span>格式轉換：JPG ↔ PNG ↔ WEBP，純本地端處理</li>
       </ul>
       <div class="btn-row">
-        <button class="btn btn-purple" onclick="openModal('imgEdit-modal')">🖼️ 開啟圖片編輯器</button>
+        <button class="btn btn-purple" onclick="event.stopPropagation();openModal('imgEdit-modal')">🖼️ 開啟圖片編輯器</button>
       </div>
     </div>
   </div>
@@ -857,7 +865,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V31.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V32.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -2816,36 +2824,39 @@ function loadImgEditorFile(file){
   reader.onload = function(ev){
     const img = new Image();
     img.onload = function(){
+      const w = img.width;   // ← 修正：明確宣告 w / h
+      const h = img.height;
       _imgSource = img;
       _imgRotDeg = 0; _imgFlipH = false; _imgFlipV = false;
       _imgCropMode = false; _imgCropRect = null;
-      _buildImgCanvas(img.width, img.height, function(ctx){
-        ctx.drawImage(img, 0, 0);
-      });
-      // Update info bar
-      document.getElementById('img-ib-name').textContent = file.name;
-      document.getElementById('img-ib-size').textContent = img.width + ' × ' + img.height + ' px';
-      document.getElementById('img-ib-fsize').textContent = fmtSize(file.size);
-      document.getElementById('img-info-bar').classList.add('show');
-      // Show controls
-      document.getElementById('img-toolbar').style.display = 'flex';
-      document.getElementById('img-resize-row').style.display = 'flex';
-      document.getElementById('img-adjust-row').style.display = 'block';
-      document.getElementById('img-download-row').style.display = 'flex';
-      document.getElementById('img-w').value = img.width;
-      document.getElementById('img-h').value = img.height;
-      // Reset sliders
-      _imgRotDeg = 0; _imgFlipH = false; _imgFlipV = false;
+
       // Build _imgBase from freshly loaded source
       _imgBase = document.createElement('canvas');
       _imgBase.width  = w;
       _imgBase.height = h;
       _imgBase.getContext('2d').drawImage(img, 0, 0);
       _imgCanvas = _imgBase;
+
+      // Update info bar
+      document.getElementById('img-ib-name').textContent = file.name;
+      document.getElementById('img-ib-size').textContent = w + ' × ' + h + ' px';
+      document.getElementById('img-ib-fsize').textContent = fmtSize(file.size);
+      document.getElementById('img-info-bar').classList.add('show');
+
+      // Show controls
+      document.getElementById('img-toolbar').style.display = 'flex';
+      document.getElementById('img-resize-row').style.display = 'flex';
+      document.getElementById('img-adjust-row').style.display = 'block';
+      document.getElementById('img-download-row').style.display = 'flex';
+      document.getElementById('img-w').value = w;
+      document.getElementById('img-h').value = h;
+
+      // Reset sliders
       ['img-brightness','img-contrast','img-saturation'].forEach(id => { document.getElementById(id).value = 0; });
       document.getElementById('img-quality').value = 85;
       document.getElementById('img-quality-val').textContent = '85%';
       ['brightness','contrast','saturation'].forEach(k => document.getElementById('img-'+k+'-val').textContent = '0');
+
       _renderImgCanvas();
     };
     img.src = ev.target.result;

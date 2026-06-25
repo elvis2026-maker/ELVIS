@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V25.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V26.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -513,7 +513,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V25.0</div>
+    <div class="version-badge">V26.0</div>
   </div>
 </header>
 
@@ -616,7 +616,7 @@ footer strong { color: var(--cyan); }
       <ul class="feature-list">
         <li><span class="dot"></span>DXF → PDF：純瀏覽器本地轉換，秒速輸出</li>
         <li><span class="dot"></span><strong style="color:var(--cyan)">DWG → PDF：本地預覽後截圖轉 PDF，無須第三方</strong></li>
-        <li><span class="dot"></span>PDF → DWG：提供最佳第三方服務選項</li>
+        <li><span class="dot"></span>PDF → DWG：推薦 4 個免費線上服務，首選已驗證可用</li>
         <li><span class="dot"></span>檔案資料不外流，確保設計圖紙安全</li>
       </ul>
       <div class="btn-row">
@@ -632,13 +632,13 @@ footer strong { color: var(--cyan); }
     <span class="notice-icon">🛡️</span>
     <div class="notice-text">
       <strong>本地端處理說明：</strong>STL、OBJ、STP、IGS、DXF、DWG 檔案在您的瀏覽器內完成所有運算，<strong>零上傳、零外流</strong>。
-      DWG → PDF 採用 WebGL 預覽後截圖輸出，在預覽器內開啟圖面後按「轉 PDF」即可。PDF → DWG 需向量識別技術，目前連結至信任的第三方服務。
+      DWG → PDF 採用 WebGL 預覽後截圖輸出，在預覽器內開啟圖面後按「轉 PDF」即可。PDF → DWG 需向量識別技術，目前連結至 4 個已篩選的免費線上服務（首選已實測可用）。
     </div>
   </div>
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V25.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V26.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -870,37 +870,53 @@ footer strong { color: var(--cyan); }
 
       <!-- ── PDF → DWG (external) ── -->
       <div class="ctab-panel" id="ctab-pdf2dwg">
-        <div class="limit-note">
-          <strong>說明：</strong>PDF → DWG 需要 AI 向量識別與圖層重建技術，目前純前端瀏覽器無法完整執行。
-          以下為業界常用工具，品質依 PDF 來源（向量圖 vs 掃描圖）而異。
-        </div>
-        <br>
         <div class="steps-guide">
           <div class="step-item"><span class="step-num">1</span>選擇下方轉換平台，點擊在新分頁開啟</div>
-          <div class="step-item"><span class="step-num">2</span>上傳 .PDF 圖面（建議向量 PDF 效果更佳）</div>
+          <div class="step-item"><span class="step-num">2</span>上傳 .PDF 圖面（向量 PDF 效果最佳，掃描圖需 OCR 支援）</div>
           <div class="step-item"><span class="step-num">3</span>下載轉換後的 .DWG 可編輯檔</div>
         </div>
-        <a class="link-out-box" href="https://convertio.co/pdf-dwg/" target="_blank">
-          <span class="lob-icon">🔁</span>
-          <div>
-            <div class="lob-name">Convertio – PDF → DWG</div>
-            <div class="lob-url">convertio.co · 支援向量 PDF 轉 DWG，免費，無需安裝</div>
-          </div>
-          <span class="lob-arrow">↗</span>
-        </a>
+
         <a class="link-out-box" href="https://www.convertpdftoautocad.com/" target="_blank">
-          <span class="lob-icon">🔁</span>
+          <span class="lob-icon">⭐</span>
           <div>
-            <div class="lob-name">ConvertPDFtoAutoCAD – PDF → DWG</div>
-            <div class="lob-url">convertpdftoautocad.com · 免費、無需帳號、支援掃描圖 OCR</div>
+            <div class="lob-name">ConvertPDFtoAutoCAD <span style="font-size:10px;background:rgba(0,180,80,0.12);border:1px solid rgba(0,180,80,0.3);color:var(--green);padding:1px 7px;border-radius:4px;margin-left:6px;">推薦・已驗證可用</span></div>
+            <div class="lob-url">convertpdftoautocad.com · 免費、無需帳號、支援掃描圖 OCR、自動啟動轉換</div>
           </div>
           <span class="lob-arrow">↗</span>
         </a>
+
+        <a class="link-out-box" href="https://cadsofttools.com/pdf-to-dwg-online/" target="_blank">
+          <span class="lob-icon">🔧</span>
+          <div>
+            <div class="lob-name">CADSoftTools – PDF → DWG</div>
+            <div class="lob-url">cadsofttools.com · 老牌 CST 引擎，向量識別，輸出含線、弧、文字、填充，免費免帳號</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+
+        <a class="link-out-box" href="https://www.weepdf.com/pdf-to-dwg" target="_blank">
+          <span class="lob-icon">📄</span>
+          <div>
+            <div class="lob-name">WeePDF – PDF → DWG</div>
+            <div class="lob-url">weepdf.com · 免費、無浮水印、無需帳號，拖入即自動轉換</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+
+        <a class="link-out-box" href="https://www.investintech.com/pdf-to-dwg/" target="_blank">
+          <span class="lob-icon">🔍</span>
+          <div>
+            <div class="lob-name">Able2Extract Online – PDF → DWG</div>
+            <div class="lob-url">investintech.com · 每日免費 1 個，Able2Extract 技術，含 OCR，品質佳</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+
         <a class="link-out-box" href="https://dwg.autodwg.com/" target="_blank">
           <span class="lob-icon">📐</span>
           <div>
-            <div class="lob-name">AutoDWG – PDF → DWG（免費線上）</div>
-            <div class="lob-url">dwg.autodwg.com · 免費、支援向量與掃描圖，無需帳號</div>
+            <div class="lob-name">AutoDWG – PDF → DWG <span style="font-size:10px;background:rgba(200,100,0,0.1);border:1px solid rgba(200,100,0,0.3);color:#b8690a;padding:1px 7px;border-radius:4px;margin-left:6px;">需登入帳號</span></div>
+            <div class="lob-url">dwg.autodwg.com · 業界老牌超過 15 年，向量與掃描圖皆可，登入後免費使用</div>
           </div>
           <span class="lob-arrow">↗</span>
         </a>

@@ -2995,16 +2995,26 @@ function toggleImgCrop(){
   dc.style.cursor = _imgCropMode ? 'crosshair' : 'default';
   if(!_imgCropMode && _imgCropRect){
     // Apply crop — ALWAYS from raw _imgCanvas (no CSS filter contamination)
+    // Crop rect coords are in display-canvas space; map back to _imgCanvas space
     const r = _imgCropRect;
-    if(r.w > 4 && r.h > 4){
+    if(r && r.w > 4 && r.h > 4){
+      const dc2 = document.getElementById('img-editor-canvas');
+      // Scale factor: display canvas may be same size as _imgCanvas (usually 1:1 after renderImgCanvas)
+      // but guard with explicit scale just in case
+      const sx2 = _imgCanvas.width  / dc2.width;
+      const sy2 = _imgCanvas.height / dc2.height;
+      const rx = Math.round(r.x * sx2);
+      const ry = Math.round(r.y * sy2);
+      const rw = Math.max(1, Math.round(r.w * sx2));
+      const rh = Math.max(1, Math.round(r.h * sy2));
       const cropC = document.createElement('canvas');
-      cropC.width  = Math.round(r.w);
-      cropC.height = Math.round(r.h);
-      cropC.getContext('2d').drawImage(_imgCanvas, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+      cropC.width  = rw;
+      cropC.height = rh;
+      cropC.getContext('2d').drawImage(_imgCanvas, rx, ry, rw, rh, 0, 0, rw, rh);
       _imgCanvas = cropC;
       // Update resize state so _renderImgCanvas uses the new cropped size
-      _imgResizeW = Math.round(r.w);
-      _imgResizeH = Math.round(r.h);
+      _imgResizeW = rw;
+      _imgResizeH = rh;
       // Re-render display canvas with filters re-applied on top of cropped raw image
       _renderImgCanvas();
     }
@@ -3020,6 +3030,7 @@ function toggleImgCrop(){
     if(!dc) return;
     dc.addEventListener('mousedown',function(e){
       if(!_imgCropMode) return;
+      e.preventDefault();
       const rect = dc.getBoundingClientRect();
       const scaleX = dc.width / rect.width;
       const scaleY = dc.height / rect.height;
@@ -3038,12 +3049,10 @@ function toggleImgCrop(){
         x: Math.min(sx,ex), y: Math.min(sy,ey),
         w: Math.abs(ex-sx), h: Math.abs(ey-sy)
       };
-      // Draw selection overlay
-      const tmp = document.createElement('canvas');
-      tmp.width = dc.width; tmp.height = dc.height;
-      tmp.getContext('2d').drawImage(_imgCanvas, 0, 0);
+
+      // Step 1: redraw image onto display canvas with current filters
+      // dc.width/height is the display canvas size (may differ from _imgCanvas after resize)
       const dCtx = dc.getContext('2d');
-      // Redraw the filtered image before overlaying crop rect
       const brightness = parseInt(document.getElementById('img-brightness')?.value||0);
       const contrast   = parseInt(document.getElementById('img-contrast')?.value||0);
       const saturation = parseInt(document.getElementById('img-saturation')?.value||0);
@@ -3052,16 +3061,30 @@ function toggleImgCrop(){
         'contrast('+(100+contrast)+'%) '+
         'saturate('+(100+saturation)+'%)';
       dCtx.filter = filterStr;
-      dCtx.drawImage(_imgCanvas, 0, 0);
+      // Draw _imgCanvas scaled to fill the display canvas exactly
+      dCtx.drawImage(_imgCanvas, 0, 0, dc.width, dc.height);
       dCtx.filter = 'none';
-      // Draw crop selection box in blue
+
+      // Step 2: draw crop selection box in blue on top
+      dCtx.save();
       dCtx.strokeStyle = '#0072B5';
-      dCtx.lineWidth = 2;
-      dCtx.setLineDash([6,3]);
+      dCtx.lineWidth = Math.max(1.5, dc.width / 400);
+      dCtx.setLineDash([6, 3]);
       dCtx.strokeRect(_imgCropRect.x, _imgCropRect.y, _imgCropRect.w, _imgCropRect.h);
-      dCtx.fillStyle = 'rgba(0,114,181,0.08)';
+      dCtx.fillStyle = 'rgba(0,114,181,0.09)';
       dCtx.fillRect(_imgCropRect.x, _imgCropRect.y, _imgCropRect.w, _imgCropRect.h);
+      // Corner handles
+      const hs = 6;
       dCtx.setLineDash([]);
+      dCtx.fillStyle = '#0072B5';
+      const corners = [
+        [_imgCropRect.x, _imgCropRect.y],
+        [_imgCropRect.x + _imgCropRect.w - hs, _imgCropRect.y],
+        [_imgCropRect.x, _imgCropRect.y + _imgCropRect.h - hs],
+        [_imgCropRect.x + _imgCropRect.w - hs, _imgCropRect.y + _imgCropRect.h - hs]
+      ];
+      corners.forEach(([cx,cy]) => dCtx.fillRect(cx, cy, hs, hs));
+      dCtx.restore();
     });
     dc.addEventListener('mouseup',function(){
       isDown=false;

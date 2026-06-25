@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V33.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V36.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -166,24 +166,24 @@ body {
 }
 .card:hover { border-color: rgba(0,114,181,0.45); box-shadow: 0 8px 40px rgba(0,114,181,0.10); transform: translateY(-3px); }
 .card:hover::before { opacity: 1; }
-/* 藍色系 card */
-.card-blue::before { background: linear-gradient(90deg, var(--cyan2), var(--cyan)); }
-.card-blue:hover { border-color: rgba(0,114,181,0.55); box-shadow: 0 8px 40px rgba(0,114,181,0.18); }
-/* 紅色系 card */
-.card-red { border-color: rgba(220,53,69,0.18); }
-.card-red::before { background: linear-gradient(90deg, #c0392b, #e74c3c); }
-.card-red:hover { border-color: rgba(220,53,69,0.55); box-shadow: 0 8px 40px rgba(220,53,69,0.14); transform: translateY(-3px); }
+/* 藍色系 card → Microsoft Blue #00A4EF */
+.card-blue::before { background: linear-gradient(90deg, #0082c8, #00A4EF); }
+.card-blue:hover { border-color: rgba(0,164,239,0.55); box-shadow: 0 8px 40px rgba(0,164,239,0.18); }
+/* 紅色系 card → Microsoft Red #F25022 */
+.card-red { border-color: rgba(242,80,34,0.18); }
+.card-red::before { background: linear-gradient(90deg, #c73d10, #F25022); }
+.card-red:hover { border-color: rgba(242,80,34,0.55); box-shadow: 0 8px 40px rgba(242,80,34,0.14); transform: translateY(-3px); }
 /* Dot colors */
-.dot-blue { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan2); flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 4px rgba(0,114,181,0.5); }
-.dot-red  { width: 6px; height: 6px; border-radius: 50%; background: #e74c3c; flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 4px rgba(220,53,69,0.5); }
+.dot-blue { width: 6px; height: 6px; border-radius: 50%; background: #00A4EF; flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 4px rgba(0,164,239,0.5); }
+.dot-red  { width: 6px; height: 6px; border-radius: 50%; background: #F25022; flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 4px rgba(242,80,34,0.5); }
 .card-head { padding: 24px 24px 18px; border-bottom: 1px solid rgba(0,114,181,0.1); display: flex; align-items: flex-start; gap: 16px; }
 .card-icon {
   width: 50px; height: 50px; flex-shrink: 0; border-radius: 12px;
   display: flex; align-items: center; justify-content: center; font-size: 24px;
 }
-.card-icon.blue  { background: rgba(0,114,181,0.10); box-shadow: 0 0 20px rgba(0,114,181,0.08); }
-.card-icon.green { background: rgba(0,135,90,0.10);  box-shadow: 0 0 20px rgba(0,135,90,0.08); }
-.card-icon.red   { background: rgba(220,53,69,0.10);  box-shadow: 0 0 20px rgba(220,53,69,0.08); }
+.card-icon.blue  { background: rgba(0,164,239,0.10); box-shadow: 0 0 20px rgba(0,164,239,0.08); }
+.card-icon.green { background: rgba(127,186,0,0.10);  box-shadow: 0 0 20px rgba(127,186,0,0.08); }
+.card-icon.red   { background: rgba(242,80,34,0.10);  box-shadow: 0 0 20px rgba(242,80,34,0.08); }
 .card-num  { font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 4px; }
 .card-title { font-size: 21px; font-weight: 900; color: var(--silver); line-height: 1.3; }
 .card-body { padding: 18px 24px 24px; }
@@ -210,15 +210,15 @@ body {
   text-decoration: none; transition: all 0.2s; letter-spacing: 0.03em;
 }
 .btn-primary {
-  background: linear-gradient(135deg, var(--cyan2), var(--cyan)); color: #FFFFFF;
-  box-shadow: 0 4px 20px rgba(0,114,181,0.22);
+  background: linear-gradient(135deg, #0082c8, #00A4EF); color: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(0,164,239,0.22);
 }
-.btn-primary:hover { box-shadow: 0 6px 28px rgba(0,114,181,0.38); transform: translateY(-1px); }
+.btn-primary:hover { box-shadow: 0 6px 28px rgba(0,164,239,0.38); transform: translateY(-1px); }
 .btn-red {
-  background: linear-gradient(135deg, #c0392b, #e74c3c); color: #FFFFFF;
-  box-shadow: 0 4px 20px rgba(220,53,69,0.22);
+  background: linear-gradient(135deg, #c73d10, #F25022); color: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(242,80,34,0.22);
 }
-.btn-red:hover { box-shadow: 0 6px 28px rgba(220,53,69,0.38); transform: translateY(-1px); }
+.btn-red:hover { box-shadow: 0 6px 28px rgba(242,80,34,0.38); transform: translateY(-1px); }
 
 /* ── CAPABILITY NOTICE ── */
 .capability-notice {
@@ -587,24 +587,24 @@ footer strong { color: var(--cyan); }
   box-shadow: 0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.55);
 }
 
-/* ── DOC card (green-teal) ── */
-.card-doc { border-color: rgba(0,155,100,0.18); }
-.card-doc::before { background: linear-gradient(90deg, #007A50, #00AA72); }
-.card-doc:hover { border-color: rgba(0,155,100,0.55); box-shadow: 0 8px 40px rgba(0,155,100,0.13); transform: translateY(-3px); }
-.dot-green2 { width:6px; height:6px; border-radius:50%; background:#00AA72; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(0,170,114,0.5); }
+/* ── DOC card → Microsoft Green #7FBA00 ── */
+.card-doc { border-color: rgba(127,186,0,0.18); }
+.card-doc::before { background: linear-gradient(90deg, #5e9000, #7FBA00); }
+.card-doc:hover { border-color: rgba(127,186,0,0.55); box-shadow: 0 8px 40px rgba(127,186,0,0.13); transform: translateY(-3px); }
+.dot-green2 { width:6px; height:6px; border-radius:50%; background:#7FBA00; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(127,186,0,0.5); }
 
-/* ── IMAGE EDITOR card (purple) ── */
-.card-img { border-color: rgba(0,114,181,0.18); }
-.card-img::before { background: linear-gradient(90deg, #005A8E, #0072B5); }
-.card-img:hover { border-color: rgba(0,114,181,0.55); box-shadow: 0 8px 40px rgba(0,114,181,0.13); transform: translateY(-3px); }
-.card-icon.purple { background: rgba(0,114,181,0.10); box-shadow: 0 0 20px rgba(0,114,181,0.08); }
-.dot-purple { width:6px; height:6px; border-radius:50%; background:#0072B5; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(0,114,181,0.5); }
-.card-doc .card-num  { color: #00875A; }
-.card-img .card-num  { color: #0072B5; }
-.btn-green { background: linear-gradient(135deg, #007A50, #00AA72); color:#fff; box-shadow:0 4px 20px rgba(0,155,100,0.22); }
-.btn-green:hover { box-shadow:0 6px 28px rgba(0,155,100,0.38); transform:translateY(-1px); }
-.btn-purple { background: linear-gradient(135deg, #005A8E, #0072B5); color:#fff; box-shadow:0 4px 20px rgba(0,114,181,0.22); }
-.btn-purple:hover { box-shadow:0 6px 28px rgba(0,114,181,0.38); transform:translateY(-1px); }
+/* ── IMAGE EDITOR card → Microsoft Yellow #FFB900 ── */
+.card-img { border-color: rgba(255,185,0,0.22); }
+.card-img::before { background: linear-gradient(90deg, #cc9400, #FFB900); }
+.card-img:hover { border-color: rgba(255,185,0,0.6); box-shadow: 0 8px 40px rgba(255,185,0,0.15); transform: translateY(-3px); }
+.card-icon.purple { background: rgba(255,185,0,0.12); box-shadow: 0 0 20px rgba(255,185,0,0.10); }
+.dot-purple { width:6px; height:6px; border-radius:50%; background:#cc9400; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(255,185,0,0.5); }
+.card-doc .card-num  { color: #7FBA00; }
+.card-img .card-num  { color: #cc9400; }
+.btn-green  { background: linear-gradient(135deg, #5e9000, #7FBA00); color:#fff; box-shadow:0 4px 20px rgba(127,186,0,0.22); }
+.btn-green:hover  { box-shadow:0 6px 28px rgba(127,186,0,0.38); transform:translateY(-1px); }
+.btn-purple { background: linear-gradient(135deg, #cc9400, #FFB900); color:#1a1a1a; box-shadow:0 4px 20px rgba(255,185,0,0.25); }
+.btn-purple:hover { box-shadow:0 6px 28px rgba(255,185,0,0.42); transform:translateY(-1px); }
 
 /* ── SECTION LABEL DIVIDER ── */
 .section-label {
@@ -689,21 +689,21 @@ footer strong { color: var(--cyan); }
   </div>
   <div class="topbar-nameplate">
     <span class="tnp-dot"></span>
-    <span class="tnp-text">瑞能電子有限公司</span>
+    <span class="tnp-text">程式設計 Elvis Liu</span>
     <span class="tnp-sep">｜</span>
-    <span class="tnp-sub">MIS 轉檔專屬網站</span>
+    <span class="tnp-sub">版權所有</span>
     <span class="tnp-dot"></span>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V33.0</div>
+    <div class="version-badge">V36.0</div>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
-  <h1>免安裝線上看<span>3D / 2D</span>工程圖檔<br>與 <span>PDF</span> 格式轉換</h1>
-  <p class="hero-sub">STP · IGS · STL · OBJ · DXF · DWG 本地端直接處理，不上傳至任何第三方伺服器</p>
+  <h1>免安裝 線上看<span>3D / 2D</span>工程圖檔<br>與<span>圖片 / 文書</span>處理及<span>PDF</span>格式轉換</h1>
+  <p class="hero-sub">全線上辦公室利器，工程圖 · 文件 · 圖片一站搞定，資料純本地處理零外流</p>
   <div class="hero-divider"></div>
 </section>
 
@@ -798,43 +798,10 @@ footer strong { color: var(--cyan); }
   <div class="section-label-line"></div>
 </div>
 
-<!-- NEW CARDS: Doc + Image Editor -->
+<!-- NEW CARDS: Image Editor + Doc -->
 <section class="services" style="padding-top:0;">
 
-  <!-- Card 3: PDF ↔ WORD 文書轉換 (綠色系) -->
-  <div class="card card-doc" onclick="openModal('doc-modal')" style="cursor:pointer;"
-       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('doc-modal')"
-       aria-label="開啟文書轉換工具">
-    <div class="card-head">
-      <div class="card-icon green">📄</div>
-      <div>
-        <div class="card-title">PDF ↔ Word 文書轉換
-          <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:400;color:var(--green);letter-spacing:0.08em;margin-top:4px;">Document Format Converter</div>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="formats">
-        <span class="fmt-tag ok">.PDF</span>
-        <span class="fmt-tag">→</span>
-        <span class="fmt-tag ok">.DOCX</span>
-        <span class="fmt-tag ok">.DOCX</span>
-        <span class="fmt-tag">→</span>
-        <span class="fmt-tag accent">.PDF</span>
-      </div>
-      <ul class="feature-list">
-        <li><span class="dot dot-green2"></span>PDF 轉 Word（.docx）：可編輯文件，保留格式與排版</li>
-        <li><span class="dot dot-green2"></span>Word 轉 PDF：高品質輸出，版面完整還原</li>
-        <li><span class="dot dot-green2"></span>免安裝 Office，純線上操作，快速完成</li>
-        <li><span class="dot dot-green2"></span>支援中文、表格、圖片等複雜文件格式</li>
-      </ul>
-      <div class="btn-row">
-        <button class="btn btn-green" onclick="event.stopPropagation();openModal('doc-modal')">📄 開啟文書轉換工具</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Card 4: 圖片線上簡易編輯 (紫色系) -->
+  <!-- Card 3: 圖片線上簡易編輯 (藍紫色系) — 移到左側 -->
   <div class="card card-img" onclick="openModal('imgEdit-modal')" style="cursor:pointer;"
        role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('imgEdit-modal')"
        aria-label="開啟圖片編輯器">
@@ -842,7 +809,7 @@ footer strong { color: var(--cyan); }
       <div class="card-icon purple">🖼️</div>
       <div>
         <div class="card-title">圖片線上簡易編輯
-          <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:400;color:#0072B5;letter-spacing:0.08em;margin-top:4px;">Online Image Editor</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:400;color:#cc9400;letter-spacing:0.08em;margin-top:4px;">Online Image Editor</div>
         </div>
       </div>
     </div>
@@ -866,10 +833,44 @@ footer strong { color: var(--cyan); }
     </div>
   </div>
 
+  <!-- Card 4: 文書格式轉換 (綠色系) — 移到右側，擴充為全文書格式 -->
+  <div class="card card-doc" onclick="openModal('doc-modal')" style="cursor:pointer;"
+       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('doc-modal')"
+       aria-label="開啟文書轉換工具">
+    <div class="card-head">
+      <div class="card-icon green">📄</div>
+      <div>
+        <div class="card-title">PDF ↔ 文書格式轉換
+          <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:400;color:#7FBA00;letter-spacing:0.08em;margin-top:4px;">Document Format Converter</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="formats">
+        <span class="fmt-tag accent">.PDF</span>
+        <span class="fmt-tag">⇄</span>
+        <span class="fmt-tag ok">.DOCX</span>
+        <span class="fmt-tag ok">.XLSX</span>
+        <span class="fmt-tag ok">.PPTX</span>
+        <span class="fmt-tag ok">.TXT</span>
+        <span class="fmt-tag ok">.CSV</span>
+      </div>
+      <ul class="feature-list">
+        <li><span class="dot dot-green2"></span>PDF → Word / Excel / PPT：還原可編輯格式，保留排版</li>
+        <li><span class="dot dot-green2"></span>Word / Excel / PPT → PDF：高品質輸出，版面完整固定</li>
+        <li><span class="dot dot-green2"></span>支援 TXT、CSV 等純文字與試算表格式轉換</li>
+        <li><span class="dot dot-green2"></span>免安裝 Office，純線上操作，支援中文複雜格式</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="event.stopPropagation();openModal('doc-modal')">📄 開啟文書轉換工具</button>
+      </div>
+    </div>
+  </div>
+
 </section>
 
 <footer>
-  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V33.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V36.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1160,13 +1161,13 @@ footer strong { color: var(--cyan); }
 
 
 <!-- ══════════════════════════════════════════
-     MODAL 3: PDF ↔ WORD 文書轉換
+     MODAL 3: 文書格式轉換
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="doc-modal">
   <div class="modal" style="max-width:860px">
     <div class="modal-header">
       <div class="modal-title">
-        📄 PDF ↔ Word 文書轉換
+        📄 PDF ↔ 文書格式轉換
         <span class="badge-partial" style="background:rgba(0,155,100,0.1);border-color:rgba(0,155,100,0.3);color:#00875A;">線上服務</span>
       </div>
       <button class="modal-close" onclick="closeModal('doc-modal')">✕</button>
@@ -1175,8 +1176,10 @@ footer strong { color: var(--cyan); }
 
       <!-- Tab bar -->
       <div class="convert-tabs" id="doc-tabs">
-        <button class="ctab active" onclick="switchDocTab('pdf2word')">PDF → Word<br><span style="font-size:10px;font-weight:400;opacity:.7">可編輯文件</span></button>
-        <button class="ctab" onclick="switchDocTab('word2pdf')">Word → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">版面固定輸出</span></button>
+        <button class="ctab active" onclick="switchDocTab('pdf2word')">PDF → Word<br><span style="font-size:10px;font-weight:400;opacity:.7">.docx 可編輯</span></button>
+        <button class="ctab" onclick="switchDocTab('pdf2excel')">PDF → Excel<br><span style="font-size:10px;font-weight:400;opacity:.7">.xlsx 試算表</span></button>
+        <button class="ctab" onclick="switchDocTab('pdf2ppt')">PDF → PPT<br><span style="font-size:10px;font-weight:400;opacity:.7">.pptx 簡報</span></button>
+        <button class="ctab" onclick="switchDocTab('office2pdf')">Office → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">Word / Excel / PPT</span></button>
       </div>
 
       <!-- PDF → Word -->
@@ -1220,18 +1223,100 @@ footer strong { color: var(--cyan); }
         </a>
       </div>
 
-      <!-- Word → PDF -->
-      <div class="ctab-panel" id="dctab-word2pdf">
+      <!-- PDF → Excel -->
+      <div class="ctab-panel" id="dctab-pdf2excel">
         <div class="steps-guide">
           <div class="step-item"><span class="step-num">1</span>選擇下方轉換平台，在新分頁開啟</div>
-          <div class="step-item"><span class="step-num">2</span>上傳 .docx / .doc 檔案</div>
+          <div class="step-item"><span class="step-num">2</span>上傳含表格的 PDF 檔案</div>
+          <div class="step-item"><span class="step-num">3</span>下載 .xlsx 可編輯的 Excel 試算表</div>
+        </div>
+        <a class="link-out-box" href="https://www.ilovepdf.com/zh-tw/pdf_to_excel" target="_blank">
+          <span class="lob-icon">⭐</span>
+          <div>
+            <div class="lob-name">iLovePDF – PDF → Excel <span style="font-size:10px;background:rgba(0,180,80,0.12);border:1px solid rgba(0,180,80,0.3);color:var(--green);padding:1px 7px;border-radius:4px;margin-left:6px;">推薦・免費</span></div>
+            <div class="lob-url">ilovepdf.com · 表格辨識準確，免費無限次，繁體中文介面</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://smallpdf.com/zh-TW/pdf-to-excel" target="_blank">
+          <span class="lob-icon">📊</span>
+          <div>
+            <div class="lob-name">Smallpdf – PDF → Excel</div>
+            <div class="lob-url">smallpdf.com · 自動偵測表格，保留欄列結構</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://www.adobe.com/acrobat/online/pdf-to-excel.html" target="_blank">
+          <span class="lob-icon">🔴</span>
+          <div>
+            <div class="lob-name">Adobe Acrobat Online – PDF → Excel</div>
+            <div class="lob-url">adobe.com · 官方工具，複雜表格還原度高，需登入</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://cloudconvert.com/pdf-to-xlsx" target="_blank">
+          <span class="lob-icon">☁️</span>
+          <div>
+            <div class="lob-name">CloudConvert – PDF → Excel</div>
+            <div class="lob-url">cloudconvert.com · 高品質轉換，每日免費 10 次</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+      </div>
+
+      <!-- PDF → PPT -->
+      <div class="ctab-panel" id="dctab-pdf2ppt">
+        <div class="steps-guide">
+          <div class="step-item"><span class="step-num">1</span>選擇下方轉換平台，在新分頁開啟</div>
+          <div class="step-item"><span class="step-num">2</span>上傳 PDF 檔案</div>
+          <div class="step-item"><span class="step-num">3</span>下載 .pptx 可編輯的 PowerPoint 簡報</div>
+        </div>
+        <a class="link-out-box" href="https://www.ilovepdf.com/zh-tw/pdf_to_powerpoint" target="_blank">
+          <span class="lob-icon">⭐</span>
+          <div>
+            <div class="lob-name">iLovePDF – PDF → PPT <span style="font-size:10px;background:rgba(0,180,80,0.12);border:1px solid rgba(0,180,80,0.3);color:var(--green);padding:1px 7px;border-radius:4px;margin-left:6px;">推薦・免費</span></div>
+            <div class="lob-url">ilovepdf.com · 每頁 PDF 轉為獨立投影片，免費無限次</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://smallpdf.com/zh-TW/pdf-to-ppt" target="_blank">
+          <span class="lob-icon">📽️</span>
+          <div>
+            <div class="lob-name">Smallpdf – PDF → PPT</div>
+            <div class="lob-url">smallpdf.com · 保留版面配置，支援圖文混排</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://www.adobe.com/acrobat/online/pdf-to-ppt.html" target="_blank">
+          <span class="lob-icon">🔴</span>
+          <div>
+            <div class="lob-name">Adobe Acrobat Online – PDF → PPT</div>
+            <div class="lob-url">adobe.com · 官方工具，版面還原精準，需登入</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://cloudconvert.com/pdf-to-pptx" target="_blank">
+          <span class="lob-icon">☁️</span>
+          <div>
+            <div class="lob-name">CloudConvert – PDF → PPT</div>
+            <div class="lob-url">cloudconvert.com · 支援複雜簡報還原，每日免費 10 次</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+      </div>
+
+      <!-- Office → PDF -->
+      <div class="ctab-panel" id="dctab-office2pdf">
+        <div class="steps-guide">
+          <div class="step-item"><span class="step-num">1</span>選擇下方轉換平台，在新分頁開啟</div>
+          <div class="step-item"><span class="step-num">2</span>上傳 .docx / .xlsx / .pptx 等文書檔案</div>
           <div class="step-item"><span class="step-num">3</span>下載轉換後的高品質 PDF 文件</div>
         </div>
         <a class="link-out-box" href="https://www.ilovepdf.com/zh-tw/word_to_pdf" target="_blank">
           <span class="lob-icon">⭐</span>
           <div>
-            <div class="lob-name">iLovePDF – Word → PDF <span style="font-size:10px;background:rgba(0,180,80,0.12);border:1px solid rgba(0,180,80,0.3);color:var(--green);padding:1px 7px;border-radius:4px;margin-left:6px;">推薦・免費</span></div>
-            <div class="lob-url">ilovepdf.com · 免費無限次，批次轉換，繁體中文介面</div>
+            <div class="lob-name">iLovePDF – Word / Excel / PPT → PDF <span style="font-size:10px;background:rgba(0,180,80,0.12);border:1px solid rgba(0,180,80,0.3);color:var(--green);padding:1px 7px;border-radius:4px;margin-left:6px;">推薦・免費</span></div>
+            <div class="lob-url">ilovepdf.com · 三種格式皆支援，免費無限次，繁體中文</div>
           </div>
           <span class="lob-arrow">↗</span>
         </a>
@@ -1246,8 +1331,16 @@ footer strong { color: var(--cyan); }
         <a class="link-out-box" href="https://cloudconvert.com/docx-to-pdf" target="_blank">
           <span class="lob-icon">☁️</span>
           <div>
-            <div class="lob-name">CloudConvert – Word → PDF</div>
-            <div class="lob-url">cloudconvert.com · 高品質輸出，每日免費 10 次</div>
+            <div class="lob-name">CloudConvert – Office → PDF（Word / Excel / PPT）</div>
+            <div class="lob-url">cloudconvert.com · 支援所有 Office 格式，每日免費 10 次</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://www.adobe.com/acrobat/online/word-to-pdf.html" target="_blank">
+          <span class="lob-icon">🔴</span>
+          <div>
+            <div class="lob-name">Adobe Acrobat Online – Word → PDF</div>
+            <div class="lob-url">adobe.com · 官方工具，格式還原最精準，需登入</div>
           </div>
           <span class="lob-arrow">↗</span>
         </a>
@@ -2794,8 +2887,9 @@ function downloadDxfPdf(){
 ══════════════════════════════════════════ */
 function switchDocTab(tab){
   const tabs = document.querySelectorAll('#doc-tabs .ctab');
-  tabs.forEach((b,i) => b.classList.toggle('active', (tab==='pdf2word'&&i===0)||(tab==='word2pdf'&&i===1)));
-  ['pdf2word','word2pdf'].forEach(t => {
+  const order = ['pdf2word','pdf2excel','pdf2ppt','office2pdf'];
+  tabs.forEach((b,i) => b.classList.toggle('active', order[i] === tab));
+  order.forEach(t => {
     const el = document.getElementById('dctab-'+t);
     if(el) el.classList.toggle('active', t===tab);
   });

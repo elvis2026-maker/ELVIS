@@ -594,17 +594,17 @@ footer strong { color: var(--cyan); }
 .dot-green2 { width:6px; height:6px; border-radius:50%; background:#00AA72; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(0,170,114,0.5); }
 
 /* ── IMAGE EDITOR card (purple) ── */
-.card-img { border-color: rgba(130,70,180,0.18); }
-.card-img::before { background: linear-gradient(90deg, #7B3FA0, #A855C8); }
-.card-img:hover { border-color: rgba(130,70,180,0.55); box-shadow: 0 8px 40px rgba(130,70,180,0.13); transform: translateY(-3px); }
-.card-icon.purple { background: rgba(130,70,180,0.10); box-shadow: 0 0 20px rgba(130,70,180,0.08); }
-.dot-purple { width:6px; height:6px; border-radius:50%; background:#A855C8; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(168,85,200,0.5); }
+.card-img { border-color: rgba(0,114,181,0.18); }
+.card-img::before { background: linear-gradient(90deg, #005A8E, #0072B5); }
+.card-img:hover { border-color: rgba(0,114,181,0.55); box-shadow: 0 8px 40px rgba(0,114,181,0.13); transform: translateY(-3px); }
+.card-icon.purple { background: rgba(0,114,181,0.10); box-shadow: 0 0 20px rgba(0,114,181,0.08); }
+.dot-purple { width:6px; height:6px; border-radius:50%; background:#0072B5; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(0,114,181,0.5); }
 .card-doc .card-num  { color: #00875A; }
-.card-img .card-num  { color: #9B59B6; }
+.card-img .card-num  { color: #0072B5; }
 .btn-green { background: linear-gradient(135deg, #007A50, #00AA72); color:#fff; box-shadow:0 4px 20px rgba(0,155,100,0.22); }
 .btn-green:hover { box-shadow:0 6px 28px rgba(0,155,100,0.38); transform:translateY(-1px); }
-.btn-purple { background: linear-gradient(135deg, #7B3FA0, #A855C8); color:#fff; box-shadow:0 4px 20px rgba(130,70,180,0.22); }
-.btn-purple:hover { box-shadow:0 6px 28px rgba(130,70,180,0.38); transform:translateY(-1px); }
+.btn-purple { background: linear-gradient(135deg, #005A8E, #0072B5); color:#fff; box-shadow:0 4px 20px rgba(0,114,181,0.22); }
+.btn-purple:hover { box-shadow:0 6px 28px rgba(0,114,181,0.38); transform:translateY(-1px); }
 
 /* ── SECTION LABEL DIVIDER ── */
 .section-label {
@@ -632,7 +632,7 @@ footer strong { color: var(--cyan); }
 /* image editor canvas */
 #img-editor-canvas-wrap {
   display:none; border-radius:10px; overflow:hidden;
-  border:1px solid rgba(130,70,180,0.25); margin-bottom:12px;
+  border:1px solid rgba(0,114,181,0.25); margin-bottom:12px;
   background:#f0f0f0; text-align:center;
 }
 #img-editor-canvas-wrap.active { display:block; }
@@ -642,23 +642,22 @@ footer strong { color: var(--cyan); }
 }
 .img-tool-btn {
   font-family:'Noto Sans TC',sans-serif; font-size:12px; font-weight:700;
-  padding:7px 14px; border-radius:8px; border:1px solid rgba(130,70,180,0.25);
-  background:rgba(130,70,180,0.07); color:#7B3FA0; cursor:pointer; transition:all 0.18s;
+  padding:7px 14px; border-radius:8px; border:1px solid rgba(0,114,181,0.22);
+  background:rgba(0,114,181,0.06); color:#005A8E; cursor:pointer; transition:all 0.18s;
 }
-.img-tool-btn:hover, .img-tool-btn.active {
-  background:rgba(130,70,180,0.15); border-color:#9B59B6;
-}
+.img-tool-btn:hover { background:rgba(0,114,181,0.10); border-color:rgba(0,114,181,0.4); }
+.img-tool-btn.active { background:rgba(0,114,181,0.14); border-color:#0072B5; color:#005A8E; }
 .img-tool-btn.danger { border-color:rgba(220,53,69,0.3); color:#c0392b; background:rgba(220,53,69,0.05); }
 .img-tool-btn.danger:hover { background:rgba(220,53,69,0.12); border-color:#e74c3c; }
 .img-size-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
 .img-size-row label { font-size:12px; color:var(--silver3); }
 .img-size-row input[type=number] {
   width:80px; padding:6px 8px; border-radius:6px;
-  border:1px solid rgba(130,70,180,0.25); background:#fff; color:var(--silver); font-size:13px;
+  border:1px solid rgba(0,114,181,0.22); background:#fff; color:var(--silver); font-size:13px;
 }
 .img-range-row { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
 .img-range-row label { font-size:12px; color:var(--silver3); min-width:70px; }
-.img-range-row input[type=range] { flex:1; min-width:100px; accent-color:#9B59B6; }
+.img-range-row input[type=range] { flex:1; min-width:100px; accent-color:#0072B5; }
 .img-range-row span { font-size:12px; color:var(--silver2); min-width:36px; text-align:right; font-family:'Share Tech Mono',monospace; }
 
 @media (max-width: 600px) {
@@ -1334,7 +1333,7 @@ footer strong { color: var(--cyan); }
       <!-- Download controls -->
       <div id="img-download-row" style="display:none;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px;">
         <label style="font-size:12px;color:var(--silver3);">輸出格式：</label>
-        <select id="img-fmt-select" style="padding:6px 10px;border-radius:6px;border:1px solid rgba(130,70,180,0.25);font-size:13px;color:var(--silver);background:#fff;">
+        <select id="img-fmt-select" style="padding:6px 10px;border-radius:6px;border:1px solid rgba(0,114,181,0.25);font-size:13px;color:var(--silver);background:#fff;">
           <option value="image/jpeg">JPG</option>
           <option value="image/png">PNG</option>
           <option value="image/webp">WEBP</option>
@@ -2995,19 +2994,19 @@ function toggleImgCrop(){
   const dc = document.getElementById('img-editor-canvas');
   dc.style.cursor = _imgCropMode ? 'crosshair' : 'default';
   if(!_imgCropMode && _imgCropRect){
-    // Apply crop
+    // Apply crop — ALWAYS from raw _imgCanvas (no CSS filter contamination)
     const r = _imgCropRect;
     if(r.w > 4 && r.h > 4){
       const cropC = document.createElement('canvas');
-      cropC.width = r.w; cropC.height = r.h;
-      cropC.getContext('2d').drawImage(dc, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+      cropC.width  = Math.round(r.w);
+      cropC.height = Math.round(r.h);
+      cropC.getContext('2d').drawImage(_imgCanvas, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
       _imgCanvas = cropC;
-      const nc = document.getElementById('img-editor-canvas');
-      nc.width = r.w; nc.height = r.h;
-      nc.getContext('2d').drawImage(cropC, 0, 0);
-      document.getElementById('img-ib-cur').textContent = r.w + ' × ' + r.h + ' px';
-      document.getElementById('img-w').value = r.w;
-      document.getElementById('img-h').value = r.h;
+      // Update resize state so _renderImgCanvas uses the new cropped size
+      _imgResizeW = Math.round(r.w);
+      _imgResizeH = Math.round(r.h);
+      // Re-render display canvas with filters re-applied on top of cropped raw image
+      _renderImgCanvas();
     }
     _imgCropRect = null;
   }
@@ -3044,12 +3043,23 @@ function toggleImgCrop(){
       tmp.width = dc.width; tmp.height = dc.height;
       tmp.getContext('2d').drawImage(_imgCanvas, 0, 0);
       const dCtx = dc.getContext('2d');
+      // Redraw the filtered image before overlaying crop rect
+      const brightness = parseInt(document.getElementById('img-brightness')?.value||0);
+      const contrast   = parseInt(document.getElementById('img-contrast')?.value||0);
+      const saturation = parseInt(document.getElementById('img-saturation')?.value||0);
+      const filterStr  =
+        'brightness('+(100+brightness)+'%) '+
+        'contrast('+(100+contrast)+'%) '+
+        'saturate('+(100+saturation)+'%)';
+      dCtx.filter = filterStr;
       dCtx.drawImage(_imgCanvas, 0, 0);
-      dCtx.strokeStyle = '#9B59B6';
+      dCtx.filter = 'none';
+      // Draw crop selection box in blue
+      dCtx.strokeStyle = '#0072B5';
       dCtx.lineWidth = 2;
       dCtx.setLineDash([6,3]);
       dCtx.strokeRect(_imgCropRect.x, _imgCropRect.y, _imgCropRect.w, _imgCropRect.h);
-      dCtx.fillStyle = 'rgba(155,89,182,0.12)';
+      dCtx.fillStyle = 'rgba(0,114,181,0.08)';
       dCtx.fillRect(_imgCropRect.x, _imgCropRect.y, _imgCropRect.w, _imgCropRect.h);
       dCtx.setLineDash([]);
     });

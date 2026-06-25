@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V42.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V43.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -744,7 +744,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V42.0</div>
+    <div class="version-badge">V43.0</div>
   </div>
 </header>
 
@@ -996,7 +996,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;MIS 轉檔專屬系統 V42.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
+  © 2026 &nbsp;MIS 轉檔專屬系統 V43.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
   <script>
     (function(){
       const d = new Date('2026-06-25'); // 自動更新：每次修改此檔案時會更新為當天日期
@@ -2730,7 +2730,10 @@ function init2DCanvas(file){
     x:margin+(W-margin*2)/2-(b.minX+dw/2)*dxf2dScale,
     y:H/2+(b.minY+dh/2)*dxf2dScale
   };
-  drawDXF2D();
+  // 預載中文字型再繪製，避免亂碼
+  document.fonts.load('16px "Noto Sans TC"').catch(()=>{}).finally(()=>{
+    drawDXF2D();
+  });
   setup2DEvents(canvas);
 }
 
@@ -2869,7 +2872,8 @@ function drawDXF2D(){
       const clampH = Math.min(Math.max(h, 8), 48); // clamp: never too tiny/huge
       ctx.save();
       ctx.fillStyle = 'rgba(0,180,255,0.9)';
-      ctx.font = clampH + 'px "Noto Sans TC", Arial, sans-serif';
+      // 使用多重 fallback 字型確保中文正確顯示
+      ctx.font = clampH + 'px "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Arial Unicode MS", Arial, sans-serif';
       ctx.fillText(txt.substring(0, 80), tx(gv(10)), ty(gv(20)));
       ctx.restore();
     }
@@ -2932,6 +2936,11 @@ async function convertDxf2Pdf(){
   const btn = document.getElementById('dxf2pdf-btn');
   btn.disabled = true;
   showStatus('dxf2pdf-status','processing','解析 DXF 中…','正在讀取圖面資料',20);
+
+  // 確保中文字型已載入，避免 canvas 畫出亂碼
+  try {
+    await document.fonts.load('16px "Noto Sans TC"');
+  } catch(e) { /* 字型載入失敗也繼續，用系統備援字型 */ }
 
   // 使用與 Viewer 相同的智慧編碼偵測
   const buf = await dxf2pdfFile.arrayBuffer();
@@ -3038,22 +3047,15 @@ async function convertDxf2Pdf(){
       const scaledH = (rawH > 0 ? rawH : (dw / 80)) * scale; // fallback: ~1/80 of drawing width
       const h = Math.min(Math.max(scaledH, 10), 60); // clamp 10–60px on canvas
       ctx.save();
-      ctx.fillStyle='#1a2a3a'; ctx.font=h+'px "Noto Sans TC", Arial';
+      ctx.fillStyle='#1a2a3a';
+      // 使用多重 fallback 字型確保中文正確顯示於 PDF
+      ctx.font=h+'px "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Arial Unicode MS", Arial, sans-serif';
       ctx.fillText(txt.substring(0,80), tx(gv(10)), ty(gv(20)));
       ctx.restore();
     }
   });
 
-  // Border & title block
-  ctx.strokeStyle='#1a2a3a'; ctx.lineWidth=4;
-  ctx.strokeRect(40,40,oc.width-80,oc.height-80);
-  ctx.strokeRect(oc.width-540,oc.height-180,500,140);
-  ctx.font='bold 28px Arial'; ctx.fillStyle='#1a2a3a';
-  ctx.fillText('瑞能電子股份有限公司', oc.width-520, oc.height-138);
-  ctx.font='22px Arial';
-  ctx.fillText('檔案：'+dxf2pdfFile.name.replace('.dxf',''), oc.width-520, oc.height-108);
-  ctx.fillText('日期：'+new Date().toLocaleDateString('zh-TW'), oc.width-520, oc.height-80);
-  ctx.fillText('MIS 轉檔系統', oc.width-520, oc.height-52);
+  // ── 不加圖框與公司名稱，保持原始 DXF 內容不變 ──
 
   showStatus('dxf2pdf-status','processing','產生 PDF…','嵌入圖面至 PDF',80);
   await new Promise(r=>setTimeout(r,80));

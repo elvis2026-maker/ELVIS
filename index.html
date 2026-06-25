@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V30.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V31.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -545,23 +545,51 @@ footer strong { color: var(--cyan); }
 .topbar-eyebrow-banner {
   background: linear-gradient(
     160deg,
-    #D8DEE6 0%, #E8EDF3 12%, #F5F7FA 28%, #FFFFFF 38%,
-    #EEF1F5 50%, #D4DAE2 62%, #BEC5CE 72%,
-    #D0D6DE 82%, #E4E8EE 92%, #D8DEE6 100%
+    #C8D0DA 0%, #D8E0EA 10%, #E8EDF3 22%, #F5F7FA 32%,
+    #FFFFFF 42%, #F0F3F7 52%, #E0E6EE 62%,
+    #CDD5DF 72%, #D8DFE8 82%, #E4E9F0 92%, #C8D0DA 100%
   );
-  border-bottom: 1px solid #A8B4C0;
+  border-bottom: 1px solid #8A9AAA;
+  border-top: 1px solid rgba(255,255,255,0.95);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.85),
-    inset 0 -1px 0 rgba(0,0,0,0.10),
-    0 2px 4px rgba(60,80,100,0.10);
-  text-align: center;
+    inset 0 1px 0 rgba(255,255,255,0.90),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 2px 6px rgba(40,60,90,0.13);
+  display: flex; align-items: center; justify-content: center; gap: 14px;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 12px; letter-spacing: 0.22em;
-  color: #2A3A4A;
-  text-transform: uppercase;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 -1px 0 rgba(0,0,0,0.08);
+  font-size: 12px;
+  color: #1E2E40;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.95), 0 -1px 0 rgba(0,0,0,0.10);
   padding: 7px 24px;
   position: sticky; top: 0; z-index: 101;
+}
+.teb-company {
+  letter-spacing: 0.30em;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #162840;
+  text-transform: none;
+}
+.teb-title {
+  letter-spacing: 0.20em;
+  font-size: 11.5px;
+  color: #2A3E56;
+  text-transform: none;
+}
+.teb-sep {
+  color: #8A9AAA;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0;
+  text-shadow: none;
+  margin: 0 2px;
+}
+.teb-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #8AAAC0 0%, #5A7A94 100%);
+  box-shadow: 0 0 3px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.6);
+  display: inline-block; flex-shrink: 0;
 }
 
 /* ── DOC card (green-teal) ── */
@@ -639,7 +667,7 @@ footer strong { color: var(--cyan); }
 .img-range-row span { font-size:12px; color:var(--silver2); min-width:36px; text-align:right; font-family:'Share Tech Mono',monospace; }
 
 @media (max-width: 600px) {
-  .topbar-eyebrow-banner { font-size:10px; padding:6px 12px; }
+  .topbar-eyebrow-banner { font-size:10px; padding:6px 12px; gap:8px; } .teb-company { font-size:10px; } .teb-title { font-size:9.5px; }
 }
 
 /* ── ORIGINAL RESPONSIVE ── */
@@ -660,7 +688,13 @@ footer strong { color: var(--cyan); }
 
 <div class="wrap">
 <!-- TOPBAR EYEBROW BANNER -->
-<div class="topbar-eyebrow-banner">瑞能電子 · MIS 轉檔專屬網站</div>
+<div class="topbar-eyebrow-banner">
+  <span class="teb-dot"></span>
+  <span class="teb-company">瑞能電子有限公司</span>
+  <span class="teb-sep">|</span>
+  <span class="teb-title">MIS 轉檔專屬網站</span>
+  <span class="teb-dot"></span>
+</div>
 <!-- TOP BAR -->
 <header class="topbar">
   <div class="topbar-logo">
@@ -668,7 +702,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V30.0</div>
+    <div class="version-badge">V31.0</div>
   </div>
 </header>
 
@@ -829,7 +863,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V30.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V31.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -2766,6 +2800,8 @@ function switchDocTab(tab){
 ══════════════════════════════════════════ */
 let _imgSource = null;   // original HTMLImageElement
 let _imgCanvas = null;   // current working canvas (offscreen)
+let _imgResizeW = 0;     // user-applied resize width (0 = use source size)
+let _imgResizeH = 0;     // user-applied resize height (0 = use source size)
 let _imgRotDeg = 0;
 let _imgFlipH  = false;
 let _imgFlipV  = false;
@@ -2806,6 +2842,7 @@ function loadImgEditorFile(file){
       document.getElementById('img-w').value = img.width;
       document.getElementById('img-h').value = img.height;
       // Reset sliders
+      _imgResizeW = 0; _imgResizeH = 0;
       ['img-brightness','img-contrast','img-saturation'].forEach(id => { document.getElementById(id).value = 0; });
       document.getElementById('img-quality').value = 85;
       document.getElementById('img-quality-val').textContent = '85%';
@@ -2827,32 +2864,42 @@ function _buildImgCanvas(w, h, drawFn){
 
 function _renderImgCanvas(){
   if(!_imgSource || !_imgCanvas) return;
-  // Get current adjustments
+  // Get current filter adjustments
   const brightness = parseInt(document.getElementById('img-brightness')?.value || 0);
   const contrast   = parseInt(document.getElementById('img-contrast')?.value   || 0);
   const saturation = parseInt(document.getElementById('img-saturation')?.value || 0);
 
-  // Build a temp canvas with rotation and flip applied
+  // Step 1: Build base canvas from source with rotation + flip applied (always at source size)
   const sw = _imgSource.width, sh = _imgSource.height;
   const rotRad = _imgRotDeg * Math.PI / 180;
   const isOdd90 = (_imgRotDeg % 180 !== 0);
-  const dw = isOdd90 ? sh : sw;
-  const dh = isOdd90 ? sw : sh;
+  const baseW = isOdd90 ? sh : sw;
+  const baseH = isOdd90 ? sw : sh;
 
+  const baseC = document.createElement('canvas');
+  baseC.width = baseW; baseC.height = baseH;
+  const baseCtx = baseC.getContext('2d');
+  baseCtx.save();
+  baseCtx.translate(baseW/2, baseH/2);
+  baseCtx.rotate(rotRad);
+  baseCtx.scale(_imgFlipH ? -1 : 1, _imgFlipV ? -1 : 1);
+  baseCtx.drawImage(_imgSource, -sw/2, -sh/2);
+  baseCtx.restore();
+
+  // Step 2: Determine output size — respect _imgResizeW/H if set (user applied a resize)
+  const outW = (_imgResizeW > 0) ? _imgResizeW : baseW;
+  const outH = (_imgResizeH > 0) ? _imgResizeH : baseH;
+
+  // Step 3: Scale base canvas to output size (this preserves the resize)
   const tmpC = document.createElement('canvas');
-  tmpC.width = dw; tmpC.height = dh;
+  tmpC.width = outW; tmpC.height = outH;
   const tmpCtx = tmpC.getContext('2d');
-  tmpCtx.save();
-  tmpCtx.translate(dw/2, dh/2);
-  tmpCtx.rotate(rotRad);
-  tmpCtx.scale(_imgFlipH ? -1 : 1, _imgFlipV ? -1 : 1);
-  tmpCtx.drawImage(_imgSource, -sw/2, -sh/2);
-  tmpCtx.restore();
+  tmpCtx.drawImage(baseC, 0, 0, outW, outH);
 
-  // Apply filters via CSS filter string on the display canvas
+  // Step 4: Render to display canvas with CSS filters applied
   const displayCanvas = document.getElementById('img-editor-canvas');
-  displayCanvas.width  = dw;
-  displayCanvas.height = dh;
+  displayCanvas.width  = outW;
+  displayCanvas.height = outH;
   const dCtx = displayCanvas.getContext('2d');
   const filterStr =
     'brightness('+(100+brightness)+'%) ' +
@@ -2862,13 +2909,13 @@ function _renderImgCanvas(){
   dCtx.drawImage(tmpC, 0, 0);
   dCtx.filter = 'none';
 
-  // Update working canvas (for export, no filter—raw)
+  // Step 5: Update working canvas (raw, no CSS filter) — keeps the resized size
   _imgCanvas = tmpC;
 
-  // Update size display
-  document.getElementById('img-ib-cur').textContent = dw + ' × ' + dh + ' px';
-  document.getElementById('img-w').value = dw;
-  document.getElementById('img-h').value = dh;
+  // Step 6: Update size display fields (never override user input during a filter adjustment)
+  document.getElementById('img-ib-cur').textContent = outW + ' × ' + outH + ' px';
+  document.getElementById('img-w').value = outW;
+  document.getElementById('img-h').value = outH;
 
   // Show canvas
   const wrap = document.getElementById('img-editor-canvas-wrap');
@@ -2892,6 +2939,7 @@ function imgReset(){
   if(!_imgSource) return;
   _imgRotDeg = 0; _imgFlipH = false; _imgFlipV = false;
   _imgCropMode = false; _imgCropRect = null;
+  _imgResizeW = 0; _imgResizeH = 0;
   document.getElementById('img-crop-btn').classList.remove('active');
   ['img-brightness','img-contrast','img-saturation'].forEach(id => { document.getElementById(id).value = 0; });
   ['brightness','contrast','saturation'].forEach(k => document.getElementById('img-'+k+'-val').textContent = '0');
@@ -2917,6 +2965,9 @@ function imgApplyResize(){
   if(!_imgCanvas) return;
   const nw = parseInt(document.getElementById('img-w').value)||1;
   const nh = parseInt(document.getElementById('img-h').value)||1;
+  // Save resize state so _renderImgCanvas always outputs this size
+  _imgResizeW = nw;
+  _imgResizeH = nh;
   const resC = document.createElement('canvas');
   resC.width = nw; resC.height = nh;
   const resCtx = resC.getContext('2d');

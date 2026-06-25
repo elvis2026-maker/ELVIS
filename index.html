@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V26.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V27.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -96,7 +96,7 @@ body {
   background: linear-gradient(90deg, var(--cyan), var(--cyan3));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.hero-sub { margin-top: 14px; font-size: 14px; color: var(--silver3); letter-spacing: 0.04em; }
+.hero-sub { margin-top: 14px; font-size: 15px; color: var(--silver3); letter-spacing: 0.04em; }
 .hero-divider {
   margin: 36px auto 0; width: 60px; height: 2px;
   background: linear-gradient(90deg, transparent, var(--cyan2), transparent);
@@ -111,9 +111,9 @@ body {
   background: rgba(0,114,181,0.04); border: 1px solid rgba(0,114,181,0.12);
   border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;
 }
-.stat-icon { font-size: 22px; }
-.stat-label { font-size: 11px; color: var(--silver3); letter-spacing: 0.06em; margin-bottom: 2px; }
-.stat-value { font-size: 15px; font-weight: 700; color: var(--silver); font-family: 'Share Tech Mono', monospace; }
+.stat-icon { font-size: 24px; }
+.stat-label { font-size: 12px; color: var(--silver3); letter-spacing: 0.06em; margin-bottom: 2px; }
+.stat-value { font-size: 16px; font-weight: 700; color: var(--silver); font-family: 'Share Tech Mono', monospace; }
 
 /* ── SERVICE CARDS ── */
 .services {
@@ -131,6 +131,16 @@ body {
 }
 .card:hover { border-color: rgba(0,114,181,0.45); box-shadow: 0 8px 40px rgba(0,114,181,0.10); transform: translateY(-3px); }
 .card:hover::before { opacity: 1; }
+/* 藍色系 card */
+.card-blue::before { background: linear-gradient(90deg, var(--cyan2), var(--cyan)); }
+.card-blue:hover { border-color: rgba(0,114,181,0.55); box-shadow: 0 8px 40px rgba(0,114,181,0.18); }
+/* 紅色系 card */
+.card-red { border-color: rgba(220,53,69,0.18); }
+.card-red::before { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+.card-red:hover { border-color: rgba(220,53,69,0.55); box-shadow: 0 8px 40px rgba(220,53,69,0.14); transform: translateY(-3px); }
+/* Dot colors */
+.dot-blue { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan2); flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 4px rgba(0,114,181,0.5); }
+.dot-red  { width: 6px; height: 6px; border-radius: 50%; background: #e74c3c; flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 4px rgba(220,53,69,0.5); }
 .card-head { padding: 24px 24px 18px; border-bottom: 1px solid rgba(0,114,181,0.1); display: flex; align-items: flex-start; gap: 16px; }
 .card-icon {
   width: 50px; height: 50px; flex-shrink: 0; border-radius: 12px;
@@ -138,8 +148,9 @@ body {
 }
 .card-icon.blue  { background: rgba(0,114,181,0.10); box-shadow: 0 0 20px rgba(0,114,181,0.08); }
 .card-icon.green { background: rgba(0,135,90,0.10);  box-shadow: 0 0 20px rgba(0,135,90,0.08); }
-.card-num  { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 4px; }
-.card-title { font-size: 19px; font-weight: 900; color: var(--silver); line-height: 1.3; }
+.card-icon.red   { background: rgba(220,53,69,0.10);  box-shadow: 0 0 20px rgba(220,53,69,0.08); }
+.card-num  { font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 4px; }
+.card-title { font-size: 21px; font-weight: 900; color: var(--silver); line-height: 1.3; }
 .card-body { padding: 18px 24px 24px; }
 .formats { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
 .fmt-tag {
@@ -149,18 +160,18 @@ body {
 }
 .fmt-tag.accent { background: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.25); color: #FF8C63; }
 .fmt-tag.ok     { background: rgba(0,135,90,0.08); border-color: rgba(0,135,90,0.28); color: var(--green); }
-.card-desc { font-size: 13.5px; color: var(--silver3); line-height: 1.75; margin-bottom: 20px; }
-.feature-list { list-style: none; margin-bottom: 20px; display: flex; flex-direction: column; gap: 9px; }
-.feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--silver2); line-height: 1.6; }
+.card-desc { font-size: 14.5px; color: var(--silver3); line-height: 1.75; margin-bottom: 20px; }
+.feature-list { list-style: none; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+.feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--silver2); line-height: 1.65; }
 .feature-list li .dot {
-  width: 5px; height: 5px; border-radius: 50%; background: var(--cyan2); flex-shrink: 0; margin-top: 7px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--cyan2); flex-shrink: 0; margin-top: 7px;
   box-shadow: 0 0 4px rgba(0,114,181,0.4);
 }
 .btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
-  font-size: 13.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
-  padding: 11px 22px; border-radius: 10px; border: none; cursor: pointer;
+  font-size: 14.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer;
   text-decoration: none; transition: all 0.2s; letter-spacing: 0.03em;
 }
 .btn-primary {
@@ -168,6 +179,11 @@ body {
   box-shadow: 0 4px 20px rgba(0,114,181,0.22);
 }
 .btn-primary:hover { box-shadow: 0 6px 28px rgba(0,114,181,0.38); transform: translateY(-1px); }
+.btn-red {
+  background: linear-gradient(135deg, #c0392b, #e74c3c); color: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(220,53,69,0.22);
+}
+.btn-red:hover { box-shadow: 0 6px 28px rgba(220,53,69,0.38); transform: translateY(-1px); }
 
 /* ── CAPABILITY NOTICE ── */
 .capability-notice {
@@ -178,14 +194,14 @@ body {
   border-radius: 12px; padding: 14px 20px;
   display: flex; align-items: flex-start; gap: 14px;
 }
-.notice-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
-.notice-text { font-size: 12.5px; color: var(--silver3); line-height: 1.7; }
+.notice-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.notice-text { font-size: 13.5px; color: var(--silver3); line-height: 1.75; }
 .notice-text strong { color: var(--green); }
 
 /* ── FOOTER ── */
 footer {
   border-top: 1px solid rgba(0,114,181,0.12); text-align: center;
-  padding: 24px; font-size: 11px; color: var(--silver3);
+  padding: 24px; font-size: 12px; color: var(--silver3);
   font-family: 'Share Tech Mono', monospace; letter-spacing: 0.06em;
 }
 footer strong { color: var(--cyan); }
@@ -214,7 +230,7 @@ footer strong { color: var(--cyan); }
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 22px; border-bottom: 1px solid rgba(0,114,181,0.12); flex-shrink: 0;
 }
-.modal-title { font-size: 15px; font-weight: 800; color: var(--silver); display: flex; align-items: center; gap: 10px; }
+.modal-title { font-size: 16px; font-weight: 800; color: var(--silver); display: flex; align-items: center; gap: 10px; }
 .modal-title .badge-local {
   font-family: 'Share Tech Mono', monospace; font-size: 10px;
   background: rgba(0,135,90,0.10); border: 1px solid rgba(0,135,90,0.28); color: var(--green);
@@ -236,7 +252,7 @@ footer strong { color: var(--cyan); }
 .vtab {
   flex: 1; min-width: 100px; padding: 9px 12px; border-radius: 8px;
   border: 1px solid rgba(0,114,181,0.15); background: transparent; color: var(--silver3);
-  cursor: pointer; font-size: 12.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  cursor: pointer; font-size: 13.5px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
   transition: all 0.2s; text-align: center;
 }
 .vtab.active { background: rgba(0,114,181,0.10); border-color: var(--cyan2); color: var(--cyan2); }
@@ -255,8 +271,8 @@ footer strong { color: var(--cyan); }
 }
 .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .upload-icon { font-size: 36px; margin-bottom: 10px; }
-.upload-label { font-size: 14px; color: var(--silver2); font-weight: 700; }
-.upload-hint  { font-size: 11px; color: var(--silver3); margin-top: 5px; }
+.upload-label { font-size: 15px; color: var(--silver2); font-weight: 700; }
+.upload-hint  { font-size: 12px; color: var(--silver3); margin-top: 5px; }
 
 /* Three.js canvas container */
 #canvas3d-wrap {
@@ -381,7 +397,7 @@ footer strong { color: var(--cyan); }
 .ctab {
   flex: 1; padding: 10px; border-radius: 8px;
   border: 1px solid rgba(0,114,181,0.15); background: transparent; color: var(--silver3);
-  cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
+  cursor: pointer; font-size: 14px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif;
   transition: all 0.2s;
 }
 .ctab.active { background: rgba(0,114,181,0.10); border-color: var(--cyan2); color: var(--cyan2); }
@@ -402,8 +418,8 @@ footer strong { color: var(--cyan); }
 }
 .file-preview-info.show { display: flex; }
 .fpi-icon { font-size: 26px; }
-.fpi-name { font-size: 13px; font-weight: 700; color: var(--silver); }
-.fpi-size { font-size: 11px; color: var(--silver3); margin-top: 2px; }
+.fpi-name { font-size: 14px; font-weight: 700; color: var(--silver); }
+.fpi-size { font-size: 12px; color: var(--silver3); margin-top: 2px; }
 
 /* Progress / Status */
 .status-box {
@@ -419,7 +435,7 @@ footer strong { color: var(--cyan); }
 .status-box.error {
   background: rgba(255,107,53,0.06); border: 1px solid rgba(255,107,53,0.25);
 }
-.status-label { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.status-label { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
 .status-box.processing .status-label { color: var(--cyan); }
 .status-box.success .status-label { color: var(--green); }
 .status-box.error .status-label { color: var(--accent); }
@@ -428,7 +444,7 @@ footer strong { color: var(--cyan); }
   height: 100%; background: linear-gradient(90deg, var(--cyan2), var(--cyan));
   border-radius: 3px; width: 0%; transition: width 0.4s; box-shadow: 0 0 6px rgba(0,114,181,0.4);
 }
-.status-msg { font-size: 12px; color: var(--silver3); margin-top: 8px; }
+.status-msg { font-size: 13px; color: var(--silver3); margin-top: 8px; }
 
 .convert-action-btn {
   display: inline-flex; align-items: center; gap: 8px;
@@ -461,7 +477,7 @@ footer strong { color: var(--cyan); }
 
 /* Steps */
 .steps-guide { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.step-item { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: var(--silver2); }
+.step-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--silver2); }
 .step-num {
   width: 22px; height: 22px; border-radius: 50%;
   background: rgba(0,114,181,0.12); border: 1px solid rgba(0,114,181,0.32);
@@ -479,8 +495,8 @@ footer strong { color: var(--cyan); }
 }
 .link-out-box:hover { background: rgba(0,114,181,0.09); border-color: var(--cyan2); }
 .lob-icon  { font-size: 20px; flex-shrink: 0; }
-.lob-name  { font-size: 13px; font-weight: 700; color: var(--silver); }
-.lob-url   { font-size: 11px; color: var(--silver3); font-family: 'Share Tech Mono', monospace; }
+.lob-name  { font-size: 14px; font-weight: 700; color: var(--silver); }
+.lob-url   { font-size: 12px; color: var(--silver3); font-family: 'Share Tech Mono', monospace; }
 .lob-arrow { margin-left: auto; color: var(--cyan); font-size: 14px; }
 
 /* DWG partial support badge */
@@ -513,13 +529,12 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V26.0</div>
+    <div class="version-badge">V27.0</div>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">瑞能電子 · MIS 轉檔專屬網站</div>
   <h1>工程圖檔<span>線上檢視</span>與<span>格式轉換</span></h1>
   <p class="hero-sub">STP · IGS · STL · OBJ · DXF · DWG 本地端直接處理，不上傳至任何第三方伺服器</p>
   <div class="hero-divider"></div>
@@ -559,12 +574,12 @@ footer strong { color: var(--cyan); }
 
 <!-- SERVICE CARDS -->
 <section class="services">
-  <!-- Card 1: 3D Viewer -->
-  <div class="card">
+  <!-- Card 1: 3D Viewer (藍色系) -->
+  <div class="card card-blue">
     <div class="card-head">
       <div class="card-icon blue">🔷</div>
       <div>
-        <div class="card-num">功能 01 · 3D / 2D VIEWER</div>
+        <div class="card-num" style="color:var(--cyan);">功能 01 · 3D / 2D VIEWER</div>
         <div class="card-title">線上檢視工程圖檔</div>
       </div>
     </div>
@@ -580,11 +595,11 @@ footer strong { color: var(--cyan); }
         <span class="fmt-tag ok">.DWG</span>
       </div>
       <ul class="feature-list">
-        <li><span class="dot"></span>STL / OBJ：瀏覽器內完整 3D 旋轉、縮放、軸測檢視</li>
-        <li><span class="dot"></span><strong style="color:var(--cyan)">STP / STEP / IGS / IGES：瀏覽器本地 3D 解析</strong>（Open CASCADE WebAssembly）</li>
-        <li><span class="dot"></span>DXF：完整 2D 本地解析，圖元 / 文字 / 尺寸全支援</li>
-        <li><span class="dot"></span><strong style="color:var(--cyan)">DWG 進階預覽：</strong>採用 mlightcad WebGL 引擎，支援圖層 / BLOCK / 填充</li>
-        <li><span class="dot"></span>檔案完全在本機處理，不上傳至任何伺服器</li>
+        <li><span class="dot dot-blue"></span>STL / OBJ：瀏覽器內完整 3D 旋轉、縮放、軸測檢視</li>
+        <li><span class="dot dot-blue"></span><strong style="color:var(--cyan)">STP / STEP / IGS / IGES：瀏覽器本地 3D 解析</strong>（Open CASCADE WebAssembly）</li>
+        <li><span class="dot dot-blue"></span>DXF：完整 2D 本地解析，圖元 / 文字 / 尺寸全支援</li>
+        <li><span class="dot dot-blue"></span><strong style="color:var(--cyan)">DWG 進階預覽：</strong>採用 mlightcad WebGL 引擎，支援圖層 / BLOCK / 填充</li>
+        <li><span class="dot dot-blue"></span>檔案完全在本機處理，不上傳至任何伺服器</li>
       </ul>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="openModal('viewer-modal')">🔷 開啟圖檔檢視器</button>
@@ -592,12 +607,12 @@ footer strong { color: var(--cyan); }
     </div>
   </div>
 
-  <!-- Card 2: Convert -->
-  <div class="card">
+  <!-- Card 2: Convert (紅色系) -->
+  <div class="card card-red">
     <div class="card-head">
-      <div class="card-icon green">🔁</div>
+      <div class="card-icon red">🔴</div>
       <div>
-        <div class="card-num">功能 02 · FORMAT CONVERT</div>
+        <div class="card-num" style="color:#e74c3c;">功能 02 · FORMAT CONVERT</div>
         <div class="card-title">圖檔格式轉換</div>
       </div>
     </div>
@@ -614,13 +629,13 @@ footer strong { color: var(--cyan); }
         <span class="fmt-tag">.DWG</span>
       </div>
       <ul class="feature-list">
-        <li><span class="dot"></span>DXF → PDF：純瀏覽器本地轉換，秒速輸出</li>
-        <li><span class="dot"></span><strong style="color:var(--cyan)">DWG → PDF：本地預覽後截圖轉 PDF，無須第三方</strong></li>
-        <li><span class="dot"></span>PDF → DWG：推薦 4 個免費線上服務，首選已驗證可用</li>
-        <li><span class="dot"></span>檔案資料不外流，確保設計圖紙安全</li>
+        <li><span class="dot dot-red"></span>DXF → PDF：純瀏覽器本地轉換，秒速輸出</li>
+        <li><span class="dot dot-red"></span><strong style="color:#e74c3c">DWG → PDF：本地預覽器內建向量輸出，無須第三方</strong></li>
+        <li><span class="dot dot-red"></span>PDF → DWG：推薦 4 個免費線上服務，首選已驗證可用</li>
+        <li><span class="dot dot-red"></span>檔案資料不外流，確保設計圖紙安全</li>
       </ul>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="openModal('convert-modal')">🔁 開啟轉換工具</button>
+        <button class="btn btn-red" onclick="openModal('convert-modal')">🔴 開啟轉換工具</button>
       </div>
     </div>
   </div>
@@ -632,13 +647,13 @@ footer strong { color: var(--cyan); }
     <span class="notice-icon">🛡️</span>
     <div class="notice-text">
       <strong>本地端處理說明：</strong>STL、OBJ、STP、IGS、DXF、DWG 檔案在您的瀏覽器內完成所有運算，<strong>零上傳、零外流</strong>。
-      DWG → PDF 採用 WebGL 預覽後截圖輸出，在預覽器內開啟圖面後按「轉 PDF」即可。PDF → DWG 需向量識別技術，目前連結至 4 個已篩選的免費線上服務（首選已實測可用）。
+      DWG → PDF 採用 mlightcad 向量引擎直接輸出，在預覽器內 Zoom Fit → BG → Export PDF 即可。PDF → DWG 需向量識別技術，目前連結至 4 個已篩選的免費線上服務（首選已實測可用）。
     </div>
   </div>
 </div>
 
 <footer>
-  © 2025 &nbsp;<strong>瑞能電子股份有限公司</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V26.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V27.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -796,7 +811,7 @@ footer strong { color: var(--cyan); }
     <div class="modal-body">
       <div class="convert-tabs">
         <button class="ctab active" onclick="switchCTab('dxf2pdf')">DXF → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地端轉換</span></button>
-        <button class="ctab" onclick="switchCTab('dwg2pdf')">DWG → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地預覽截圖</span></button>
+        <button class="ctab" onclick="switchCTab('dwg2pdf')">DWG → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地向量輸出</span></button>
         <button class="ctab" onclick="switchCTab('pdf2dwg')">PDF → DWG<br><span style="font-size:10px;font-weight:400;opacity:.7">外部平台</span></button>
       </div>
 

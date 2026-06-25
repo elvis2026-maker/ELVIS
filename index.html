@@ -81,7 +81,7 @@ body {
 }
 
 /* ── HERO ── */
-.hero { text-align: center; padding: 36px 24px 28px; }
+.hero { text-align: center; padding: 64px 24px 48px; }
 .hero-eyebrow {
   display: inline-block; font-family: 'Share Tech Mono', monospace;
   font-size: 12px; letter-spacing: 0.22em;
@@ -541,15 +541,117 @@ footer strong { color: var(--cyan); }
   padding: 2px 8px; border-radius: 20px; letter-spacing: 0.06em;
 }
 
+/* ── TOPBAR EYEBROW BANNER ── */
+.topbar-eyebrow-banner {
+  background: linear-gradient(
+    160deg,
+    #D8DEE6 0%, #E8EDF3 12%, #F5F7FA 28%, #FFFFFF 38%,
+    #EEF1F5 50%, #D4DAE2 62%, #BEC5CE 72%,
+    #D0D6DE 82%, #E4E8EE 92%, #D8DEE6 100%
+  );
+  border-bottom: 1px solid #A8B4C0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 2px 4px rgba(60,80,100,0.10);
+  text-align: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px; letter-spacing: 0.22em;
+  color: #2A3A4A;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 -1px 0 rgba(0,0,0,0.08);
+  padding: 7px 24px;
+  position: sticky; top: 0; z-index: 101;
+}
+
+/* ── DOC card (green-teal) ── */
+.card-doc { border-color: rgba(0,155,100,0.18); }
+.card-doc::before { background: linear-gradient(90deg, #007A50, #00AA72); }
+.card-doc:hover { border-color: rgba(0,155,100,0.55); box-shadow: 0 8px 40px rgba(0,155,100,0.13); transform: translateY(-3px); }
+.dot-green2 { width:6px; height:6px; border-radius:50%; background:#00AA72; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(0,170,114,0.5); }
+
+/* ── IMAGE EDITOR card (purple) ── */
+.card-img { border-color: rgba(130,70,180,0.18); }
+.card-img::before { background: linear-gradient(90deg, #7B3FA0, #A855C8); }
+.card-img:hover { border-color: rgba(130,70,180,0.55); box-shadow: 0 8px 40px rgba(130,70,180,0.13); transform: translateY(-3px); }
+.card-icon.purple { background: rgba(130,70,180,0.10); box-shadow: 0 0 20px rgba(130,70,180,0.08); }
+.dot-purple { width:6px; height:6px; border-radius:50%; background:#A855C8; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(168,85,200,0.5); }
+.card-doc .card-num  { color: #00875A; }
+.card-img .card-num  { color: #9B59B6; }
+.btn-green { background: linear-gradient(135deg, #007A50, #00AA72); color:#fff; box-shadow:0 4px 20px rgba(0,155,100,0.22); }
+.btn-green:hover { box-shadow:0 6px 28px rgba(0,155,100,0.38); transform:translateY(-1px); }
+.btn-purple { background: linear-gradient(135deg, #7B3FA0, #A855C8); color:#fff; box-shadow:0 4px 20px rgba(130,70,180,0.22); }
+.btn-purple:hover { box-shadow:0 6px 28px rgba(130,70,180,0.38); transform:translateY(-1px); }
+
+/* ── SECTION LABEL DIVIDER ── */
+.section-label {
+  max-width: 1120px; margin: 0 auto 20px; padding: 0 32px;
+  display: flex; align-items: center; gap: 14px;
+}
+.section-label-text {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  letter-spacing: 0.18em; color: var(--silver3); white-space: nowrap;
+  text-transform: uppercase;
+}
+.section-label-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(0,114,181,0.25), transparent);
+}
+
+/* ── DOC/IMAGE MODAL base (reuses .modal-overlay .modal etc.) ── */
+.doc-tool-wrap { margin-bottom: 20px; }
+.doc-tool-iframe-box {
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(0,114,181,0.2); margin-bottom: 12px;
+}
+.doc-tool-iframe-box iframe { width:100%; border:none; display:block; }
+
+/* image editor canvas */
+#img-editor-canvas-wrap {
+  display:none; border-radius:10px; overflow:hidden;
+  border:1px solid rgba(130,70,180,0.25); margin-bottom:12px;
+  background:#f0f0f0; text-align:center;
+}
+#img-editor-canvas-wrap.active { display:block; }
+#img-editor-canvas { max-width:100%; display:block; margin:0 auto; cursor:crosshair; }
+.img-toolbar {
+  display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; align-items:center;
+}
+.img-tool-btn {
+  font-family:'Noto Sans TC',sans-serif; font-size:12px; font-weight:700;
+  padding:7px 14px; border-radius:8px; border:1px solid rgba(130,70,180,0.25);
+  background:rgba(130,70,180,0.07); color:#7B3FA0; cursor:pointer; transition:all 0.18s;
+}
+.img-tool-btn:hover, .img-tool-btn.active {
+  background:rgba(130,70,180,0.15); border-color:#9B59B6;
+}
+.img-tool-btn.danger { border-color:rgba(220,53,69,0.3); color:#c0392b; background:rgba(220,53,69,0.05); }
+.img-tool-btn.danger:hover { background:rgba(220,53,69,0.12); border-color:#e74c3c; }
+.img-size-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.img-size-row label { font-size:12px; color:var(--silver3); }
+.img-size-row input[type=number] {
+  width:80px; padding:6px 8px; border-radius:6px;
+  border:1px solid rgba(130,70,180,0.25); background:#fff; color:var(--silver); font-size:13px;
+}
+.img-range-row { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+.img-range-row label { font-size:12px; color:var(--silver3); min-width:70px; }
+.img-range-row input[type=range] { flex:1; min-width:100px; accent-color:#9B59B6; }
+.img-range-row span { font-size:12px; color:var(--silver2); min-width:36px; text-align:right; font-family:'Share Tech Mono',monospace; }
+
+@media (max-width: 600px) {
+  .topbar-eyebrow-banner { font-size:10px; padding:6px 12px; }
+}
+
+/* ── ORIGINAL RESPONSIVE ── */
 @media (max-width: 600px) {
   .topbar { padding: 12px 16px; }
-  .hero { padding: 28px 16px 22px; }
+  .hero { padding: 40px 16px 30px; }
   .services { padding: 0 16px 48px; gap: 18px; }
-  .statusbar { padding: 0 16px; }
   .convert-tabs { flex-direction: column; }
   .format-support { grid-template-columns: 1fr; }
   .viewer-tabs { flex-wrap: wrap; }
   #canvas3d, #canvas2d { height: 280px; }
+  .section-label { padding: 0 16px; }
 }
 </style>
 </head>
@@ -557,13 +659,12 @@ footer strong { color: var(--cyan); }
 <canvas id="circuit-canvas"></canvas>
 
 <div class="wrap">
+<!-- TOPBAR EYEBROW BANNER -->
+<div class="topbar-eyebrow-banner">瑞能電子 · MIS 轉檔專屬網站</div>
 <!-- TOP BAR -->
 <header class="topbar">
   <div class="topbar-logo">
     <img src="data:image/png;base64,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" alt="瑞能電子 RENE Logo" style="height:44px;width:auto;object-fit:contain;display:block;">
-  </div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="hero-eyebrow" style="margin-bottom:0;font-size:11px;padding:5px 18px;">瑞能電子 · MIS 轉檔專屬網站</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
@@ -578,15 +679,10 @@ footer strong { color: var(--cyan); }
   <div class="hero-divider"></div>
 </section>
 
-<!-- STATUS BAR 已移除 V30.0 -->
-
-<!-- ── 工程圖檔功能區塊標題 ── -->
-<div style="max-width:1120px;margin:0 auto 8px;padding:0 32px;">
-  <div style="display:flex;align-items:center;gap:12px;">
-    <div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(0,114,181,0.25))"></div>
-    <span style="font-size:11px;font-family:'Share Tech Mono',monospace;letter-spacing:0.18em;color:var(--silver3);white-space:nowrap;">— 工程圖檔 —</span>
-    <div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(0,114,181,0.25),transparent)"></div>
-  </div>
+<!-- SECTION LABEL: 工程圖檔 -->
+<div class="section-label" style="margin-top:0; padding-top:0;">
+  <span class="section-label-text">工程圖檔功能</span>
+  <div class="section-label-line"></div>
 </div>
 
 <!-- SERVICE CARDS -->
@@ -657,81 +753,81 @@ footer strong { color: var(--cyan); }
   </div>
 </section>
 
-<!-- ── 文書處理功能區塊 ── -->
-<div style="max-width:1120px;margin:0 auto 8px;padding:0 32px;">
-  <div style="display:flex;align-items:center;gap:12px;">
-    <div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(130,60,180,0.3))"></div>
-    <span style="font-size:11px;font-family:'Share Tech Mono',monospace;letter-spacing:0.18em;color:var(--silver3);white-space:nowrap;">— 文書轉檔 &amp; 圖片編輯 —</span>
-    <div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(130,60,180,0.3),transparent)"></div>
-  </div>
+
+
+
+
+
+<!-- SECTION LABEL: 文書功能 -->
+<div class="section-label" style="margin-top:8px;">
+  <span class="section-label-text">文書轉檔功能</span>
+  <div class="section-label-line"></div>
 </div>
 
-<section class="services" style="padding-bottom:32px;">
+<!-- NEW CARDS: Doc + Image Editor -->
+<section class="services" style="padding-top:0;">
 
-  <!-- Card 3: 文書轉檔 (紫色系) -->
-  <div class="card" style="border-color:rgba(130,60,180,0.18);">
-    <div style="content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,#7c3aed,#a855f7);opacity:0;transition:opacity 0.25s;" class="card-topline-purple"></div>
-    <div class="card-head" style="border-bottom-color:rgba(130,60,180,0.12);">
-      <div class="card-icon" style="background:rgba(130,60,180,0.10);box-shadow:0 0 20px rgba(130,60,180,0.10);">📄</div>
+  <!-- Card 3: PDF ↔ WORD 文書轉換 (綠色系) -->
+  <div class="card card-doc">
+    <div class="card-head">
+      <div class="card-icon green">📄</div>
       <div>
-        <div class="card-num" style="color:#a855f7;">功能 03 · DOCUMENT CONVERT</div>
-        <div class="card-title">文書格式轉換</div>
+        <div class="card-num">功能 03 · DOC CONVERT</div>
+        <div class="card-title">PDF ↔ Word 文書轉換</div>
       </div>
     </div>
     <div class="card-body">
       <div class="formats">
-        <span class="fmt-tag" style="background:rgba(130,60,180,0.07);border-color:rgba(130,60,180,0.22);color:#a855f7;">.PDF</span>
+        <span class="fmt-tag ok">.PDF</span>
         <span class="fmt-tag">→</span>
-        <span class="fmt-tag" style="background:rgba(130,60,180,0.07);border-color:rgba(130,60,180,0.22);color:#a855f7;">.WORD</span>
-        <span class="fmt-tag" style="background:rgba(130,60,180,0.07);border-color:rgba(130,60,180,0.22);color:#a855f7;">.WORD</span>
+        <span class="fmt-tag ok">.DOCX</span>
+        <span class="fmt-tag ok">.DOCX</span>
         <span class="fmt-tag">→</span>
-        <span class="fmt-tag" style="background:rgba(130,60,180,0.07);border-color:rgba(130,60,180,0.22);color:#a855f7;">.PDF</span>
-        <span class="fmt-tag" style="background:rgba(130,60,180,0.07);border-color:rgba(130,60,180,0.22);color:#a855f7;">.EXCEL</span>
-        <span class="fmt-tag">→</span>
-        <span class="fmt-tag" style="background:rgba(130,60,180,0.07);border-color:rgba(130,60,180,0.22);color:#a855f7;">.PDF</span>
+        <span class="fmt-tag accent">.PDF</span>
       </div>
       <ul class="feature-list">
-        <li><span class="dot" style="background:#a855f7;box-shadow:0 0 4px rgba(168,85,247,0.5);"></span><strong style="color:#a855f7">PDF → Word</strong>：本地端解析，保留文字與段落格式</li>
-        <li><span class="dot" style="background:#a855f7;box-shadow:0 0 4px rgba(168,85,247,0.5);"></span>Word / Excel → PDF：瀏覽器內直接轉換，免安裝 Office</li>
-        <li><span class="dot" style="background:#a855f7;box-shadow:0 0 4px rgba(168,85,247,0.5);"></span>支援繁體中文，版面不跑版</li>
-        <li><span class="dot" style="background:#a855f7;box-shadow:0 0 4px rgba(168,85,247,0.5);"></span>檔案不離開本機，確保文件保密</li>
+        <li><span class="dot dot-green2"></span>PDF 轉 Word（.docx）：可編輯文件，保留格式與排版</li>
+        <li><span class="dot dot-green2"></span>Word 轉 PDF：高品質輸出，版面完整還原</li>
+        <li><span class="dot dot-green2"></span>免安裝 Office，純線上操作，快速完成</li>
+        <li><span class="dot dot-green2"></span>支援中文、表格、圖片等複雜文件格式</li>
       </ul>
       <div class="btn-row">
-        <button class="btn" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;box-shadow:0 4px 20px rgba(130,60,180,0.22);" onclick="openModal('doc-convert-modal')">📄 開啟文書轉換</button>
+        <button class="btn btn-green" onclick="openModal('doc-modal')">📄 開啟文書轉換工具</button>
       </div>
     </div>
   </div>
 
-  <!-- Card 4: 圖片線上編輯 (橙色系) -->
-  <div class="card" style="border-color:rgba(234,88,12,0.18);">
-    <div class="card-head" style="border-bottom-color:rgba(234,88,12,0.12);">
-      <div class="card-icon" style="background:rgba(234,88,12,0.10);box-shadow:0 0 20px rgba(234,88,12,0.10);">🖼️</div>
+  <!-- Card 4: 圖片線上簡易編輯 (紫色系) -->
+  <div class="card card-img">
+    <div class="card-head">
+      <div class="card-icon purple">🖼️</div>
       <div>
-        <div class="card-num" style="color:#f97316;">功能 04 · IMAGE EDITOR</div>
-        <div class="card-title">圖片線上編輯</div>
+        <div class="card-num">功能 04 · IMAGE EDITOR</div>
+        <div class="card-title">圖片線上簡易編輯</div>
       </div>
     </div>
     <div class="card-body">
       <div class="formats">
-        <span class="fmt-tag" style="background:rgba(234,88,12,0.07);border-color:rgba(234,88,12,0.22);color:#f97316;">.JPG</span>
-        <span class="fmt-tag" style="background:rgba(234,88,12,0.07);border-color:rgba(234,88,12,0.22);color:#f97316;">.PNG</span>
-        <span class="fmt-tag" style="background:rgba(234,88,12,0.07);border-color:rgba(234,88,12,0.22);color:#f97316;">.WEBP</span>
-        <span class="fmt-tag" style="background:rgba(234,88,12,0.07);border-color:rgba(234,88,12,0.22);color:#f97316;">.GIF</span>
-        <span class="fmt-tag" style="background:rgba(234,88,12,0.07);border-color:rgba(234,88,12,0.22);color:#f97316;">.BMP</span>
+        <span class="fmt-tag">.JPG</span>
+        <span class="fmt-tag">.PNG</span>
+        <span class="fmt-tag">.WEBP</span>
+        <span class="fmt-tag">.GIF</span>
+        <span class="fmt-tag">.BMP</span>
       </div>
       <ul class="feature-list">
-        <li><span class="dot" style="background:#f97316;box-shadow:0 0 4px rgba(249,115,22,0.5);"></span><strong style="color:#f97316">壓縮圖檔</strong>：調整品質/解析度，快速縮小檔案大小</li>
-        <li><span class="dot" style="background:#f97316;box-shadow:0 0 4px rgba(249,115,22,0.5);"></span><strong style="color:#f97316">改尺寸 / 旋轉 / 裁切</strong>：自由調整圖片規格</li>
-        <li><span class="dot" style="background:#f97316;box-shadow:0 0 4px rgba(249,115,22,0.5);"></span>簡易畫筆：標注、箭頭、文字、橡皮擦，類小畫家操作</li>
-        <li><span class="dot" style="background:#f97316;box-shadow:0 0 4px rgba(249,115,22,0.5);"></span>格式互轉：JPG ↔ PNG ↔ WEBP，一鍵下載</li>
+        <li><span class="dot dot-purple"></span>壓縮圖片：減少檔案大小，調整品質輸出</li>
+        <li><span class="dot dot-purple"></span>調整尺寸：自訂寬高或等比例縮放</li>
+        <li><span class="dot dot-purple"></span>簡易編輯：裁切、旋轉、翻轉、調色、加文字</li>
+        <li><span class="dot dot-purple"></span>格式轉換：JPG ↔ PNG ↔ WEBP，純本地端處理</li>
       </ul>
       <div class="btn-row">
-        <button class="btn" style="background:linear-gradient(135deg,#ea580c,#f97316);color:#fff;box-shadow:0 4px 20px rgba(234,88,12,0.22);" onclick="openModal('img-editor-modal')">🖼️ 開啟圖片編輯器</button>
+        <button class="btn btn-purple" onclick="openModal('imgEdit-modal')">🖼️ 開啟圖片編輯器</button>
       </div>
     </div>
   </div>
 
 </section>
+
 <footer>
   © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V30.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
@@ -1021,9 +1117,205 @@ footer strong { color: var(--cyan); }
 </div>
 
 
+
+
 <!-- ══════════════════════════════════════════
-     JAVASCRIPT
+     MODAL 3: PDF ↔ WORD 文書轉換
 ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="doc-modal">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-header">
+      <div class="modal-title">
+        📄 PDF ↔ Word 文書轉換
+        <span class="badge-partial" style="background:rgba(0,155,100,0.1);border-color:rgba(0,155,100,0.3);color:#00875A;">線上服務</span>
+      </div>
+      <button class="modal-close" onclick="closeModal('doc-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Tab bar -->
+      <div class="convert-tabs" id="doc-tabs">
+        <button class="ctab active" onclick="switchDocTab('pdf2word')">PDF → Word<br><span style="font-size:10px;font-weight:400;opacity:.7">可編輯文件</span></button>
+        <button class="ctab" onclick="switchDocTab('word2pdf')">Word → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">版面固定輸出</span></button>
+      </div>
+
+      <!-- PDF → Word -->
+      <div class="ctab-panel active" id="dctab-pdf2word">
+        <div class="steps-guide">
+          <div class="step-item"><span class="step-num">1</span>選擇下方轉換平台，在新分頁開啟</div>
+          <div class="step-item"><span class="step-num">2</span>上傳 PDF 檔案，等待平台轉換</div>
+          <div class="step-item"><span class="step-num">3</span>下載 .docx 可編輯的 Word 文件</div>
+        </div>
+        <a class="link-out-box" href="https://smallpdf.com/zh-TW/pdf-to-word" target="_blank">
+          <span class="lob-icon">⭐</span>
+          <div>
+            <div class="lob-name">Smallpdf – PDF → Word <span style="font-size:10px;background:rgba(0,180,80,0.12);border:1px solid rgba(0,180,80,0.3);color:var(--green);padding:1px 7px;border-radius:4px;margin-left:6px;">推薦・免費</span></div>
+            <div class="lob-url">smallpdf.com · 業界領導，中文支援佳，每天免費兩次</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://www.ilovepdf.com/zh-tw/pdf_to_word" target="_blank">
+          <span class="lob-icon">❤️</span>
+          <div>
+            <div class="lob-name">iLovePDF – PDF → Word</div>
+            <div class="lob-url">ilovepdf.com · 免費無限次，支援批次轉換，繁體中文介面</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://www.adobe.com/acrobat/online/pdf-to-word.html" target="_blank">
+          <span class="lob-icon">🔴</span>
+          <div>
+            <div class="lob-name">Adobe Acrobat Online – PDF → Word</div>
+            <div class="lob-url">adobe.com · Adobe 官方工具，格式還原精準，需登入</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://pdf2doc.com/zh/" target="_blank">
+          <span class="lob-icon">📄</span>
+          <div>
+            <div class="lob-name">PDF2Doc – PDF → Word</div>
+            <div class="lob-url">pdf2doc.com · 免費、無帳號、支援批次最多 20 個</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+      </div>
+
+      <!-- Word → PDF -->
+      <div class="ctab-panel" id="dctab-word2pdf">
+        <div class="steps-guide">
+          <div class="step-item"><span class="step-num">1</span>選擇下方轉換平台，在新分頁開啟</div>
+          <div class="step-item"><span class="step-num">2</span>上傳 .docx / .doc 檔案</div>
+          <div class="step-item"><span class="step-num">3</span>下載轉換後的高品質 PDF 文件</div>
+        </div>
+        <a class="link-out-box" href="https://www.ilovepdf.com/zh-tw/word_to_pdf" target="_blank">
+          <span class="lob-icon">⭐</span>
+          <div>
+            <div class="lob-name">iLovePDF – Word → PDF <span style="font-size:10px;background:rgba(0,180,80,0.12);border:1px solid rgba(0,180,80,0.3);color:var(--green);padding:1px 7px;border-radius:4px;margin-left:6px;">推薦・免費</span></div>
+            <div class="lob-url">ilovepdf.com · 免費無限次，批次轉換，繁體中文介面</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://smallpdf.com/zh-TW/word-to-pdf" target="_blank">
+          <span class="lob-icon">📝</span>
+          <div>
+            <div class="lob-name">Smallpdf – Word → PDF</div>
+            <div class="lob-url">smallpdf.com · 版面精準還原，支援中文字體</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+        <a class="link-out-box" href="https://cloudconvert.com/docx-to-pdf" target="_blank">
+          <span class="lob-icon">☁️</span>
+          <div>
+            <div class="lob-name">CloudConvert – Word → PDF</div>
+            <div class="lob-url">cloudconvert.com · 高品質輸出，每日免費 10 次</div>
+          </div>
+          <span class="lob-arrow">↗</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MODAL 4: 圖片線上簡易編輯器
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="imgEdit-modal">
+  <div class="modal" style="max-width:900px">
+    <div class="modal-header">
+      <div class="modal-title">
+        🖼️ 圖片線上簡易編輯器
+        <span class="badge-local">本地端處理</span>
+      </div>
+      <button class="modal-close" onclick="closeImgEditor()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Upload zone -->
+      <div class="upload-zone" id="img-upload-zone"
+           ondragover="zoneDragOver(event,'img-upload-zone')"
+           ondragleave="zoneDragLeave('img-upload-zone')"
+           ondrop="imgEditorDrop(event)">
+        <input type="file" accept="image/*" id="img-file-input" onchange="loadImgEditor(event)">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-label">點擊選取或拖放圖片</div>
+        <div class="upload-hint">支援 JPG · PNG · WEBP · GIF · BMP（本地端處理）</div>
+      </div>
+
+      <!-- Info bar -->
+      <div class="viewer-info-bar" id="img-info-bar">
+        <div>檔案：<span id="img-ib-name">—</span></div>
+        <div>原始尺寸：<span id="img-ib-size">—</span></div>
+        <div>目前尺寸：<span id="img-ib-cur">—</span></div>
+        <div>檔案大小：<span id="img-ib-fsize">—</span></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="img-toolbar" id="img-toolbar" style="display:none;">
+        <button class="img-tool-btn" onclick="imgRotate(-90)">↺ 左旋 90°</button>
+        <button class="img-tool-btn" onclick="imgRotate(90)">↻ 右旋 90°</button>
+        <button class="img-tool-btn" onclick="imgFlip('h')">⇄ 水平翻轉</button>
+        <button class="img-tool-btn" onclick="imgFlip('v')">⇅ 垂直翻轉</button>
+        <button class="img-tool-btn" id="img-crop-btn" onclick="toggleImgCrop()">✂ 裁切模式</button>
+        <button class="img-tool-btn danger" onclick="imgReset()">↩ 重置</button>
+      </div>
+
+      <!-- Resize controls -->
+      <div class="img-size-row" id="img-resize-row" style="display:none;">
+        <label>寬 (px)：</label>
+        <input type="number" id="img-w" min="1" max="9999" oninput="imgSyncSize('w')">
+        <label>高 (px)：</label>
+        <input type="number" id="img-h" min="1" max="9999" oninput="imgSyncSize('h')">
+        <label style="display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" id="img-lock-ratio" checked> 鎖定比例
+        </label>
+        <button class="img-tool-btn" onclick="imgApplyResize()">套用尺寸</button>
+      </div>
+
+      <!-- Adjust controls -->
+      <div id="img-adjust-row" style="display:none;">
+        <div class="img-range-row">
+          <label>壓縮品質</label>
+          <input type="range" id="img-quality" min="10" max="100" value="85" oninput="imgQualityUpdate()">
+          <span id="img-quality-val">85%</span>
+        </div>
+        <div class="img-range-row">
+          <label>亮度</label>
+          <input type="range" id="img-brightness" min="-100" max="100" value="0" oninput="imgFilterUpdate()">
+          <span id="img-brightness-val">0</span>
+        </div>
+        <div class="img-range-row">
+          <label>對比度</label>
+          <input type="range" id="img-contrast" min="-100" max="100" value="0" oninput="imgFilterUpdate()">
+          <span id="img-contrast-val">0</span>
+        </div>
+        <div class="img-range-row">
+          <label>飽和度</label>
+          <input type="range" id="img-saturation" min="-100" max="100" value="0" oninput="imgFilterUpdate()">
+          <span id="img-saturation-val">0</span>
+        </div>
+      </div>
+
+      <!-- Canvas display -->
+      <div id="img-editor-canvas-wrap">
+        <canvas id="img-editor-canvas"></canvas>
+      </div>
+
+      <!-- Download controls -->
+      <div id="img-download-row" style="display:none;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px;">
+        <label style="font-size:12px;color:var(--silver3);">輸出格式：</label>
+        <select id="img-fmt-select" style="padding:6px 10px;border-radius:6px;border:1px solid rgba(130,70,180,0.25);font-size:13px;color:var(--silver);background:#fff;">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WEBP</option>
+        </select>
+        <button class="btn btn-purple" onclick="imgDownload()" style="padding:10px 20px;font-size:13px;">⬇ 下載圖片</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 <script>
 /* ─────────────────────────────────────────
    ⚡ 程式碼保護機制
@@ -2458,476 +2750,301 @@ function downloadDxfPdf(){
 }
 
 /* ══════════════════════════════════════════
-   MODAL 3: 文書轉換  ── helpers
+   DOC MODAL TAB SWITCHER
 ══════════════════════════════════════════ */
-let docFile=null, docPdfBlob=null;
-
-function loadDocFile(e){ loadDocFileObj(e.target.files[0]); }
-function loadDocFileObj(f){
-  if(!f) return; docFile=f; docPdfBlob=null;
-  document.getElementById('doc-fname').textContent=f.name;
-  document.getElementById('doc-fsize').textContent=fmtSize(f.size);
-  document.getElementById('doc-fpi').classList.add('show');
-  document.getElementById('doc-convert-btn').disabled=false;
-  document.getElementById('doc-dl').classList.remove('show');
-  hideDocStatus();
-}
-function showDocStatus(type,label,msg,pct){
-  const b=document.getElementById('doc-status');
-  b.className='status-box show '+type;
-  document.getElementById('doc-status-label').textContent=label;
-  document.getElementById('doc-pb').style.width=(pct||0)+'%';
-  document.getElementById('doc-status-msg').textContent=msg||'';
-}
-function hideDocStatus(){ document.getElementById('doc-status').className='status-box'; }
-
 function switchDocTab(tab){
-  ['word2pdf','pdf2word','excel2pdf'].forEach(t=>{
-    document.querySelector(`[data-doctab="${t}"]`).classList.toggle('active',t===tab);
-    document.getElementById('doctab-'+t).classList.toggle('active',t===tab);
+  const tabs = document.querySelectorAll('#doc-tabs .ctab');
+  tabs.forEach((b,i) => b.classList.toggle('active', (tab==='pdf2word'&&i===0)||(tab==='word2pdf'&&i===1)));
+  ['pdf2word','word2pdf'].forEach(t => {
+    const el = document.getElementById('dctab-'+t);
+    if(el) el.classList.toggle('active', t===tab);
   });
-  docFile=null; docPdfBlob=null;
-  document.getElementById('doc-fpi').classList.remove('show');
-  document.getElementById('doc-dl').classList.remove('show');
-  hideDocStatus();
-  document.getElementById('doc-convert-btn').disabled=true;
 }
-
-async function convertDoc(){
-  if(!docFile) return;
-  const ext=docFile.name.split('.').pop().toLowerCase();
-  const btn=document.getElementById('doc-convert-btn');
-  btn.disabled=true;
-  showDocStatus('processing','讀取檔案…','',20);
-  await new Promise(r=>setTimeout(r,60));
-
-  try {
-    const {jsPDF}=window.jspdf;
-    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const W=210, mg=15, lh=7, maxW=W-mg*2;
-
-    if(ext==='docx'||ext==='doc'){
-      // Read docx via FileReader → ArrayBuffer, extract raw text via mammoth-style manual parse
-      showDocStatus('processing','解析 Word 文件…','',45);
-      const text = await readDocxText(docFile);
-      showDocStatus('processing','產生 PDF…','',75);
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(11);
-      const lines=pdf.splitTextToSize(text, maxW);
-      let y=mg;
-      lines.forEach(line=>{
-        if(y+lh>297-mg){ pdf.addPage(); y=mg; }
-        pdf.text(line,mg,y); y+=lh;
-      });
-    } else if(ext==='xlsx'||ext==='xls'){
-      showDocStatus('processing','解析 Excel…','',45);
-      const rows = await readExcelText(docFile);
-      showDocStatus('processing','產生 PDF…','',75);
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
-      let y=mg;
-      rows.forEach(row=>{
-        const line=row.join('  |  ');
-        if(y+lh>297-mg){ pdf.addPage(); y=mg; }
-        pdf.text(line.substring(0,100),mg,y); y+=lh;
-      });
-    }
-
-    pdf.setProperties({title:docFile.name, creator:'瑞能電子 MIS V30.0'});
-    docPdfBlob=pdf.output('blob');
-    showDocStatus('success','✅ 轉換完成！','PDF 已在本機產生，點擊下方下載',100);
-    document.getElementById('doc-dl').classList.add('show');
-  } catch(err){
-    showDocStatus('error','❌ 轉換失敗',''+err.message,0);
-  }
-  btn.disabled=false;
-}
-
-async function readDocxText(file){
-  // Minimal docx text extractor: unzip and grab w:t elements
-  const ab=await file.arrayBuffer();
-  try {
-    // Try JSZip-style via DecompressionStream if available
-    const zip=await loadZip(ab);
-    const doc=zip['word/document.xml']||zip['word\\document.xml'];
-    if(!doc) return '(無法解析此 Word 檔案，請確認為 .docx 格式)';
-    const xml=new TextDecoder().decode(doc);
-    const matches=xml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g)||[];
-    return matches.map(m=>m.replace(/<[^>]+>/g,'')).join(' ').replace(/\s+/g,' ').trim()||'(文件內容為空)';
-  } catch(e){ return '(解析錯誤：'+e.message+')'; }
-}
-
-async function readExcelText(file){
-  const ab=await file.arrayBuffer();
-  try {
-    const zip=await loadZip(ab);
-    // Get shared strings
-    const ssXml=new TextDecoder().decode(zip['xl/sharedStrings.xml']||new Uint8Array());
-    const ss=(ssXml.match(/<t[^>]*>([^<]*)<\/t>/g)||[]).map(m=>m.replace(/<[^>]+>/g,''));
-    // Get first sheet
-    const sheetKey=Object.keys(zip).find(k=>k.match(/xl\/worksheets\/sheet1/));
-    if(!sheetKey) return [['(無法讀取工作表)']];
-    const shXml=new TextDecoder().decode(zip[sheetKey]);
-    const rows=[];
-    const rowMatches=shXml.match(/<row[^>]*>([\s\S]*?)<\/row>/g)||[];
-    rowMatches.slice(0,100).forEach(rowXml=>{
-      const cells=[];
-      const cMatches=rowXml.match(/<c[^>]*>([\s\S]*?)<\/c>/g)||[];
-      cMatches.forEach(cXml=>{
-        const t=(cXml.match(/t="([^"]*)"/))||[];
-        const v=(cXml.match(/<v>([^<]*)<\/v>/))||[];
-        if(t[1]==='s'){ cells.push(ss[parseInt(v[1]||0)]||''); }
-        else { cells.push(v[1]||''); }
-      });
-      if(cells.length) rows.push(cells);
-    });
-    return rows.length?rows:[['(工作表為空)']];
-  } catch(e){ return [['(解析錯誤：'+e.message+')']]; }
-}
-
-async function loadZip(ab){
-  // Pure JS ZIP reader (PKZIP local file headers)
-  const data=new Uint8Array(ab);
-  const files={};
-  let i=0;
-  while(i<data.length-4){
-    if(data[i]===0x50&&data[i+1]===0x4B&&data[i+2]===0x03&&data[i+3]===0x04){
-      const comp=data[i+8]|(data[i+9]<<8);
-      const csize=(data[i+18])|(data[i+19]<<8)|(data[i+20]<<16)|(data[i+21]<<24);
-      const usize=(data[i+22])|(data[i+23]<<8)|(data[i+24]<<16)|(data[i+25]<<24);
-      const fnlen=data[i+26]|(data[i+27]<<8);
-      const exlen=data[i+28]|(data[i+29]<<8);
-      const fname=new TextDecoder().decode(data.slice(i+30,i+30+fnlen));
-      const start=i+30+fnlen+exlen;
-      const compressed=data.slice(start,start+csize);
-      if(comp===0){ files[fname]=compressed; }
-      else if(comp===8){
-        try{
-          const ds=new DecompressionStream('deflate-raw');
-          const w=ds.writable.getWriter(); w.write(compressed); w.close();
-          const chunks=[]; const r=ds.readable.getReader();
-          while(true){const{done,value}=await r.read();if(done)break;chunks.push(value);}
-          const out=new Uint8Array(chunks.reduce((a,c)=>a+c.length,0));
-          let p=0; chunks.forEach(c=>{out.set(c,p);p+=c.length;});
-          files[fname]=out;
-        }catch(e){files[fname]=compressed;}
-      }
-      i=start+csize;
-    } else { i++; }
-  }
-  return files;
-}
-
-function downloadDocPdf(){
-  if(!docPdfBlob) return;
-  const name=docFile.name.replace(/\.(docx?|xlsx?)$/i,'')+'.pdf';
-  const url=URL.createObjectURL(docPdfBlob);
-  const a=document.createElement('a'); a.href=url; a.download=name; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),5000);
-}
-
-function fmtSize(b){ if(b<1024)return b+'B'; if(b<1048576)return (b/1024).toFixed(1)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
-
 
 /* ══════════════════════════════════════════
-   MODAL 4: 圖片編輯器 helpers
+   IMAGE EDITOR
 ══════════════════════════════════════════ */
-let imgCanvas=null, imgCtx=null, imgEl=null;
-let imgTool='pen', imgColor='#e74c3c', imgSize=4;
-let imgDrawing=false, imgLastX=0, imgLastY=0;
+let _imgSource = null;   // original HTMLImageElement
+let _imgCanvas = null;   // current working canvas (offscreen)
+let _imgRotDeg = 0;
+let _imgFlipH  = false;
+let _imgFlipV  = false;
+let _imgCropMode = false;
+let _imgCropStart = null;
+let _imgCropRect  = null;
 
-function initImgEditor(){
-  imgCanvas=document.getElementById('img-editor-canvas');
-  imgCtx=imgCanvas.getContext('2d');
-  imgCanvas.addEventListener('mousedown', e=>{ imgDrawing=true; [imgLastX,imgLastY]=getXY(e); });
-  imgCanvas.addEventListener('mousemove', e=>{ if(!imgDrawing)return; draw(e); });
-  imgCanvas.addEventListener('mouseup',   ()=>{ imgDrawing=false; });
-  imgCanvas.addEventListener('mouseleave',()=>{ imgDrawing=false; });
-  // Touch
-  imgCanvas.addEventListener('touchstart', e=>{ e.preventDefault(); imgDrawing=true; [imgLastX,imgLastY]=getXY(e.touches[0]); });
-  imgCanvas.addEventListener('touchmove',  e=>{ e.preventDefault(); if(!imgDrawing)return; draw(e.touches[0]); });
-  imgCanvas.addEventListener('touchend',   ()=>{ imgDrawing=false; });
-}
-function getXY(e){ const r=imgCanvas.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; }
-function draw(e){
-  const [x,y]=getXY(e);
-  imgCtx.beginPath();
-  imgCtx.lineWidth=imgSize; imgCtx.lineCap='round';
-  if(imgTool==='eraser'){ imgCtx.globalCompositeOperation='destination-out'; imgCtx.lineWidth=imgSize*3; }
-  else { imgCtx.globalCompositeOperation='source-over'; imgCtx.strokeStyle=imgColor; }
-  imgCtx.moveTo(imgLastX,imgLastY); imgCtx.lineTo(x,y); imgCtx.stroke();
-  [imgLastX,imgLastY]=[x,y];
-}
-function drawArrow(e){
-  const [ex,ey]=getXY(e);
-  imgCtx.beginPath(); imgCtx.strokeStyle=imgColor; imgCtx.lineWidth=3; imgCtx.globalCompositeOperation='source-over';
-  imgCtx.moveTo(imgLastX,imgLastY); imgCtx.lineTo(ex,ey); imgCtx.stroke();
-  const a=Math.atan2(ey-imgLastY,ex-imgLastX), as=14;
-  imgCtx.beginPath();
-  imgCtx.moveTo(ex,ey);
-  imgCtx.lineTo(ex-as*Math.cos(a-0.4),ey-as*Math.sin(a-0.4));
-  imgCtx.lineTo(ex-as*Math.cos(a+0.4),ey-as*Math.sin(a+0.4));
-  imgCtx.closePath(); imgCtx.fillStyle=imgColor; imgCtx.fill();
+function loadImgEditor(e){ loadImgEditorFile(e.target.files[0]); }
+function imgEditorDrop(e){
+  e.preventDefault();
+  document.getElementById('img-upload-zone').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if(f && f.type.startsWith('image/')) loadImgEditorFile(f);
 }
 
-function setImgTool(t){
-  imgTool=t;
-  document.querySelectorAll('.itool').forEach(b=>b.classList.remove('active'));
-  document.getElementById('itool-'+t)?.classList.add('active');
-}
-function setImgColor(c){ imgColor=c; }
-function setImgSize(v){ imgSize=parseInt(v); }
-
-function loadImgFile(e){
-  const f=e.target.files[0]; if(!f) return;
-  const url=URL.createObjectURL(f);
-  imgEl=new Image();
-  imgEl.onload=()=>{
-    const maxW=760, maxH=480;
-    let w=imgEl.naturalWidth, h=imgEl.naturalHeight;
-    const ratio=Math.min(maxW/w,maxH/h,1);
-    imgCanvas.width=Math.round(w*ratio); imgCanvas.height=Math.round(h*ratio);
-    imgCtx.drawImage(imgEl,0,0,imgCanvas.width,imgCanvas.height);
-    document.getElementById('img-editor-area').style.display='block';
-    document.getElementById('img-upload-zone').style.display='none';
-    document.getElementById('img-size-info').textContent=imgEl.naturalWidth+'×'+imgEl.naturalHeight+' → '+imgCanvas.width+'×'+imgCanvas.height;
+function loadImgEditorFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      _imgSource = img;
+      _imgRotDeg = 0; _imgFlipH = false; _imgFlipV = false;
+      _imgCropMode = false; _imgCropRect = null;
+      _buildImgCanvas(img.width, img.height, function(ctx){
+        ctx.drawImage(img, 0, 0);
+      });
+      // Update info bar
+      document.getElementById('img-ib-name').textContent = file.name;
+      document.getElementById('img-ib-size').textContent = img.width + ' × ' + img.height + ' px';
+      document.getElementById('img-ib-fsize').textContent = fmtSize(file.size);
+      document.getElementById('img-info-bar').classList.add('show');
+      // Show controls
+      document.getElementById('img-toolbar').style.display = 'flex';
+      document.getElementById('img-resize-row').style.display = 'flex';
+      document.getElementById('img-adjust-row').style.display = 'block';
+      document.getElementById('img-download-row').style.display = 'flex';
+      document.getElementById('img-w').value = img.width;
+      document.getElementById('img-h').value = img.height;
+      // Reset sliders
+      ['img-brightness','img-contrast','img-saturation'].forEach(id => { document.getElementById(id).value = 0; });
+      document.getElementById('img-quality').value = 85;
+      document.getElementById('img-quality-val').textContent = '85%';
+      ['brightness','contrast','saturation'].forEach(k => document.getElementById('img-'+k+'-val').textContent = '0');
+      _renderImgCanvas();
+    };
+    img.src = ev.target.result;
   };
-  imgEl.src=url;
+  reader.readAsDataURL(file);
 }
-function imgClear(){
-  if(!imgEl) return;
-  imgCtx.clearRect(0,0,imgCanvas.width,imgCanvas.height);
-  imgCtx.drawImage(imgEl,0,0,imgCanvas.width,imgCanvas.height);
+
+function _buildImgCanvas(w, h, drawFn){
+  _imgCanvas = document.createElement('canvas');
+  _imgCanvas.width  = w;
+  _imgCanvas.height = h;
+  const ctx = _imgCanvas.getContext('2d');
+  if(drawFn) drawFn(ctx);
 }
-function imgAddText(){
-  const txt=prompt('請輸入文字：'); if(!txt) return;
-  imgCtx.font='bold '+(imgSize*4+12)+'px Noto Sans TC, Arial';
-  imgCtx.fillStyle=imgColor; imgCtx.globalCompositeOperation='source-over';
-  imgCtx.fillText(txt,20,40);
+
+function _renderImgCanvas(){
+  if(!_imgSource || !_imgCanvas) return;
+  // Get current adjustments
+  const brightness = parseInt(document.getElementById('img-brightness')?.value || 0);
+  const contrast   = parseInt(document.getElementById('img-contrast')?.value   || 0);
+  const saturation = parseInt(document.getElementById('img-saturation')?.value || 0);
+
+  // Build a temp canvas with rotation and flip applied
+  const sw = _imgSource.width, sh = _imgSource.height;
+  const rotRad = _imgRotDeg * Math.PI / 180;
+  const isOdd90 = (_imgRotDeg % 180 !== 0);
+  const dw = isOdd90 ? sh : sw;
+  const dh = isOdd90 ? sw : sh;
+
+  const tmpC = document.createElement('canvas');
+  tmpC.width = dw; tmpC.height = dh;
+  const tmpCtx = tmpC.getContext('2d');
+  tmpCtx.save();
+  tmpCtx.translate(dw/2, dh/2);
+  tmpCtx.rotate(rotRad);
+  tmpCtx.scale(_imgFlipH ? -1 : 1, _imgFlipV ? -1 : 1);
+  tmpCtx.drawImage(_imgSource, -sw/2, -sh/2);
+  tmpCtx.restore();
+
+  // Apply filters via CSS filter string on the display canvas
+  const displayCanvas = document.getElementById('img-editor-canvas');
+  displayCanvas.width  = dw;
+  displayCanvas.height = dh;
+  const dCtx = displayCanvas.getContext('2d');
+  const filterStr =
+    'brightness('+(100+brightness)+'%) ' +
+    'contrast('+(100+contrast)+'%) ' +
+    'saturate('+(100+saturation)+'%)';
+  dCtx.filter = filterStr;
+  dCtx.drawImage(tmpC, 0, 0);
+  dCtx.filter = 'none';
+
+  // Update working canvas (for export, no filter—raw)
+  _imgCanvas = tmpC;
+
+  // Update size display
+  document.getElementById('img-ib-cur').textContent = dw + ' × ' + dh + ' px';
+  document.getElementById('img-w').value = dw;
+  document.getElementById('img-h').value = dh;
+
+  // Show canvas
+  const wrap = document.getElementById('img-editor-canvas-wrap');
+  wrap.classList.add('active');
 }
-function imgResize(){
-  const w=parseInt(prompt('新寬度 px：',imgCanvas.width))||imgCanvas.width;
-  const h=parseInt(prompt('新高度 px：',imgCanvas.height))||imgCanvas.height;
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h;
-  tmp.getContext('2d').drawImage(imgCanvas,0,0,w,h);
-  imgCanvas.width=w; imgCanvas.height=h;
-  imgCtx.drawImage(tmp,0,0);
-  document.getElementById('img-size-info').textContent=w+'×'+h;
+
+function imgRotate(deg){
+  if(!_imgSource) return;
+  _imgRotDeg = ((_imgRotDeg + deg) % 360 + 360) % 360;
+  _renderImgCanvas();
 }
-function imgRotate(){
-  const tmp=document.createElement('canvas');
-  tmp.width=imgCanvas.height; tmp.height=imgCanvas.width;
-  const tc=tmp.getContext('2d');
-  tc.translate(tmp.width/2,tmp.height/2); tc.rotate(Math.PI/2);
-  tc.drawImage(imgCanvas,-imgCanvas.width/2,-imgCanvas.height/2);
-  imgCanvas.width=tmp.width; imgCanvas.height=tmp.height;
-  imgCtx.drawImage(tmp,0,0);
+
+function imgFlip(dir){
+  if(!_imgSource) return;
+  if(dir==='h') _imgFlipH = !_imgFlipH;
+  else          _imgFlipV = !_imgFlipV;
+  _renderImgCanvas();
 }
-function imgDownload(fmt){
-  const q=fmt==='jpg'?0.9:1;
-  const mtype=fmt==='jpg'?'image/jpeg':fmt==='webp'?'image/webp':'image/png';
-  if(fmt==='jpg'){
-    // fill white background for jpg
-    const tmp=document.createElement('canvas'); tmp.width=imgCanvas.width; tmp.height=imgCanvas.height;
-    const tc=tmp.getContext('2d'); tc.fillStyle='#fff'; tc.fillRect(0,0,tmp.width,tmp.height); tc.drawImage(imgCanvas,0,0);
-    const url=tmp.toDataURL(mtype,q);
-    const a=document.createElement('a'); a.href=url; a.download='edited.jpg'; a.click();
+
+function imgReset(){
+  if(!_imgSource) return;
+  _imgRotDeg = 0; _imgFlipH = false; _imgFlipV = false;
+  _imgCropMode = false; _imgCropRect = null;
+  document.getElementById('img-crop-btn').classList.remove('active');
+  ['img-brightness','img-contrast','img-saturation'].forEach(id => { document.getElementById(id).value = 0; });
+  ['brightness','contrast','saturation'].forEach(k => document.getElementById('img-'+k+'-val').textContent = '0');
+  _renderImgCanvas();
+}
+
+function imgSyncSize(changed){
+  if(!_imgCanvas) return;
+  const lockRatio = document.getElementById('img-lock-ratio').checked;
+  if(!lockRatio) return;
+  const origW = _imgCanvas.width, origH = _imgCanvas.height;
+  if(!origW || !origH) return;
+  if(changed==='w'){
+    const w = parseInt(document.getElementById('img-w').value)||1;
+    document.getElementById('img-h').value = Math.round(w * origH / origW);
   } else {
-    imgCanvas.toBlob(blob=>{ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='edited.'+fmt; a.click(); setTimeout(()=>URL.revokeObjectURL(url),3000); },mtype,q);
+    const h = parseInt(document.getElementById('img-h').value)||1;
+    document.getElementById('img-w').value = Math.round(h * origW / origH);
   }
 }
-function imgCompress(){
-  const qval=parseFloat(prompt('壓縮品質 (0.1–1.0)：','0.7'))||0.7;
-  imgCanvas.toBlob(blob=>{
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download='compressed.jpg'; a.click();
-    setTimeout(()=>URL.revokeObjectURL(url),3000);
-    alert('壓縮完成！檔案大小約 '+fmtSize(blob.size));
-  },'image/jpeg',Math.min(1,Math.max(0.05,qval)));
+
+function imgApplyResize(){
+  if(!_imgCanvas) return;
+  const nw = parseInt(document.getElementById('img-w').value)||1;
+  const nh = parseInt(document.getElementById('img-h').value)||1;
+  const resC = document.createElement('canvas');
+  resC.width = nw; resC.height = nh;
+  const resCtx = resC.getContext('2d');
+  resCtx.drawImage(_imgCanvas, 0, 0, nw, nh);
+  _imgCanvas = resC;
+  // Redraw display
+  const dc = document.getElementById('img-editor-canvas');
+  dc.width = nw; dc.height = nh;
+  const dCtx = dc.getContext('2d');
+  dCtx.drawImage(resC, 0, 0);
+  document.getElementById('img-ib-cur').textContent = nw + ' × ' + nh + ' px';
 }
+
+function imgQualityUpdate(){
+  const v = document.getElementById('img-quality').value;
+  document.getElementById('img-quality-val').textContent = v+'%';
+}
+
+function imgFilterUpdate(){
+  ['brightness','contrast','saturation'].forEach(k => {
+    const v = document.getElementById('img-'+k).value;
+    document.getElementById('img-'+k+'-val').textContent = v;
+  });
+  _renderImgCanvas();
+}
+
+function toggleImgCrop(){
+  _imgCropMode = !_imgCropMode;
+  document.getElementById('img-crop-btn').classList.toggle('active', _imgCropMode);
+  const dc = document.getElementById('img-editor-canvas');
+  dc.style.cursor = _imgCropMode ? 'crosshair' : 'default';
+  if(!_imgCropMode && _imgCropRect){
+    // Apply crop
+    const r = _imgCropRect;
+    if(r.w > 4 && r.h > 4){
+      const cropC = document.createElement('canvas');
+      cropC.width = r.w; cropC.height = r.h;
+      cropC.getContext('2d').drawImage(dc, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+      _imgCanvas = cropC;
+      const nc = document.getElementById('img-editor-canvas');
+      nc.width = r.w; nc.height = r.h;
+      nc.getContext('2d').drawImage(cropC, 0, 0);
+      document.getElementById('img-ib-cur').textContent = r.w + ' × ' + r.h + ' px';
+      document.getElementById('img-w').value = r.w;
+      document.getElementById('img-h').value = r.h;
+    }
+    _imgCropRect = null;
+  }
+}
+
+// Crop mouse events on canvas
+(function(){
+  let isDown=false, sx=0, sy=0;
+  document.addEventListener('DOMContentLoaded',function(){
+    const dc = document.getElementById('img-editor-canvas');
+    if(!dc) return;
+    dc.addEventListener('mousedown',function(e){
+      if(!_imgCropMode) return;
+      const rect = dc.getBoundingClientRect();
+      const scaleX = dc.width / rect.width;
+      const scaleY = dc.height / rect.height;
+      sx = (e.clientX - rect.left) * scaleX;
+      sy = (e.clientY - rect.top)  * scaleY;
+      isDown = true;
+    });
+    dc.addEventListener('mousemove',function(e){
+      if(!_imgCropMode || !isDown) return;
+      const rect = dc.getBoundingClientRect();
+      const scaleX = dc.width / rect.width;
+      const scaleY = dc.height / rect.height;
+      const ex = (e.clientX - rect.left) * scaleX;
+      const ey = (e.clientY - rect.top)  * scaleY;
+      _imgCropRect = {
+        x: Math.min(sx,ex), y: Math.min(sy,ey),
+        w: Math.abs(ex-sx), h: Math.abs(ey-sy)
+      };
+      // Draw selection overlay
+      const tmp = document.createElement('canvas');
+      tmp.width = dc.width; tmp.height = dc.height;
+      tmp.getContext('2d').drawImage(_imgCanvas, 0, 0);
+      const dCtx = dc.getContext('2d');
+      dCtx.drawImage(_imgCanvas, 0, 0);
+      dCtx.strokeStyle = '#9B59B6';
+      dCtx.lineWidth = 2;
+      dCtx.setLineDash([6,3]);
+      dCtx.strokeRect(_imgCropRect.x, _imgCropRect.y, _imgCropRect.w, _imgCropRect.h);
+      dCtx.fillStyle = 'rgba(155,89,182,0.12)';
+      dCtx.fillRect(_imgCropRect.x, _imgCropRect.y, _imgCropRect.w, _imgCropRect.h);
+      dCtx.setLineDash([]);
+    });
+    dc.addEventListener('mouseup',function(){
+      isDown=false;
+    });
+  });
+})();
+
+function imgDownload(){
+  if(!_imgCanvas) return;
+  const fmt = document.getElementById('img-fmt-select').value;
+  const quality = parseInt(document.getElementById('img-quality').value) / 100;
+  // Create final canvas with filters applied
+  const finalC = document.createElement('canvas');
+  finalC.width  = _imgCanvas.width;
+  finalC.height = _imgCanvas.height;
+  const fCtx = finalC.getContext('2d');
+  const brightness = parseInt(document.getElementById('img-brightness')?.value || 0);
+  const contrast   = parseInt(document.getElementById('img-contrast')?.value   || 0);
+  const saturation = parseInt(document.getElementById('img-saturation')?.value || 0);
+  fCtx.filter =
+    'brightness('+(100+brightness)+'%) ' +
+    'contrast('+(100+contrast)+'%) ' +
+    'saturate('+(100+saturation)+'%)';
+  fCtx.drawImage(_imgCanvas, 0, 0);
+  fCtx.filter = 'none';
+  const ext = fmt.split('/')[1] === 'jpeg' ? 'jpg' : fmt.split('/')[1];
+  const dataUrl = finalC.toDataURL(fmt, quality);
+  const a = document.createElement('a');
+  const origName = (document.getElementById('img-ib-name').textContent || 'image').replace(/\.[^.]+$/,'');
+  a.download = origName + '_edited.' + ext;
+  a.href = dataUrl;
+  a.click();
+}
+
+function closeImgEditor(){
+  closeModal('imgEdit-modal');
+}
+
+
 </script>
-
-
-<!-- ══════════════════════════════════════════
-     MODAL 3: 文書格式轉換
-══════════════════════════════════════════ -->
-<div class="modal-overlay" id="doc-convert-modal">
-  <div class="modal" style="max-width:720px">
-    <div class="modal-header">
-      <div class="modal-title">
-        📄 文書格式轉換
-        <span class="badge-local" style="background:rgba(130,60,180,0.10);border-color:rgba(130,60,180,0.3);color:#a855f7;">本地端</span>
-      </div>
-      <button class="modal-close" onclick="closeModal('doc-convert-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- Tabs -->
-      <div class="convert-tabs" style="margin-bottom:14px;">
-        <button class="ctab active" data-doctab="word2pdf" onclick="switchDocTab('word2pdf')" style="">Word → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地端</span></button>
-        <button class="ctab" data-doctab="pdf2word" onclick="switchDocTab('pdf2word')">PDF → Word<br><span style="font-size:10px;font-weight:400;opacity:.7">本地端</span></button>
-        <button class="ctab" data-doctab="excel2pdf" onclick="switchDocTab('excel2pdf')">Excel → PDF<br><span style="font-size:10px;font-weight:400;opacity:.7">本地端</span></button>
-      </div>
-
-      <!-- Word → PDF -->
-      <div class="ctab-panel active" id="doctab-word2pdf">
-        <div class="steps-guide">
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">1</span>上傳 .DOCX 檔案（在瀏覽器內解析，不上傳伺服器）</div>
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">2</span>點擊「轉換為 PDF」，本機即時產生</div>
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">3</span>下載 PDF 完成</div>
-        </div>
-        <div class="limit-note">⚠️ <strong>目前限制：</strong>本地端 Word→PDF 可保留純文字內容，圖片 / 表格 / 複雜排版暫不完整支援。完整版面保留請改用桌面版 Word 另存為 PDF。</div>
-      </div>
-
-      <!-- PDF → Word -->
-      <div class="ctab-panel" id="doctab-pdf2word">
-        <div class="steps-guide">
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">1</span>上傳 .PDF（向量文字 PDF 效果最佳，掃描圖效果較差）</div>
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">2</span>點擊「轉換為 Word」，提取文字內容</div>
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">3</span>下載 .DOCX 完成</div>
-        </div>
-        <div class="limit-note">⚠️ <strong>說明：</strong>純前端 PDF→Word 使用文字提取方式，可保留段落文字，圖片與複雜表格暫不支援。</div>
-      </div>
-
-      <!-- Excel → PDF -->
-      <div class="ctab-panel" id="doctab-excel2pdf">
-        <div class="steps-guide">
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">1</span>上傳 .XLSX 檔案</div>
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">2</span>點擊「轉換為 PDF」</div>
-          <div class="step-item"><span class="step-num" style="background:rgba(130,60,180,0.12);border-color:rgba(130,60,180,0.4);color:#a855f7;">3</span>下載 PDF 完成</div>
-        </div>
-        <div class="limit-note">⚠️ <strong>目前限制：</strong>Excel→PDF 以純文字格式輸出儲存格資料，不含格式化外觀。完整版面請用 Excel 另存。</div>
-      </div>
-
-      <!-- Shared upload + status area -->
-      <div class="convert-drop" id="doc-drop"
-           ondragover="zoneDragOver(event,'doc-drop')" ondragleave="zoneDragLeave('doc-drop')"
-           ondrop="e=>{e.preventDefault();document.getElementById('doc-drop').classList.remove('dragover');loadDocFileObj(e.dataTransfer.files[0])}">
-        <input type="file" accept=".docx,.doc,.pdf,.xlsx,.xls" id="doc-input" onchange="loadDocFile(event)">
-        <div style="font-size:28px;margin-bottom:6px;">📄</div>
-        <div style="font-size:13px;font-weight:700;color:var(--silver2);">點擊選取或拖放檔案</div>
-        <div style="font-size:11px;color:var(--silver3);margin-top:3px;">.DOCX · .PDF · .XLSX</div>
-      </div>
-      <div class="file-preview-info" id="doc-fpi">
-        <span class="fpi-icon">📄</span>
-        <div><div class="fpi-name" id="doc-fname">—</div><div class="fpi-size" id="doc-fsize">—</div></div>
-      </div>
-      <div class="status-box" id="doc-status">
-        <div class="status-label" id="doc-status-label">處理中…</div>
-        <div class="pb-track"><div class="pb-fill" id="doc-pb"></div></div>
-        <div class="status-msg" id="doc-status-msg"></div>
-      </div>
-      <button class="convert-action-btn" id="doc-convert-btn" onclick="convertDoc()" disabled
-              style="background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 4px 20px rgba(130,60,180,0.22);">
-        📄 轉換（本地端）
-      </button>
-      <button class="download-btn" id="doc-dl" onclick="downloadDocPdf()"
-              style="background:linear-gradient(135deg,#5b21b6,#7c3aed);">
-        ⬇ 下載結果
-      </button>
-
-    </div>
-  </div>
-</div>
-
-
-<!-- ══════════════════════════════════════════
-     MODAL 4: 圖片線上編輯器
-══════════════════════════════════════════ -->
-<style>
-.itoolbar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; align-items:center; }
-.itool {
-  padding:6px 12px; border-radius:8px; border:1px solid rgba(234,88,12,0.2);
-  background:transparent; color:var(--silver2); cursor:pointer; font-size:12.5px;
-  font-weight:700; font-family:'Noto Sans TC',sans-serif; transition:all 0.18s;
-}
-.itool:hover { background:rgba(234,88,12,0.08); border-color:rgba(234,88,12,0.4); }
-.itool.active { background:rgba(234,88,12,0.14); border-color:#f97316; color:#f97316; }
-.icolor-pick { width:30px; height:30px; border-radius:8px; border:2px solid rgba(234,88,12,0.3); cursor:pointer; padding:2px; }
-#img-editor-canvas { display:block; max-width:100%; border-radius:8px; border:1px solid rgba(234,88,12,0.2); cursor:crosshair; }
-#img-editor-area { display:none; }
-.img-dl-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.img-dl-btn {
-  padding:9px 16px; border-radius:8px; border:none; cursor:pointer; font-size:12.5px; font-weight:700;
-  font-family:'Noto Sans TC',sans-serif; transition:all 0.18s; color:#fff;
-}
-</style>
-<div class="modal-overlay" id="img-editor-modal">
-  <div class="modal" style="max-width:860px">
-    <div class="modal-header">
-      <div class="modal-title">
-        🖼️ 圖片線上編輯器
-        <span class="badge-local" style="background:rgba(234,88,12,0.10);border-color:rgba(234,88,12,0.3);color:#f97316;">本地端</span>
-      </div>
-      <button class="modal-close" onclick="closeModal('img-editor-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- Upload zone -->
-      <div class="upload-zone" id="img-upload-zone"
-           ondragover="zoneDragOver(event,'img-upload-zone')" ondragleave="zoneDragLeave('img-upload-zone')"
-           ondrop="e=>{e.preventDefault();document.getElementById('img-upload-zone').classList.remove('dragover');const f=e.dataTransfer.files[0];if(f){document.getElementById('img-file-input').files;loadImgFileFromObj(f)}}">
-        <input type="file" accept="image/*" id="img-file-input" onchange="loadImgFile(event)">
-        <div class="upload-icon">🖼️</div>
-        <div class="upload-label">點擊選取或拖放圖片</div>
-        <div class="upload-hint">支援 JPG · PNG · WEBP · GIF · BMP</div>
-      </div>
-
-      <!-- Editor area -->
-      <div id="img-editor-area">
-        <!-- Toolbar -->
-        <div class="itoolbar">
-          <button class="itool active" id="itool-pen"    onclick="setImgTool('pen')">✏️ 畫筆</button>
-          <button class="itool" id="itool-eraser" onclick="setImgTool('eraser')">🧹 橡皮擦</button>
-          <button class="itool" id="itool-text"   onclick="imgAddText()">T 文字</button>
-          <button class="itool" onclick="imgRotate()">↻ 旋轉 90°</button>
-          <button class="itool" onclick="imgResize()">⤡ 改尺寸</button>
-          <button class="itool" onclick="imgClear()">🔄 還原</button>
-          <!-- Color picker -->
-          <input type="color" class="icolor-pick" value="#e74c3c" onchange="setImgColor(this.value)" title="顏色">
-          <!-- Brush size -->
-          <select onchange="setImgSize(this.value)" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(234,88,12,0.25);background:#fff;font-size:12px;color:var(--silver2);">
-            <option value="2">細</option>
-            <option value="4" selected>中</option>
-            <option value="8">粗</option>
-            <option value="16">特粗</option>
-          </select>
-        </div>
-
-        <div style="font-size:11px;color:var(--silver3);margin-bottom:8px;" id="img-size-info">—</div>
-        <canvas id="img-editor-canvas"></canvas>
-
-        <!-- Download row -->
-        <div class="img-dl-row">
-          <button class="img-dl-btn" onclick="imgDownload('jpg')" style="background:linear-gradient(135deg,#d97706,#f59e0b);">⬇ 下載 JPG</button>
-          <button class="img-dl-btn" onclick="imgDownload('png')" style="background:linear-gradient(135deg,#0369a1,#0ea5e9);">⬇ 下載 PNG</button>
-          <button class="img-dl-btn" onclick="imgDownload('webp')" style="background:linear-gradient(135deg,#047857,#10b981);">⬇ 下載 WEBP</button>
-          <button class="img-dl-btn" onclick="imgCompress()" style="background:linear-gradient(135deg,#ea580c,#f97316);">🗜 壓縮下載（JPG）</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<script>
-// Init image editor when modal opens
-document.getElementById('img-editor-modal').addEventListener('click',function(e){
-  if(e.target===this && !imgCanvas) initImgEditor();
-});
-document.querySelector('[onclick="openModal(\'img-editor-modal\')"]')?.addEventListener('click',()=>{
-  if(!imgCanvas) setTimeout(initImgEditor,50);
-});
-function loadImgFileFromObj(f){
-  const dt=new DataTransfer(); dt.items.add(f);
-  document.getElementById('img-file-input').files=dt.files;
-  loadImgFile({target:{files:dt.files}});
-}
-// Ensure initImgEditor is called on open
-const _origOpenModal=openModal;
-function openModal(id){
-  _origOpenModal(id);
-  if(id==='img-editor-modal' && !imgCanvas) setTimeout(initImgEditor,50);
-}
-</script>
-
 </body>
 </html>

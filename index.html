@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V43.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V44.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -607,6 +607,130 @@ footer strong { color: var(--cyan); }
 .btn-purple { background: linear-gradient(135deg, #cc9400, #FFB900); color:#1a1a1a; box-shadow:0 4px 20px rgba(255,185,0,0.25); }
 .btn-purple:hover { box-shadow:0 6px 28px rgba(255,185,0,0.42); transform:translateY(-1px); }
 
+/* ── QR CODE 條碼 card → 紫色 #8B5CF6 ── */
+.card-qr { border-color: rgba(139,92,246,0.22); }
+.card-qr::before { background: linear-gradient(90deg, #6d28d9, #8B5CF6); }
+.card-qr:hover { border-color: rgba(139,92,246,0.6); box-shadow: 0 8px 40px rgba(139,92,246,0.18); transform: translateY(-3px); }
+.card-icon.violet { background: linear-gradient(135deg,rgba(109,40,217,0.13),rgba(139,92,246,0.22)); box-shadow: 0 0 24px rgba(139,92,246,0.15); }
+.dot-violet { width:6px; height:6px; border-radius:50%; background:#8B5CF6; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(139,92,246,0.5); }
+.card-qr .card-num { color: #8B5CF6; }
+.btn-violet { background: linear-gradient(135deg, #6d28d9, #8B5CF6); color:#fff; box-shadow:0 4px 20px rgba(139,92,246,0.28); }
+.btn-violet:hover { box-shadow:0 6px 28px rgba(139,92,246,0.45); transform:translateY(-1px); }
+
+/* ── WATERMARK card → 青藍色 #0EA5E9 ── */
+.card-wm { border-color: rgba(14,165,233,0.22); }
+.card-wm::before { background: linear-gradient(90deg, #0369a1, #0EA5E9); }
+.card-wm:hover { border-color: rgba(14,165,233,0.6); box-shadow: 0 8px 40px rgba(14,165,233,0.18); transform: translateY(-3px); }
+.card-icon.sky { background: linear-gradient(135deg,rgba(3,105,161,0.13),rgba(14,165,233,0.22)); box-shadow: 0 0 24px rgba(14,165,233,0.15); }
+.dot-sky { width:6px; height:6px; border-radius:50%; background:#0EA5E9; flex-shrink:0; margin-top:8px; box-shadow:0 0 4px rgba(14,165,233,0.5); }
+.card-wm .card-num { color: #0EA5E9; }
+.btn-sky { background: linear-gradient(135deg, #0369a1, #0EA5E9); color:#fff; box-shadow:0 4px 20px rgba(14,165,233,0.28); }
+.btn-sky:hover { box-shadow:0 6px 28px rgba(14,165,233,0.45); transform:translateY(-1px); }
+
+/* ── QR/BARCODE Modal styles ── */
+.qr-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.qtab {
+  flex:1; min-width:80px; padding:9px 12px; border-radius:8px;
+  border:1px solid rgba(139,92,246,0.18); background:transparent; color:var(--silver3);
+  cursor:pointer; font-size:13px; font-weight:700; font-family:'Noto Sans TC',sans-serif;
+  transition:all 0.2s; text-align:center;
+}
+.qtab.active { background:rgba(139,92,246,0.10); border-color:#8B5CF6; color:#8B5CF6; }
+.qtab-panel { display:none; }
+.qtab-panel.active { display:block; }
+
+.qr-input-row { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.qr-label { font-size:12.5px; font-weight:700; color:var(--silver2); margin-bottom:4px; letter-spacing:0.04em; }
+.qr-input {
+  width:100%; padding:10px 14px; border-radius:8px;
+  border:1px solid rgba(139,92,246,0.25); background:rgba(139,92,246,0.04);
+  color:var(--silver); font-size:14px; font-family:'Noto Sans TC',sans-serif;
+  outline:none; transition:border-color 0.2s;
+}
+.qr-input:focus { border-color:#8B5CF6; background:rgba(139,92,246,0.07); }
+.qr-textarea {
+  width:100%; padding:10px 14px; border-radius:8px; min-height:90px; resize:vertical;
+  border:1px solid rgba(139,92,246,0.25); background:rgba(139,92,246,0.04);
+  color:var(--silver); font-size:13.5px; font-family:'Noto Sans TC',sans-serif;
+  outline:none; transition:border-color 0.2s;
+}
+.qr-textarea:focus { border-color:#8B5CF6; }
+.qr-options { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:14px; align-items:flex-end; }
+.qr-opt-group { display:flex; flex-direction:column; gap:4px; flex:1; min-width:100px; }
+.qr-select {
+  padding:8px 10px; border-radius:7px;
+  border:1px solid rgba(139,92,246,0.22); background:rgba(139,92,246,0.04);
+  color:var(--silver); font-size:13px; font-family:'Noto Sans TC',sans-serif; outline:none; cursor:pointer;
+}
+.qr-preview-area {
+  display:flex; align-items:center; justify-content:center; gap:24px; flex-wrap:wrap;
+  background:rgba(139,92,246,0.04); border:1px solid rgba(139,92,246,0.14);
+  border-radius:12px; padding:20px; margin-bottom:14px; min-height:160px;
+}
+.qr-canvas-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; }
+#qr-canvas, #bar-canvas { border-radius:6px; box-shadow:0 2px 12px rgba(0,0,0,0.10); }
+.qr-info-text { font-size:11.5px; color:var(--silver3); font-family:'Share Tech Mono',monospace; }
+.qr-batch-preview {
+  max-height:200px; overflow-y:auto; border:1px solid rgba(139,92,246,0.15);
+  border-radius:8px; padding:10px; margin-bottom:12px;
+  background:rgba(139,92,246,0.03);
+  display:flex; flex-wrap:wrap; gap:10px;
+}
+.batch-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.batch-item canvas { border-radius:4px; box-shadow:0 1px 6px rgba(0,0,0,0.12); }
+.batch-label { font-size:9px; color:var(--silver3); max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+.btn-violet-outline {
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:13px; font-weight:700; font-family:'Noto Sans TC',sans-serif;
+  padding:10px 20px; border-radius:9px; cursor:pointer; transition:all 0.2s;
+  background:transparent; border:1.5px solid #8B5CF6; color:#8B5CF6;
+}
+.btn-violet-outline:hover { background:rgba(139,92,246,0.10); }
+
+/* ── WATERMARK Modal styles ── */
+.wm-row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:14px; }
+.wm-col { display:flex; flex-direction:column; gap:6px; flex:1; min-width:120px; }
+.wm-label { font-size:12.5px; font-weight:700; color:var(--silver2); letter-spacing:0.04em; }
+.wm-input, .wm-select {
+  width:100%; padding:9px 12px; border-radius:8px;
+  border:1px solid rgba(14,165,233,0.25); background:rgba(14,165,233,0.04);
+  color:var(--silver); font-size:13.5px; font-family:'Noto Sans TC',sans-serif;
+  outline:none; transition:border-color 0.2s;
+}
+.wm-input:focus, .wm-select:focus { border-color:#0EA5E9; }
+.wm-preview-wrap {
+  position:relative; border-radius:10px; overflow:hidden;
+  border:1px solid rgba(14,165,233,0.2); margin-bottom:14px; background:#f8f9fa;
+  min-height:200px; display:flex; align-items:center; justify-content:center;
+}
+#wm-preview-canvas { max-width:100%; max-height:420px; display:block; border-radius:8px; }
+.wm-placeholder {
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  color:var(--silver3); font-size:14px; padding:40px;
+}
+.wm-placeholder-icon { font-size:40px; opacity:0.5; }
+.wm-upload-zone {
+  border:2px dashed rgba(14,165,233,0.28); border-radius:12px;
+  padding:28px 24px; text-align:center; cursor:pointer; position:relative;
+  transition:all 0.2s; margin-bottom:14px;
+}
+.wm-upload-zone:hover { border-color:#0EA5E9; background:rgba(14,165,233,0.04); }
+.wm-upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.btn-sky-outline {
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:13px; font-weight:700; font-family:'Noto Sans TC',sans-serif;
+  padding:10px 20px; border-radius:9px; cursor:pointer; transition:all 0.2s;
+  background:transparent; border:1.5px solid #0EA5E9; color:#0EA5E9;
+}
+.btn-sky-outline:hover { background:rgba(14,165,233,0.10); }
+.wm-pdf-page-info {
+  font-size:12px; color:var(--silver3); font-family:'Share Tech Mono',monospace;
+  padding:6px 12px; background:rgba(14,165,233,0.06); border-radius:6px;
+  margin-bottom:8px; display:none;
+}
+.wm-pdf-page-info.show { display:block; }
+.wm-action-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+
 /* ── SECTION LABEL DIVIDER ── */
 .section-label {
   max-width: 1120px; margin: 0 auto 20px; padding: 0 32px;
@@ -744,14 +868,14 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V43.0</div>
+    <div class="version-badge">V44.0</div>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
-  <h1>免安裝 線上看<span>3D / 2D</span>工程圖檔<br><span>圖片 / 文書</span>處理及<span>PDF</span>格式轉換</h1>
-  <p class="hero-sub">全線上辦公室利器，工程圖 · 文件 · 圖片一站搞定，資料純本地處理零外流</p>
+  <h1>免安裝 線上看<span>3D / 2D</span>工程圖檔<br><span>圖片 / 文書</span>處理及<span>PDF</span>格式轉換<br><span>QR條碼</span>產生及<span>浮水印</span>工具</h1>
+  <p class="hero-sub">全線上辦公室利器，工程圖 · 文件 · 圖片 · 生產工具一站搞定，資料純本地處理零外流</p>
   <div class="hero-divider"></div>
 </section>
 
@@ -995,8 +1119,115 @@ footer strong { color: var(--cyan); }
 
 </section>
 
+<!-- SECTION LABEL: 生產工具 -->
+<div class="section-label" style="margin-top:8px;">
+  <span class="section-label-text">生產工具功能</span>
+  <div class="section-label-line"></div>
+</div>
+
+<!-- PRODUCTION TOOLS CARDS -->
+<section class="services" style="padding-top:0;">
+
+  <!-- Card 5: QR Code / 條碼產生器 (紫色系) -->
+  <div class="card card-qr" onclick="openModal('qr-modal')" style="cursor:pointer;"
+       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('qr-modal')"
+       aria-label="開啟 QR Code 條碼產生器">
+    <div class="card-head">
+      <div class="card-icon violet">
+        <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- QR 左上角 -->
+          <rect x="3" y="3" width="13" height="13" rx="2" stroke="#8B5CF6" stroke-width="1.8" fill="rgba(139,92,246,0.08)"/>
+          <rect x="6" y="6" width="7" height="7" rx="1" fill="#8B5CF6" opacity="0.7"/>
+          <!-- QR 右上角 -->
+          <rect x="22" y="3" width="13" height="13" rx="2" stroke="#8B5CF6" stroke-width="1.8" fill="rgba(139,92,246,0.08)"/>
+          <rect x="25" y="6" width="7" height="7" rx="1" fill="#8B5CF6" opacity="0.7"/>
+          <!-- QR 左下角 -->
+          <rect x="3" y="22" width="13" height="13" rx="2" stroke="#8B5CF6" stroke-width="1.8" fill="rgba(139,92,246,0.08)"/>
+          <rect x="6" y="25" width="7" height="7" rx="1" fill="#8B5CF6" opacity="0.7"/>
+          <!-- QR 右下角 data dots -->
+          <rect x="23" y="23" width="3" height="3" rx="0.5" fill="#8B5CF6" opacity="0.6"/>
+          <rect x="27" y="23" width="3" height="3" rx="0.5" fill="#8B5CF6" opacity="0.6"/>
+          <rect x="31" y="23" width="3" height="3" rx="0.5" fill="#8B5CF6" opacity="0.6"/>
+          <rect x="23" y="27" width="3" height="3" rx="0.5" fill="#8B5CF6" opacity="0.6"/>
+          <rect x="31" y="27" width="3" height="3" rx="0.5" fill="#8B5CF6" opacity="0.6"/>
+          <rect x="27" y="31" width="3" height="3" rx="0.5" fill="#8B5CF6" opacity="0.6"/>
+          <rect x="31" y="31" width="3" height="3" rx="0.5" fill="#8B5CF6" opacity="0.6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="card-title">QR Code / 條碼產生器
+          <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:400;color:#8B5CF6;letter-spacing:0.08em;margin-top:4px;">QR Code &amp; Barcode Generator</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="formats">
+        <span class="fmt-tag" style="background:rgba(139,92,246,0.07);border-color:rgba(139,92,246,0.25);color:#8B5CF6;">QR Code</span>
+        <span class="fmt-tag" style="background:rgba(139,92,246,0.07);border-color:rgba(139,92,246,0.25);color:#8B5CF6;">Code128</span>
+        <span class="fmt-tag" style="background:rgba(139,92,246,0.07);border-color:rgba(139,92,246,0.25);color:#8B5CF6;">EAN-13</span>
+        <span class="fmt-tag" style="background:rgba(139,92,246,0.07);border-color:rgba(139,92,246,0.25);color:#8B5CF6;">批次輸出</span>
+      </div>
+      <ul class="feature-list">
+        <li><span class="dot dot-violet"></span>輸入文字 / 料號 / URL，即時產生 QR Code</li>
+        <li><span class="dot dot-violet"></span>工業條碼：Code128（通用）、EAN-13（商品）</li>
+        <li><span class="dot dot-violet"></span>批次模式：貼上多筆清單，一次全部產生並打包下載</li>
+        <li><span class="dot dot-violet"></span>可調尺寸 / 說明文字 / 容錯率，輸出 PNG 直接列印</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-violet" onclick="event.stopPropagation();openModal('qr-modal')">⬡ 開啟條碼產生器</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 6: 浮水印工具 (青藍色系) -->
+  <div class="card card-wm" onclick="openModal('wm-modal')" style="cursor:pointer;"
+       role="button" tabindex="0" onkeydown="if(event.key==='Enter')openModal('wm-modal')"
+       aria-label="開啟浮水印工具">
+    <div class="card-head">
+      <div class="card-icon sky">
+        <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 文件底層 -->
+          <rect x="5" y="4" width="22" height="28" rx="2.5" stroke="#0EA5E9" stroke-width="1.8" fill="rgba(14,165,233,0.06)"/>
+          <line x1="9" y1="11" x2="23" y2="11" stroke="#0EA5E9" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+          <line x1="9" y1="15" x2="23" y2="15" stroke="#0EA5E9" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+          <line x1="9" y1="19" x2="18" y2="19" stroke="#0EA5E9" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+          <!-- 浮水印斜字 (半透明) -->
+          <text x="3" y="26" font-size="10" font-weight="900" fill="#0EA5E9" opacity="0.25"
+                transform="rotate(-30 16 20)" font-family="monospace" letter-spacing="1">機密</text>
+          <!-- 印章圓環 -->
+          <circle cx="29" cy="29" r="7.5" stroke="#0EA5E9" stroke-width="2" fill="rgba(14,165,233,0.08)" stroke-dasharray="3 1.5"/>
+          <text x="29" y="32" font-size="5.5" font-weight="800" fill="#0EA5E9" text-anchor="middle" font-family="monospace">STAMP</text>
+        </svg>
+      </div>
+      <div>
+        <div class="card-title">圖片 / PDF 浮水印
+          <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:400;color:#0EA5E9;letter-spacing:0.08em;margin-top:4px;">Watermark Tool</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="formats">
+        <span class="fmt-tag" style="background:rgba(14,165,233,0.07);border-color:rgba(14,165,233,0.25);color:#0EA5E9;">.JPG</span>
+        <span class="fmt-tag" style="background:rgba(14,165,233,0.07);border-color:rgba(14,165,233,0.25);color:#0EA5E9;">.PNG</span>
+        <span class="fmt-tag" style="background:rgba(14,165,233,0.07);border-color:rgba(14,165,233,0.25);color:#0EA5E9;">.PDF</span>
+        <span class="fmt-tag" style="background:rgba(14,165,233,0.07);border-color:rgba(14,165,233,0.25);color:#0EA5E9;">多頁批次</span>
+      </div>
+      <ul class="feature-list">
+        <li><span class="dot dot-sky"></span>自訂浮水印文字：機密、草稿、CONFIDENTIAL 等</li>
+        <li><span class="dot dot-sky"></span>調整透明度、旋轉角度、字型大小、顏色</li>
+        <li><span class="dot dot-sky"></span>平鋪滿版 或 單一中央 兩種排版模式</li>
+        <li><span class="dot dot-sky"></span>支援 PDF 多頁批次加浮水印，輸出完整 PDF</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-sky" onclick="event.stopPropagation();openModal('wm-modal')">💧 開啟浮水印工具</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+
 <footer>
-  © 2026 &nbsp;MIS 轉檔專屬系統 V43.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
+  © 2026 &nbsp;MIS 轉檔專屬系統 V44.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
   <script>
     (function(){
       const d = new Date('2026-06-25'); // 自動更新：每次修改此檔案時會更新為當天日期
@@ -1642,9 +1873,285 @@ footer strong { color: var(--cyan); }
         <button class="btn btn-purple" onclick="imgDownload()" style="padding:10px 20px;font-size:13px;">⬇ 下載圖片</button>
       </div>
 
+
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════
+     MODAL 5: QR CODE / 條碼產生器
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-header">
+      <div class="modal-title">
+        ⬡ QR Code / 條碼產生器
+        <span class="badge-local" style="background:rgba(139,92,246,0.10);border-color:rgba(139,92,246,0.28);color:#8B5CF6;">本地端產生</span>
+      </div>
+      <button class="modal-close" onclick="closeModal('qr-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Tabs -->
+      <div class="qr-tabs">
+        <button class="qtab active" onclick="switchQTab('qr')">🔲 QR Code<br><span style="font-size:10px;font-weight:400;opacity:.7">文字 / URL / 料號</span></button>
+        <button class="qtab" onclick="switchQTab('bar')">▌▌▌ 條碼<br><span style="font-size:10px;font-weight:400;opacity:.7">Code128 / EAN-13</span></button>
+        <button class="qtab" onclick="switchQTab('batch')">⊞ 批次產生<br><span style="font-size:10px;font-weight:400;opacity:.7">多筆清單一次輸出</span></button>
+      </div>
+
+      <!-- QR Code Tab -->
+      <div class="qtab-panel active" id="qtab-qr">
+        <div class="qr-input-row">
+          <div>
+            <div class="qr-label">輸入內容（文字 / URL / 料號）</div>
+            <input type="text" class="qr-input" id="qr-text-input" placeholder="例：P/N 1234-A  或  https://example.com"
+                   oninput="renderQR()" value="瑞能電子 P/N 1234-A">
+          </div>
+        </div>
+        <div class="qr-options">
+          <div class="qr-opt-group">
+            <div class="qr-label">尺寸</div>
+            <select class="qr-select" id="qr-size" onchange="renderQR()">
+              <option value="128">128 px（小）</option>
+              <option value="200" selected>200 px（中）</option>
+              <option value="300">300 px（大）</option>
+              <option value="512">512 px（列印）</option>
+            </select>
+          </div>
+          <div class="qr-opt-group">
+            <div class="qr-label">容錯率</div>
+            <select class="qr-select" id="qr-ecl" onchange="renderQR()">
+              <option value="L">L – 7%（低）</option>
+              <option value="M" selected>M – 15%（標準）</option>
+              <option value="Q">Q – 25%（高）</option>
+              <option value="H">H – 30%（最高）</option>
+            </select>
+          </div>
+          <div class="qr-opt-group">
+            <div class="qr-label">前景色</div>
+            <input type="color" id="qr-color-fg" value="#1A2840" oninput="renderQR()"
+                   style="width:100%;height:36px;border-radius:7px;border:1px solid rgba(139,92,246,0.22);cursor:pointer;padding:2px;">
+          </div>
+          <div class="qr-opt-group">
+            <div class="qr-label">背景色</div>
+            <input type="color" id="qr-color-bg" value="#FFFFFF" oninput="renderQR()"
+                   style="width:100%;height:36px;border-radius:7px;border:1px solid rgba(139,92,246,0.22);cursor:pointer;padding:2px;">
+          </div>
+        </div>
+        <div class="qr-input-row">
+          <div>
+            <div class="qr-label">說明文字（顯示在 QR Code 下方，選填）</div>
+            <input type="text" class="qr-input" id="qr-caption" placeholder="例：料號：1234-A" oninput="renderQR()">
+          </div>
+        </div>
+        <div class="qr-preview-area">
+          <div class="qr-canvas-wrap">
+            <canvas id="qr-canvas" width="200" height="200"></canvas>
+            <div class="qr-info-text" id="qr-info-text">—</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-violet" onclick="downloadQR('qr')">⬇ 下載 QR Code PNG</button>
+          <button class="btn-violet-outline" onclick="copyQRToClipboard()">📋 複製到剪貼簿</button>
+        </div>
+      </div>
+
+      <!-- Barcode Tab -->
+      <div class="qtab-panel" id="qtab-bar">
+        <div class="qr-input-row">
+          <div>
+            <div class="qr-label">條碼內容</div>
+            <input type="text" class="qr-input" id="bar-text-input" placeholder="輸入數字或文字" oninput="renderBarcode()" value="123456789012">
+          </div>
+        </div>
+        <div class="qr-options">
+          <div class="qr-opt-group">
+            <div class="qr-label">條碼類型</div>
+            <select class="qr-select" id="bar-type" onchange="barTypeChange()">
+              <option value="code128">Code 128（通用文數字）</option>
+              <option value="ean13">EAN-13（13位數字）</option>
+            </select>
+          </div>
+          <div class="qr-opt-group">
+            <div class="qr-label">寬度（px）</div>
+            <input type="number" class="qr-input" id="bar-width" value="320" min="100" max="800" oninput="renderBarcode()" style="padding:8px 10px;">
+          </div>
+          <div class="qr-opt-group">
+            <div class="qr-label">高度（px）</div>
+            <input type="number" class="qr-input" id="bar-height" value="80" min="30" max="300" oninput="renderBarcode()" style="padding:8px 10px;">
+          </div>
+          <div class="qr-opt-group">
+            <div class="qr-label">顯示數字</div>
+            <select class="qr-select" id="bar-show-text" onchange="renderBarcode()">
+              <option value="1" selected>是</option>
+              <option value="0">否</option>
+            </select>
+          </div>
+        </div>
+        <div class="qr-preview-area">
+          <div class="qr-canvas-wrap">
+            <canvas id="bar-canvas" width="320" height="100"></canvas>
+            <div class="qr-info-text" id="bar-info-text">—</div>
+          </div>
+        </div>
+        <div class="limit-note" id="bar-error-note" style="display:none;"></div>
+        <div class="btn-row">
+          <button class="btn btn-violet" onclick="downloadQR('bar')">⬇ 下載條碼 PNG</button>
+        </div>
+      </div>
+
+      <!-- Batch Tab -->
+      <div class="qtab-panel" id="qtab-batch">
+        <div class="limit-note" style="margin-bottom:14px;">
+          <strong>💡 批次說明：</strong>每行一筆資料，支援最多 50 筆。產生後可個別下載或打包下載 ZIP。
+        </div>
+        <div class="qr-input-row">
+          <div>
+            <div class="qr-label">批次清單（每行一筆）</div>
+            <textarea class="qr-textarea" id="batch-input" placeholder="P/N 1001-A&#10;P/N 1002-B&#10;P/N 1003-C&#10;https://example.com/item/001">P/N 1001-A
+P/N 1002-B
+P/N 1003-C</textarea>
+          </div>
+        </div>
+        <div class="qr-options">
+          <div class="qr-opt-group">
+            <div class="qr-label">類型</div>
+            <select class="qr-select" id="batch-type">
+              <option value="qr">QR Code</option>
+              <option value="code128">Code 128 條碼</option>
+            </select>
+          </div>
+          <div class="qr-opt-group">
+            <div class="qr-label">尺寸</div>
+            <select class="qr-select" id="batch-size">
+              <option value="128">128 px</option>
+              <option value="200" selected>200 px</option>
+              <option value="300">300 px</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-bottom:12px;">
+          <button class="btn btn-violet" onclick="generateBatch()">⊞ 產生批次</button>
+        </div>
+        <div class="qr-batch-preview" id="batch-preview" style="display:none;"></div>
+        <div class="btn-row" id="batch-dl-row" style="display:none;">
+          <button class="btn btn-violet" onclick="downloadBatchZip()">⬇ 打包下載 ZIP</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL 6: 浮水印工具
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="wm-modal">
+  <div class="modal" style="max-width:900px">
+    <div class="modal-header">
+      <div class="modal-title">
+        💧 圖片 / PDF 浮水印工具
+        <span class="badge-local" style="background:rgba(14,165,233,0.10);border-color:rgba(14,165,233,0.28);color:#0EA5E9;">本地端處理</span>
+      </div>
+      <button class="modal-close" onclick="closeModal('wm-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- 上傳區 -->
+      <div class="wm-upload-zone" id="wm-upload-zone"
+           ondragover="wmDragOver(event)" ondragleave="wmDragLeave(event)" ondrop="wmDrop(event)">
+        <input type="file" id="wm-file-input" accept="image/*,.pdf" onchange="wmLoadFile(event)">
+        <div style="font-size:32px;margin-bottom:8px;">💧</div>
+        <div style="font-size:14px;font-weight:700;color:var(--silver2);">點擊選取或拖放圖片 / PDF</div>
+        <div style="font-size:12px;color:var(--silver3);margin-top:5px;">支援 JPG · PNG · WEBP · PDF（純本地端，不上傳伺服器）</div>
+      </div>
+
+      <!-- 已載入檔案資訊 -->
+      <div class="viewer-info-bar" id="wm-info-bar">
+        <div>檔案：<span id="wm-ib-name">—</span></div>
+        <div>類型：<span id="wm-ib-type">—</span></div>
+        <div>尺寸：<span id="wm-ib-size">—</span></div>
+      </div>
+      <div class="wm-pdf-page-info" id="wm-pdf-page-info">
+        PDF 共 <span id="wm-pdf-pages">0</span> 頁 · 目前預覽第 <span id="wm-pdf-cur">1</span> 頁
+        &nbsp;<button class="btn-sky-outline" style="padding:3px 10px;font-size:11px;" onclick="wmPdfPrevPage()">◀</button>
+        <button class="btn-sky-outline" style="padding:3px 10px;font-size:11px;" onclick="wmPdfNextPage()">▶</button>
+      </div>
+
+      <!-- 浮水印設定 -->
+      <div class="wm-row">
+        <div class="wm-col" style="flex:2;min-width:180px;">
+          <div class="wm-label">浮水印文字</div>
+          <input type="text" class="wm-input" id="wm-text" value="機密文件 CONFIDENTIAL" oninput="wmRender()">
+        </div>
+        <div class="wm-col">
+          <div class="wm-label">排版模式</div>
+          <select class="wm-select" id="wm-mode" onchange="wmRender()">
+            <option value="tile">平鋪滿版</option>
+            <option value="center">單一中央</option>
+            <option value="diagonal">對角線</option>
+          </select>
+        </div>
+      </div>
+      <div class="wm-row">
+        <div class="wm-col">
+          <div class="wm-label">字型大小</div>
+          <input type="range" class="wm-input" id="wm-fontsize" min="12" max="120" value="48" oninput="wmRender();document.getElementById('wm-fontsize-val').textContent=this.value+'px'" style="padding:6px 0;border:none;background:none;">
+          <span id="wm-fontsize-val" style="font-size:12px;color:var(--silver3);font-family:'Share Tech Mono',monospace;">48px</span>
+        </div>
+        <div class="wm-col">
+          <div class="wm-label">旋轉角度</div>
+          <input type="range" class="wm-input" id="wm-angle" min="-90" max="90" value="-30" oninput="wmRender();document.getElementById('wm-angle-val').textContent=this.value+'°'" style="padding:6px 0;border:none;background:none;">
+          <span id="wm-angle-val" style="font-size:12px;color:var(--silver3);font-family:'Share Tech Mono',monospace;">-30°</span>
+        </div>
+        <div class="wm-col">
+          <div class="wm-label">透明度</div>
+          <input type="range" class="wm-input" id="wm-opacity" min="5" max="80" value="20" oninput="wmRender();document.getElementById('wm-opacity-val').textContent=this.value+'%'" style="padding:6px 0;border:none;background:none;">
+          <span id="wm-opacity-val" style="font-size:12px;color:var(--silver3);font-family:'Share Tech Mono',monospace;">20%</span>
+        </div>
+        <div class="wm-col">
+          <div class="wm-label">顏色</div>
+          <input type="color" id="wm-color" value="#cc0000" oninput="wmRender()"
+                 style="width:100%;height:36px;border-radius:7px;border:1px solid rgba(14,165,233,0.22);cursor:pointer;padding:2px;">
+        </div>
+        <div class="wm-col">
+          <div class="wm-label">快選文字</div>
+          <select class="wm-select" id="wm-presets" onchange="wmApplyPreset()">
+            <option value="">── 快速套用 ──</option>
+            <option value="機密 CONFIDENTIAL">機密 CONFIDENTIAL</option>
+            <option value="草稿 DRAFT">草稿 DRAFT</option>
+            <option value="請勿外流">請勿外流</option>
+            <option value="FOR INTERNAL USE ONLY">FOR INTERNAL USE ONLY</option>
+            <option value="SAMPLE 樣品">SAMPLE 樣品</option>
+            <option value="作廢 VOID">作廢 VOID</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 預覽 -->
+      <div class="wm-preview-wrap" id="wm-preview-wrap">
+        <div class="wm-placeholder" id="wm-placeholder">
+          <div class="wm-placeholder-icon">💧</div>
+          <div>請先上傳圖片或 PDF 檔案</div>
+        </div>
+        <canvas id="wm-preview-canvas" style="display:none;"></canvas>
+      </div>
+
+      <!-- 動作按鈕 -->
+      <div class="wm-action-row">
+        <button class="btn btn-sky" id="wm-dl-btn" onclick="wmDownload()" disabled>⬇ 下載加浮水印圖片</button>
+        <button class="btn btn-sky" id="wm-pdf-dl-btn" onclick="wmDownloadPdf()" disabled style="display:none;">⬇ 下載加浮水印 PDF（全部頁）</button>
+        <button class="btn-sky-outline" onclick="wmReset()">↩ 重置</button>
+      </div>
+
+      <div class="limit-note" style="margin-top:8px;">
+        <strong>📌 PDF 說明：</strong>PDF 採用 jsPDF 逐頁將頁面渲染為圖片後加入浮水印，再合併輸出為新 PDF。複雜向量 PDF 建議先用圖片模式確認效果。
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
 /* ─────────────────────────────────────────
    ⚡ 程式碼保護機制
@@ -3831,6 +4338,599 @@ function clearDrawLayer(){
 /* ─── 重置時也清塗鴉 ─── */
 function closeImgEditor(){
   closeModal('imgEdit-modal');
+}
+
+/* ══════════════════════════════════════════
+   QR CODE / BARCODE GENERATOR
+══════════════════════════════════════════ */
+
+// ── QR Code 純 JS 實作（不依賴外部函式庫）──
+// 使用小型 QR encoder，支援 UTF-8 + 容錯率
+// 使用 qrcodejs 動態載入方式
+
+let _qrLib = null;
+let _qrLibLoading = false;
+let _qrLibCbs = [];
+
+async function _getQRLib(){
+  if(_qrLib) return _qrLib;
+  if(_qrLibLoading) return new Promise(r=>_qrLibCbs.push(r));
+  _qrLibLoading = true;
+  return new Promise((resolve)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = ()=>{
+      _qrLib = window.QRCode;
+      _qrLibLoading = false;
+      _qrLibCbs.forEach(cb=>cb(_qrLib));
+      _qrLibCbs = [];
+      resolve(_qrLib);
+    };
+    s.onerror = ()=>{ _qrLibLoading=false; resolve(null); };
+    document.head.appendChild(s);
+  });
+}
+
+function switchQTab(tab){
+  document.querySelectorAll('.qtab').forEach((b,i)=>{
+    const order=['qr','bar','batch'];
+    b.classList.toggle('active', order[i]===tab);
+  });
+  ['qr','bar','batch'].forEach(t=>{
+    const el=document.getElementById('qtab-'+t);
+    if(el) el.classList.toggle('active', t===tab);
+  });
+}
+
+// ── QR Code 繪製（Canvas 手動實作，不依賴 QRCodeJS DOM 注入）──
+async function renderQR(){
+  const txt = document.getElementById('qr-text-input').value.trim();
+  const size = parseInt(document.getElementById('qr-size').value)||200;
+  const ecl  = document.getElementById('qr-ecl').value;
+  const fg   = document.getElementById('qr-color-fg').value;
+  const bg   = document.getElementById('qr-color-bg').value;
+  const cap  = document.getElementById('qr-caption').value.trim();
+  const canvas = document.getElementById('qr-canvas');
+  const ctx = canvas.getContext('2d');
+
+  if(!txt){
+    canvas.width=size; canvas.height=size;
+    ctx.fillStyle=bg; ctx.fillRect(0,0,size,size);
+    ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.textAlign='center';
+    ctx.fillText('請輸入內容',size/2,size/2);
+    return;
+  }
+
+  // 動態載入 qrcodejs 並使用 hidden div 方式取得 QR 矩陣
+  const QRCodeLib = await _getQRLib();
+  if(!QRCodeLib){
+    document.getElementById('qr-info-text').textContent = '⚠ 載入 QR 函式庫失敗，請確認網路連線';
+    return;
+  }
+
+  const eclMap = {L:1, M:0, Q:3, H:2};
+  try{
+    // 使用隱藏 div 方式讓 qrcodejs 產生 table，再讀取格子
+    const tmp = document.createElement('div');
+    tmp.style.cssText='position:absolute;visibility:hidden;pointer-events:none;';
+    document.body.appendChild(tmp);
+    const qr = new QRCodeLib(tmp, {
+      text: txt,
+      width: 256, height: 256,
+      colorDark:'#000000', colorLight:'#ffffff',
+      correctLevel: QRCodeLib.CorrectLevel[ecl]||QRCodeLib.CorrectLevel.M
+    });
+    // 等一個 tick 讓 QRCode 渲染完成
+    await new Promise(r=>setTimeout(r,50));
+    const img = tmp.querySelector('img') || tmp.querySelector('canvas');
+    const capH = cap ? Math.round(size*0.10)+8 : 0;
+    canvas.width = size; canvas.height = size + capH;
+    ctx.fillStyle = bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+    if(img){
+      if(img.tagName==='IMG'){
+        const t=new Image(); t.onload=()=>{
+          ctx.drawImage(t,0,0,size,size);
+          if(cap){ ctx.fillStyle=fg; ctx.font=`bold ${Math.round(size*0.07)}px "Noto Sans TC",Arial`; ctx.textAlign='center'; ctx.fillText(cap,size/2,size+capH-4); }
+          document.getElementById('qr-info-text').textContent=`${size}×${size}px · ECL: ${ecl} · ${txt.length} 字元`;
+        }; t.src=img.src;
+      } else {
+        ctx.drawImage(img,0,0,size,size);
+        if(cap){ ctx.fillStyle=fg; ctx.font=`bold ${Math.round(size*0.07)}px "Noto Sans TC",Arial`; ctx.textAlign='center'; ctx.fillText(cap,size/2,size+capH-4); }
+        document.getElementById('qr-info-text').textContent=`${size}×${size}px · ECL: ${ecl} · ${txt.length} 字元`;
+      }
+    }
+    // 套用自訂顏色（重新繪製 fg/bg）
+    if(fg!=='#1a2840'||fg!=='#000000'||bg!=='#ffffff'){
+      // 重疊色彩轉換
+      const id=ctx.getImageData(0,0,size,size);
+      const d=id.data;
+      const fgR=parseInt(fg.slice(1,3),16),fgG=parseInt(fg.slice(3,5),16),fgB=parseInt(fg.slice(5,7),16);
+      const bgR=parseInt(bg.slice(1,3),16),bgG=parseInt(bg.slice(3,5),16),bgB=parseInt(bg.slice(5,7),16);
+      for(let i=0;i<d.length;i+=4){
+        const lum=(d[i]+d[i+1]+d[i+2])/3;
+        if(lum<128){ d[i]=fgR;d[i+1]=fgG;d[i+2]=fgB; }
+        else { d[i]=bgR;d[i+1]=bgG;d[i+2]=bgB; }
+      }
+      ctx.putImageData(id,0,0);
+      if(cap){ ctx.fillStyle=fg; ctx.font=`bold ${Math.round(size*0.07)}px "Noto Sans TC",Arial`; ctx.textAlign='center'; ctx.fillText(cap,size/2,size+capH-4); }
+    }
+    document.body.removeChild(tmp);
+  } catch(e){
+    document.getElementById('qr-info-text').textContent='⚠ 產生失敗：'+e.message;
+  }
+}
+
+// ── Barcode (Code128 / EAN-13) 純 Canvas 實作 ──
+function barTypeChange(){
+  const type = document.getElementById('bar-type').value;
+  const input = document.getElementById('bar-text-input');
+  if(type==='ean13'){
+    input.placeholder='13位數字，例：4901234567890';
+    if(!/^\d+$/.test(input.value)) input.value='4901234567890';
+  } else {
+    input.placeholder='文字或數字，例：1234-A';
+  }
+  renderBarcode();
+}
+
+function renderBarcode(){
+  const type   = document.getElementById('bar-type').value;
+  const text   = document.getElementById('bar-text-input').value;
+  const W      = parseInt(document.getElementById('bar-width').value)||320;
+  const H      = parseInt(document.getElementById('bar-height').value)||80;
+  const showTxt= document.getElementById('bar-show-text').value==='1';
+  const canvas = document.getElementById('bar-canvas');
+  const errNote= document.getElementById('bar-error-note');
+  errNote.style.display='none';
+
+  canvas.width=W; canvas.height=showTxt?H+20:H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  let bars=null;
+  let errMsg='';
+  if(type==='ean13'){
+    if(!/^\d{13}$/.test(text)){ errMsg='EAN-13 需要恰好 13 位數字'; }
+    else { bars=encodeEAN13(text); }
+  } else {
+    if(!text){ errMsg='請輸入條碼內容'; }
+    else { bars=encodeCode128(text); }
+  }
+
+  if(errMsg){
+    errNote.innerHTML='<strong>⚠</strong> '+errMsg; errNote.style.display='block';
+    document.getElementById('bar-info-text').textContent='—';
+    return;
+  }
+  if(!bars||!bars.length){ errNote.innerHTML='<strong>⚠</strong> 編碼失敗'; errNote.style.display='block'; return; }
+
+  const totalBars = bars.reduce((s,b)=>s+b,0);
+  const barW = W/totalBars;
+  let x=0;
+  ctx.fillStyle='#000';
+  bars.forEach((w,i)=>{
+    if(i%2===0){ ctx.fillRect(Math.round(x),0,Math.max(1,Math.round(barW*w)),H); }
+    x+=barW*w;
+  });
+  if(showTxt){
+    ctx.fillStyle='#000';
+    ctx.font=`12px "Noto Sans TC","Share Tech Mono",monospace`;
+    ctx.textAlign='center';
+    ctx.fillText(text.substring(0,40),W/2,H+14);
+  }
+  document.getElementById('bar-info-text').textContent=`${W}×${canvas.height}px · ${type==='ean13'?'EAN-13':'Code 128'} · ${bars.length} bars`;
+}
+
+// Code 128 encoder
+function encodeCode128(text){
+  const CODE_B_START=104, STOP=106;
+  const vals=[CODE_B_START];
+  for(let i=0;i<text.length;i++) vals.push(text.charCodeAt(i)-32);
+  // checksum
+  let sum=CODE_B_START;
+  for(let i=1;i<vals.length;i++) sum+=vals[i]*i;
+  vals.push(sum%103); vals.push(STOP);
+  // encode to bar widths
+  const patterns=[
+    [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],
+    [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],
+    [2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],
+    [1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],
+    [2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],
+    [3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],
+    [2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],
+    [1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],
+    [2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],
+    [1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,2,1,3],[1,1,3,2,3,1],
+    [2,1,3,1,1,3],[2,1,3,3,1,1],[2,3,3,1,1,1],[1,2,2,1,2,3],[1,2,2,3,2,1],
+    [1,2,3,1,1,3],[1,2,3,3,1,1],[1,3,2,2,1,2],[1,3,3,1,1,2],[2,1,1,2,3,2],
+    [2,1,1,3,2,2],[2,1,2,2,1,3],[2,1,2,3,1,2],[2,1,3,2,2,1],[2,3,1,2,1,2],
+    [3,1,2,1,2,2],[3,1,2,2,2,1],[3,2,2,1,2,1],[3,3,1,1,1,2],[3,3,1,2,1,1],
+    [3,3,2,1,1,1],[3,1,4,1,1,1],[2,2,1,4,1,1],[4,3,1,1,1,1],[1,1,2,2,4,1],
+    [1,2,2,1,4,1],[1,4,2,2,1,1],[4,1,1,2,1,2],[1,2,4,1,1,2],[3,1,1,4,1,1],
+    [1,1,4,1,1,3],[1,3,4,1,1,1],[1,1,1,4,3,1],[1,1,1,3,4,1],[3,1,1,1,4,1],
+    [2,1,1,4,2,1],[2,1,1,2,4,1],[2,2,1,4,2,1],[2,2,1,2,4,1],[2,2,2,4,1,1],
+    [1,2,4,2,1,1],[2,4,1,2,1,1],[4,1,2,1,2,1],[4,2,2,1,1,1],[2,4,2,1,1,1],
+    [2,1,4,2,2,1],[2,2,4,1,2,1],[1,1,1,1,4,3],[1,1,1,3,4,1],[1,3,1,1,4,1],
+    [1,1,4,3,1,1],[4,1,3,1,1,1],[1,4,3,1,1,1],[3,4,1,1,1,1],[1,1,3,4,1,1],
+    [1,1,4,1,3,1],[3,1,1,1,4,1],[2,1,3,2,1,1],[2,2,3,1,1,1],[2,1,1,1,3,2],
+    // stop pattern (index 106)
+    [2,3,3,1,1,1,2]
+  ];
+  const bars=[];
+  // leading quiet zone
+  bars.push(10);
+  vals.forEach(v=>{
+    const p=patterns[v%patterns.length];
+    p.forEach(w=>bars.push(w));
+  });
+  bars.push(10); // trailing quiet
+  return bars;
+}
+
+// EAN-13 encoder
+function encodeEAN13(digits){
+  const L=[[3,2,1,1],[2,2,2,1],[2,1,2,2],[1,4,1,1],[1,1,3,2],[1,2,3,1],[1,1,1,4],[1,3,1,2],[1,2,1,3],[3,1,1,2]];
+  const G=[[1,1,2,3],[1,2,2,2],[2,2,1,2],[1,1,4,1],[2,3,1,1],[1,3,2,1],[4,1,1,1],[2,1,3,1],[3,1,2,1],[2,1,1,3]];
+  const R=[[3,2,1,1],[2,2,2,1],[2,1,2,2],[1,4,1,1],[1,1,3,2],[1,2,3,1],[1,1,1,4],[1,3,1,2],[1,2,1,3],[3,1,1,2]].map(p=>[...p].reverse());
+  const parity=[
+    [0,0,0,0,0,0],[0,0,1,0,1,1],[0,0,1,1,0,1],[0,0,1,1,1,0],
+    [0,1,0,0,1,1],[0,1,1,0,0,1],[0,1,1,1,0,0],[0,1,0,1,0,1],
+    [0,1,0,1,1,0],[0,1,1,0,1,0]
+  ];
+  const d=digits.split('').map(Number);
+  const bars=[9]; // quiet
+  bars.push(1,1,1); // start guard
+  const par=parity[d[0]];
+  for(let i=0;i<6;i++){
+    const enc=par[i]===0?L[d[i+1]]:G[d[i+1]];
+    enc.forEach(w=>bars.push(w));
+  }
+  bars.push(1,1,1,1,1); // center guard
+  for(let i=6;i<12;i++){ R[d[i+1]]&&R[d[i+1]].forEach(w=>bars.push(w)); }
+  bars.push(1,1,1); // end guard
+  bars.push(9); // quiet
+  return bars;
+}
+
+function downloadQR(type){
+  const canvas=document.getElementById(type==='bar'?'bar-canvas':'qr-canvas');
+  const fname=type==='bar'?'barcode.png':'qrcode.png';
+  const a=document.createElement('a');
+  a.href=canvas.toDataURL('image/png');
+  a.download=fname; a.click();
+}
+
+async function copyQRToClipboard(){
+  const canvas=document.getElementById('qr-canvas');
+  try{
+    canvas.toBlob(async blob=>{
+      await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+      alert('✅ QR Code 已複製到剪貼簿');
+    });
+  } catch(e){ alert('⚠ 複製失敗：'+e.message+'\n請改用下載功能'); }
+}
+
+async function generateBatch(){
+  const lines=document.getElementById('batch-input').value.split('\n').map(l=>l.trim()).filter(Boolean).slice(0,50);
+  const type=document.getElementById('batch-type').value;
+  const size=parseInt(document.getElementById('batch-size').value)||200;
+  const preview=document.getElementById('batch-preview');
+  preview.innerHTML=''; preview.style.display='flex';
+  document.getElementById('batch-dl-row').style.display='none';
+
+  const QRCodeLib = type==='qr' ? await _getQRLib() : null;
+
+  for(const line of lines){
+    const c=document.createElement('canvas');
+    const itemDiv=document.createElement('div');
+    itemDiv.className='batch-item';
+    const lbl=document.createElement('div');
+    lbl.className='batch-label'; lbl.title=line; lbl.textContent=line;
+
+    if(type==='qr' && QRCodeLib){
+      c.width=size; c.height=size;
+      const tmp=document.createElement('div');
+      tmp.style.cssText='position:absolute;visibility:hidden;';
+      document.body.appendChild(tmp);
+      try{
+        new QRCodeLib(tmp,{text:line,width:256,height:256,correctLevel:QRCodeLib.CorrectLevel.M});
+        await new Promise(r=>setTimeout(r,60));
+        const img=tmp.querySelector('img')||tmp.querySelector('canvas');
+        const ctx=c.getContext('2d');
+        ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
+        if(img){ if(img.tagName==='IMG'){const t=new Image();t.onload=()=>ctx.drawImage(t,0,0,size,size);t.src=img.src;await new Promise(r=>setTimeout(r,100));}else{ctx.drawImage(img,0,0,size,size);} }
+      }catch(e){}
+      document.body.removeChild(tmp);
+    } else {
+      c.width=size; c.height=Math.round(size*0.4)+20;
+      const ctx=c.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      const bars=encodeCode128(line);
+      const total=bars.reduce((s,b)=>s+b,0);
+      const bw=size/total; let x=0; ctx.fillStyle='#000';
+      bars.forEach((w,i)=>{ if(i%2===0) ctx.fillRect(Math.round(x),0,Math.max(1,Math.round(bw*w)),c.height-20); x+=bw*w; });
+      ctx.fillStyle='#000'; ctx.font='10px monospace'; ctx.textAlign='center';
+      ctx.fillText(line.substring(0,30),c.width/2,c.height-4);
+    }
+    itemDiv.appendChild(c); itemDiv.appendChild(lbl);
+    preview.appendChild(itemDiv);
+  }
+  document.getElementById('batch-dl-row').style.display='flex';
+}
+
+async function downloadBatchZip(){
+  // 使用 JSZip (動態載入)
+  let JSZip=window.JSZip;
+  if(!JSZip){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=()=>{ JSZip=window.JSZip; res(); };
+      s.onerror=rej;
+      document.head.appendChild(s);
+    });
+  }
+  const zip=new JSZip();
+  const items=document.querySelectorAll('#batch-preview .batch-item canvas');
+  const labels=document.querySelectorAll('#batch-preview .batch-item .batch-label');
+  items.forEach((c,i)=>{
+    const name=(labels[i]?.title||'item_'+i).replace(/[/\\:*?"<>|]/g,'_').substring(0,40)+'.png';
+    const data=c.toDataURL('image/png').split(',')[1];
+    zip.file(name, data, {base64:true});
+  });
+  const blob=await zip.generateAsync({type:'blob'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='barcodes_batch.zip'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+
+// 初始化 QR modal 時自動產生
+document.getElementById('qr-modal').addEventListener('click', function onFirstOpen(e){
+  if(!e.target.closest('.modal')) return;
+  renderQR();
+  renderBarcode();
+  this.removeEventListener('click', onFirstOpen);
+});
+
+/* ══════════════════════════════════════════
+   WATERMARK TOOL
+══════════════════════════════════════════ */
+let _wmFile=null;
+let _wmImgEl=null;      // HTMLImageElement for image mode
+let _wmPdfDoc=null;     // PDF.js doc for PDF mode
+let _wmPdfPage=1;
+let _wmPdfPageCount=0;
+let _wmPageCanvases=[];  // rendered page canvases (all pages, for final PDF export)
+let _wmMode='image';    // 'image' | 'pdf'
+
+// 動態載入 PDF.js
+async function _getPdfJs(){
+  if(window.pdfjsLib) return window.pdfjsLib;
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload=()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      res(window.pdfjsLib);
+    };
+    s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+function wmDragOver(e){ e.preventDefault(); document.getElementById('wm-upload-zone').style.borderColor='#0EA5E9'; }
+function wmDragLeave(e){ document.getElementById('wm-upload-zone').style.borderColor=''; }
+function wmDrop(e){
+  e.preventDefault(); wmDragLeave(e);
+  const f=e.dataTransfer.files[0];
+  if(f) wmLoadFile({target:{files:[f]}});
+}
+
+function wmLoadFile(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  _wmFile=file;
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='pdf'){
+    _wmMode='pdf'; wmLoadPdf(file);
+  } else {
+    _wmMode='image'; wmLoadImage(file);
+  }
+}
+
+function wmLoadImage(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    _wmImgEl=new Image();
+    _wmImgEl.onload=()=>{
+      document.getElementById('wm-ib-name').textContent=file.name;
+      document.getElementById('wm-ib-type').textContent='圖片';
+      document.getElementById('wm-ib-size').textContent=_wmImgEl.width+'×'+_wmImgEl.height+' px';
+      document.getElementById('wm-info-bar').classList.add('show');
+      document.getElementById('wm-pdf-page-info').classList.remove('show');
+      document.getElementById('wm-dl-btn').disabled=false;
+      document.getElementById('wm-dl-btn').style.display='';
+      document.getElementById('wm-pdf-dl-btn').style.display='none';
+      wmRender();
+    };
+    _wmImgEl.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function wmLoadPdf(file){
+  try{
+    const pdfjsLib=await _getPdfJs();
+    const buf=await file.arrayBuffer();
+    _wmPdfDoc=await pdfjsLib.getDocument({data:buf}).promise;
+    _wmPdfPageCount=_wmPdfDoc.numPages;
+    _wmPdfPage=1;
+    document.getElementById('wm-ib-name').textContent=file.name;
+    document.getElementById('wm-ib-type').textContent='PDF';
+    document.getElementById('wm-ib-size').textContent=_wmPdfPageCount+' 頁';
+    document.getElementById('wm-info-bar').classList.add('show');
+    document.getElementById('wm-pdf-pages').textContent=_wmPdfPageCount;
+    document.getElementById('wm-pdf-cur').textContent=_wmPdfPage;
+    document.getElementById('wm-pdf-page-info').classList.add('show');
+    document.getElementById('wm-dl-btn').style.display='none';
+    document.getElementById('wm-pdf-dl-btn').style.display='';
+    document.getElementById('wm-pdf-dl-btn').disabled=false;
+    wmRender();
+  } catch(e){
+    alert('⚠ PDF 載入失敗：'+e.message);
+  }
+}
+
+function wmPdfPrevPage(){ if(_wmPdfPage>1){ _wmPdfPage--; document.getElementById('wm-pdf-cur').textContent=_wmPdfPage; wmRender(); } }
+function wmPdfNextPage(){ if(_wmPdfPage<_wmPdfPageCount){ _wmPdfPage++; document.getElementById('wm-pdf-cur').textContent=_wmPdfPage; wmRender(); } }
+
+async function wmRender(){
+  const canvas=document.getElementById('wm-preview-canvas');
+  const placeholder=document.getElementById('wm-placeholder');
+  if(!_wmImgEl && !_wmPdfDoc){ return; }
+
+  const wmTxt  =document.getElementById('wm-text').value||'浮水印';
+  const mode   =document.getElementById('wm-mode').value;
+  const fs     =parseInt(document.getElementById('wm-fontsize').value)||48;
+  const angle  =parseInt(document.getElementById('wm-angle').value)||(-30);
+  const opacity=(parseInt(document.getElementById('wm-opacity').value)||20)/100;
+  const color  =document.getElementById('wm-color').value||'#cc0000';
+
+  let srcCanvas;
+  if(_wmMode==='image' && _wmImgEl){
+    srcCanvas=document.createElement('canvas');
+    srcCanvas.width=_wmImgEl.width; srcCanvas.height=_wmImgEl.height;
+    srcCanvas.getContext('2d').drawImage(_wmImgEl,0,0);
+  } else if(_wmMode==='pdf' && _wmPdfDoc){
+    const page=await _wmPdfDoc.getPage(_wmPdfPage);
+    const vp=page.getViewport({scale:1.5});
+    srcCanvas=document.createElement('canvas');
+    srcCanvas.width=vp.width; srcCanvas.height=vp.height;
+    await page.render({canvasContext:srcCanvas.getContext('2d'),viewport:vp}).promise;
+  } else return;
+
+  const out=_applyWatermark(srcCanvas,wmTxt,mode,fs,angle,opacity,color);
+  canvas.width=out.width; canvas.height=out.height;
+  canvas.getContext('2d').drawImage(out,0,0);
+  placeholder.style.display='none';
+  canvas.style.display='block';
+}
+
+function _applyWatermark(srcCanvas,txt,mode,fs,angle,opacity,color){
+  const out=document.createElement('canvas');
+  out.width=srcCanvas.width; out.height=srcCanvas.height;
+  const ctx=out.getContext('2d');
+  ctx.drawImage(srcCanvas,0,0);
+
+  ctx.save();
+  ctx.globalAlpha=opacity;
+  ctx.fillStyle=color;
+  // 確保中文字型載入
+  ctx.font=`bold ${fs}px "Noto Sans TC","Microsoft JhengHei","PingFang TC",Arial,sans-serif`;
+  const tm=ctx.measureText(txt);
+  const tw=tm.width, th=fs;
+
+  const rad=angle*Math.PI/180;
+
+  if(mode==='center'){
+    ctx.translate(out.width/2, out.height/2);
+    ctx.rotate(rad);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(txt,0,0);
+  } else if(mode==='diagonal'){
+    // 對角線三條
+    const positions=[0.25,0.5,0.75];
+    positions.forEach(p=>{
+      ctx.save();
+      ctx.translate(out.width*p, out.height*p);
+      ctx.rotate(rad);
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(txt,0,0);
+      ctx.restore();
+    });
+  } else {
+    // tile 平鋪
+    const padX=tw*0.8, padY=th*2.5;
+    const stepX=tw+padX, stepY=th+padY;
+    const diag=Math.sqrt(out.width*out.width+out.height*out.height);
+    ctx.translate(out.width/2,out.height/2);
+    ctx.rotate(rad);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    for(let y=-diag;y<diag;y+=stepY){
+      for(let x=-diag;x<diag;x+=stepX){
+        ctx.fillText(txt,x,y);
+      }
+    }
+  }
+  ctx.restore();
+  return out;
+}
+
+function wmApplyPreset(){
+  const v=document.getElementById('wm-presets').value;
+  if(v){ document.getElementById('wm-text').value=v; wmRender(); }
+}
+
+function wmDownload(){
+  const canvas=document.getElementById('wm-preview-canvas');
+  if(!canvas||canvas.style.display==='none') return;
+  const ext=(_wmFile?.name||'image').split('.').pop().toLowerCase();
+  const mime=ext==='png'?'image/png':'image/jpeg';
+  const name=(_wmFile?.name||'watermarked').replace(/\.[^.]+$/,'')+'_watermarked.'+ext;
+  const a=document.createElement('a');
+  a.href=canvas.toDataURL(mime,0.92); a.download=name; a.click();
+}
+
+async function wmDownloadPdf(){
+  if(!_wmPdfDoc) return;
+  const btn=document.getElementById('wm-pdf-dl-btn');
+  btn.disabled=true; btn.textContent='⏳ 處理中…';
+
+  const wmTxt  =document.getElementById('wm-text').value||'浮水印';
+  const mode   =document.getElementById('wm-mode').value;
+  const fs     =parseInt(document.getElementById('wm-fontsize').value)||48;
+  const angle  =parseInt(document.getElementById('wm-angle').value)||(-30);
+  const opacity=(parseInt(document.getElementById('wm-opacity').value)||20)/100;
+  const color  =document.getElementById('wm-color').value||'#cc0000';
+
+  try{
+    const {jsPDF}=window.jspdf;
+    let pdf=null;
+    for(let p=1;p<=_wmPdfPageCount;p++){
+      const page=await _wmPdfDoc.getPage(p);
+      const vp=page.getViewport({scale:2});
+      const sc=document.createElement('canvas');
+      sc.width=vp.width; sc.height=vp.height;
+      await page.render({canvasContext:sc.getContext('2d'),viewport:vp}).promise;
+      const wm=_applyWatermark(sc,wmTxt,mode,fs,angle,opacity,color);
+      const imgData=wm.toDataURL('image/jpeg',0.90);
+      const mmW=vp.width/2*0.264583, mmH=vp.height/2*0.264583;
+      if(!pdf){
+        pdf=new jsPDF({orientation:mmW>mmH?'landscape':'portrait',unit:'mm',format:[mmW,mmH]});
+      } else {
+        pdf.addPage([mmW,mmH], mmW>mmH?'landscape':'portrait');
+      }
+      pdf.addImage(imgData,'JPEG',0,0,mmW,mmH);
+    }
+    const name=(_wmFile?.name||'document').replace(/\.pdf$/i,'')+'_watermarked.pdf';
+    pdf.save(name);
+  } catch(e){
+    alert('⚠ PDF 輸出失敗：'+e.message);
+  }
+  btn.disabled=false; btn.textContent='⬇ 下載加浮水印 PDF（全部頁）';
+}
+
+function wmReset(){
+  _wmFile=null; _wmImgEl=null; _wmPdfDoc=null; _wmPdfPage=1; _wmPdfPageCount=0; _wmMode='image';
+  document.getElementById('wm-preview-canvas').style.display='none';
+  document.getElementById('wm-placeholder').style.display='flex';
+  document.getElementById('wm-info-bar').classList.remove('show');
+  document.getElementById('wm-pdf-page-info').classList.remove('show');
+  document.getElementById('wm-dl-btn').disabled=true;
+  document.getElementById('wm-pdf-dl-btn').disabled=true;
+  document.getElementById('wm-file-input').value='';
 }
 </script>
 </body>

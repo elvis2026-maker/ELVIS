@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V36.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V37.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -649,6 +649,53 @@ footer strong { color: var(--cyan); }
 .img-tool-btn.active { background:rgba(0,114,181,0.14); border-color:#0072B5; color:#005A8E; }
 .img-tool-btn.danger { border-color:rgba(220,53,69,0.3); color:#c0392b; background:rgba(220,53,69,0.05); }
 .img-tool-btn.danger:hover { background:rgba(220,53,69,0.12); border-color:#e74c3c; }
+.img-tool-btn.draw-active { background:rgba(224,90,26,0.13); border-color:var(--accent); color:var(--accent); }
+
+/* ── 塗鴉面板 ── */
+#img-draw-panel {
+  display:none; flex-wrap:wrap; gap:8px; align-items:center;
+  padding:10px 14px; margin-bottom:10px;
+  background:rgba(224,90,26,0.05); border:1px solid rgba(224,90,26,0.18);
+  border-radius:10px;
+}
+#img-draw-panel.show { display:flex; }
+#img-draw-panel label { font-size:12px; color:var(--silver3); }
+.draw-color-btn {
+  width:24px; height:24px; border-radius:50%; border:2px solid transparent;
+  cursor:pointer; transition:transform .15s, border-color .15s; flex-shrink:0;
+}
+.draw-color-btn.sel { border-color:#1A2840; transform:scale(1.25); }
+#draw-size-slider { width:80px; accent-color:var(--accent); }
+#draw-tool-pen.sel, #draw-tool-text.sel {
+  background:rgba(224,90,26,0.18); border-color:var(--accent); color:var(--accent);
+}
+/* 文字輸入浮動框 */
+#img-text-overlay {
+  display:none; position:absolute;
+  background:rgba(255,255,255,0.96);
+  border:1.5px solid var(--accent); border-radius:8px;
+  padding:6px 10px; box-shadow:0 4px 16px rgba(0,0,0,0.15);
+  z-index:20; flex-direction:column; gap:6px; min-width:200px;
+}
+#img-text-overlay.show { display:flex; }
+#img-text-overlay input[type=text] {
+  border:1px solid rgba(224,90,26,0.3); border-radius:5px;
+  padding:4px 8px; font-size:14px; color:var(--silver);
+  font-family:'Noto Sans TC',sans-serif;
+}
+#img-text-overlay .ov-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+#img-text-overlay select {
+  font-size:12px; padding:3px 6px; border-radius:5px;
+  border:1px solid rgba(0,0,0,0.15); color:var(--silver);
+}
+#img-text-overlay button {
+  font-size:12px; padding:4px 10px; border-radius:5px;
+  border:1px solid var(--accent); background:var(--accent);
+  color:#fff; cursor:pointer;
+}
+#img-text-overlay .cancel-btn {
+  background:#fff; color:var(--silver3); border-color:rgba(0,0,0,0.15);
+}
 .img-size-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
 .img-size-row label { font-size:12px; color:var(--silver3); }
 .img-size-row input[type=number] {
@@ -696,13 +743,13 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V36.0</div>
+    <div class="version-badge">V37.0</div>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
-  <h1>免安裝 線上看<span>3D / 2D</span>工程圖檔<br>與<span>圖片 / 文書</span>處理及<span>PDF</span>格式轉換</h1>
+  <h1>免安裝 線上看<span>3D / 2D</span>工程圖檔<br><span>圖片 / 文書</span>處理及<span>PDF</span>格式轉換</h1>
   <p class="hero-sub">全線上辦公室利器，工程圖 · 文件 · 圖片一站搞定，資料純本地處理零外流</p>
   <div class="hero-divider"></div>
 </section>
@@ -870,7 +917,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V36.0 &nbsp;·&nbsp; 僅供內部使用
+  © 2026 &nbsp;<strong>Elvis Liu 程式設計</strong>&nbsp; · &nbsp;MIS 轉檔專屬系統 V37.0 &nbsp;·&nbsp; 僅供內部使用
 </footer>
 </div><!-- /.wrap -->
 
@@ -1391,7 +1438,53 @@ footer strong { color: var(--cyan); }
         <button class="img-tool-btn" onclick="imgFlip('h')">⇄ 水平翻轉</button>
         <button class="img-tool-btn" onclick="imgFlip('v')">⇅ 垂直翻轉</button>
         <button class="img-tool-btn" id="img-crop-btn" onclick="toggleImgCrop()">✂ 裁切模式</button>
+        <button class="img-tool-btn" id="img-draw-btn" onclick="toggleImgDraw()">🖊 塗鴉模式</button>
         <button class="img-tool-btn danger" onclick="imgReset()">↩ 重置</button>
+      </div>
+
+      <!-- 塗鴉工具面板 -->
+      <div id="img-draw-panel">
+        <!-- 工具選擇 -->
+        <button class="img-tool-btn sel" id="draw-tool-pen" onclick="setDrawTool('pen')">✏ 畫筆</button>
+        <button class="img-tool-btn" id="draw-tool-eraser" onclick="setDrawTool('eraser')">◻ 橡皮擦</button>
+        <button class="img-tool-btn" id="draw-tool-text" onclick="setDrawTool('text')">T 文字</button>
+        <span style="width:1px;height:24px;background:rgba(0,0,0,0.1);margin:0 4px;"></span>
+        <!-- 顏色 -->
+        <label>顏色：</label>
+        <div class="draw-color-btn sel" style="background:#E05A1A;" data-color="#E05A1A" onclick="setDrawColor(this)"></div>
+        <div class="draw-color-btn" style="background:#e74c3c;" data-color="#e74c3c" onclick="setDrawColor(this)"></div>
+        <div class="draw-color-btn" style="background:#f1c40f;" data-color="#f1c40f" onclick="setDrawColor(this)"></div>
+        <div class="draw-color-btn" style="background:#2ecc71;" data-color="#2ecc71" onclick="setDrawColor(this)"></div>
+        <div class="draw-color-btn" style="background:#0072B5;" data-color="#0072B5" onclick="setDrawColor(this)"></div>
+        <div class="draw-color-btn" style="background:#9b59b6;" data-color="#9b59b6" onclick="setDrawColor(this)"></div>
+        <div class="draw-color-btn" style="background:#1A2840;" data-color="#1A2840" onclick="setDrawColor(this)"></div>
+        <div class="draw-color-btn" style="background:#ffffff;border:1.5px solid #ccc;" data-color="#ffffff" onclick="setDrawColor(this)"></div>
+        <input type="color" id="draw-custom-color" title="自訂顏色" value="#E05A1A"
+               style="width:24px;height:24px;border-radius:50%;border:none;cursor:pointer;padding:0;"
+               oninput="setDrawColorHex(this.value)">
+        <span style="width:1px;height:24px;background:rgba(0,0,0,0.1);margin:0 4px;"></span>
+        <!-- 筆刷大小 -->
+        <label>粗細：</label>
+        <input type="range" id="draw-size-slider" min="1" max="40" value="4" oninput="setDrawSize(this.value)">
+        <span id="draw-size-val" style="font-size:12px;font-family:'Share Tech Mono',monospace;color:var(--silver2);min-width:28px;">4px</span>
+        <span style="width:1px;height:24px;background:rgba(0,0,0,0.1);margin:0 4px;"></span>
+        <!-- 燒錄到圖片 -->
+        <button class="img-tool-btn" onclick="flattenDrawLayer()" style="color:var(--green);border-color:rgba(0,135,90,0.3);">✔ 合併到圖片</button>
+        <button class="img-tool-btn" onclick="clearDrawLayer()">🗑 清除塗鴉</button>
+      </div>
+
+      <!-- 文字輸入浮動框（絕對定位，js 控制位置） -->
+      <div id="img-text-overlay" style="position:fixed;">
+        <input type="text" id="draw-text-input" placeholder="輸入文字…" autofocus>
+        <div class="ov-row">
+          <select id="draw-text-size">
+            <option value="14">14px</option><option value="18">18px</option>
+            <option value="24" selected>24px</option><option value="32">32px</option>
+            <option value="48">48px</option><option value="64">64px</option>
+          </select>
+          <button onclick="commitDrawText()">✔ 確定</button>
+          <button class="cancel-btn" onclick="cancelDrawText()">✕ 取消</button>
+        </div>
       </div>
 
       <!-- Resize controls -->
@@ -1431,8 +1524,11 @@ footer strong { color: var(--cyan); }
       </div>
 
       <!-- Canvas display -->
-      <div id="img-editor-canvas-wrap">
+      <div id="img-editor-canvas-wrap" style="position:relative;">
         <canvas id="img-editor-canvas"></canvas>
+        <!-- 塗鴉疊加層 canvas -->
+        <canvas id="img-draw-canvas"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;touch-action:none;"></canvas>
       </div>
 
       <!-- Download controls -->
@@ -2908,6 +3004,15 @@ let _imgCropMode  = false;
 let _imgCropStart = null;
 let _imgCropRect  = null;
 
+// ── 塗鴉模式狀態 ──
+let _imgDrawMode   = false;
+let _drawTool      = 'pen';   // 'pen' | 'eraser' | 'text'
+let _drawColor     = '#E05A1A';
+let _drawSize      = 4;
+let _drawCanvas    = null;    // 疊加層 canvas（不影響 _imgBase）
+let _drawCtx       = null;
+let _drawPending   = null;    // 待放文字的座標 {x,y}
+
 function loadImgEditor(e){ loadImgEditorFile(e.target.files[0]); }
 function imgEditorDrop(e){
   e.preventDefault();
@@ -3056,6 +3161,8 @@ function imgReset(){
   document.getElementById('img-crop-btn').classList.remove('active');
   ['img-brightness','img-contrast','img-saturation'].forEach(id => { document.getElementById(id).value = 0; });
   ['brightness','contrast','saturation'].forEach(k => document.getElementById('img-'+k+'-val').textContent = '0');
+  // 也清除塗鴉層
+  if(_drawCtx && _drawCanvas) _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
   _rebuildBase(); // rebuild from original source
   _renderImgCanvas();
 }
@@ -3101,30 +3208,15 @@ function imgFilterUpdate(){
 }
 
 function toggleImgCrop(){
+  // 如果塗鴉模式開著，先關掉
+  if(_imgDrawMode){ toggleImgDraw(); }
   _imgCropMode = !_imgCropMode;
   document.getElementById('img-crop-btn').classList.toggle('active', _imgCropMode);
   const dc = document.getElementById('img-editor-canvas');
   dc.style.cursor = _imgCropMode ? 'crosshair' : 'default';
-  if(!_imgCropMode && _imgCropRect){
-    // Apply crop: display canvas == _imgBase (1:1 after _renderImgCanvas)
-    // so crop rect coords map directly to _imgBase pixel coords
-    const r = _imgCropRect;
-    if(r && r.w > 4 && r.h > 4){
-      const rx = Math.round(Math.max(0, r.x));
-      const ry = Math.round(Math.max(0, r.y));
-      const rw = Math.round(Math.min(r.w, _imgBase.width  - rx));
-      const rh = Math.round(Math.min(r.h, _imgBase.height - ry));
-      if(rw > 1 && rh > 1){
-        const cropC = document.createElement('canvas');
-        cropC.width  = rw;
-        cropC.height = rh;
-        cropC.getContext('2d').drawImage(_imgBase, rx, ry, rw, rh, 0, 0, rw, rh);
-        _imgBase = cropC;
-        _imgCanvas = _imgBase;
-        _renderImgCanvas();
-      }
-    }
+  if(!_imgCropMode){
     _imgCropRect = null;
+    _renderImgCanvas(); // 清除框選虛線
   }
 }
 
@@ -3193,7 +3285,31 @@ function toggleImgCrop(){
       dCtx.restore();
     });
     dc.addEventListener('mouseup',function(){
-      isDown=false;
+      if(!_imgCropMode || !isDown) { isDown=false; return; }
+      isDown = false;
+      // 框選完畢 → 直接裁切，不需再按按鈕
+      if(_imgCropRect && _imgCropRect.w > 4 && _imgCropRect.h > 4){
+        const r = _imgCropRect;
+        // 座標是 display canvas 的像素座標，需對應回 _imgBase 尺寸
+        const scaleX = _imgBase.width  / dc.width;
+        const scaleY = _imgBase.height / dc.height;
+        const rx = Math.round(Math.max(0, r.x * scaleX));
+        const ry = Math.round(Math.max(0, r.y * scaleY));
+        const rw = Math.round(Math.min(r.w * scaleX, _imgBase.width  - rx));
+        const rh = Math.round(Math.min(r.h * scaleY, _imgBase.height - ry));
+        if(rw > 1 && rh > 1){
+          const cropC = document.createElement('canvas');
+          cropC.width  = rw; cropC.height = rh;
+          cropC.getContext('2d').drawImage(_imgBase, rx, ry, rw, rh, 0, 0, rw, rh);
+          _imgBase = cropC; _imgCanvas = _imgBase;
+          document.getElementById('img-ib-cur').textContent = rw + ' × ' + rh + ' px';
+        }
+        _imgCropRect = null;
+        _imgCropMode = false;
+        document.getElementById('img-crop-btn').classList.remove('active');
+        dc.style.cursor = 'default';
+        _renderImgCanvas();
+      }
     });
   });
 })();
@@ -3225,10 +3341,170 @@ function imgDownload(){
   a.click();
 }
 
+/* ══════════════════════════════════════════
+   塗鴉模式 (Draw / Graffiti Mode)
+   ── 疊加在 img-draw-canvas（透明層）上
+   ── flattenDrawLayer() 才真正寫入 _imgBase
+══════════════════════════════════════════ */
+function _initDrawCanvas(){
+  const base = document.getElementById('img-editor-canvas');
+  _drawCanvas = document.getElementById('img-draw-canvas');
+  _drawCanvas.width  = base.width;
+  _drawCanvas.height = base.height;
+  _drawCtx = _drawCanvas.getContext('2d');
+  _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
+  _drawCanvas.style.display = 'block';
+}
+
+function toggleImgDraw(){
+  // 如果裁切模式開著，先關掉
+  if(_imgCropMode){ _imgCropMode=false; document.getElementById('img-crop-btn').classList.remove('active'); document.getElementById('img-editor-canvas').style.cursor='default'; _imgCropRect=null; _renderImgCanvas(); }
+  _imgDrawMode = !_imgDrawMode;
+  const btn = document.getElementById('img-draw-btn');
+  const panel = document.getElementById('img-draw-panel');
+  btn.classList.toggle('draw-active', _imgDrawMode);
+  if(_imgDrawMode){
+    panel.classList.add('show');
+    _initDrawCanvas();
+    _attachDrawEvents();
+  } else {
+    panel.classList.remove('show');
+    cancelDrawText();
+    if(_drawCanvas){ _drawCanvas.style.display='none'; }
+  }
+}
+
+function setDrawTool(t){
+  _drawTool = t;
+  ['pen','eraser','text'].forEach(id => {
+    document.getElementById('draw-tool-'+id).classList.toggle('sel', id===t);
+  });
+  if(_drawCanvas) _drawCanvas.style.cursor = t==='text' ? 'text' : t==='eraser' ? 'cell' : 'crosshair';
+}
+function setDrawColor(el){
+  _drawColor = el.dataset.color;
+  document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('draw-custom-color').value = _drawColor;
+}
+function setDrawColorHex(hex){
+  _drawColor = hex;
+  document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('sel'));
+}
+function setDrawSize(v){
+  _drawSize = parseInt(v);
+  document.getElementById('draw-size-val').textContent = v+'px';
+}
+
+// ── 塗鴉滑鼠事件 ──
+let _drawAttached = false;
+function _attachDrawEvents(){
+  if(_drawAttached) return;
+  _drawAttached = true;
+  const dc = document.getElementById('img-draw-canvas');
+  let painting=false, lx=0, ly=0;
+
+  function getPos(e){
+    const r = dc.getBoundingClientRect();
+    const sx = dc.width  / r.width;
+    const sy = dc.height / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x:(src.clientX - r.left)*sx, y:(src.clientY - r.top)*sy };
+  }
+
+  function startDraw(e){
+    if(!_imgDrawMode) return;
+    e.preventDefault();
+    const {x,y} = getPos(e);
+    if(_drawTool === 'text'){
+      _drawPending = {x,y};
+      showTextOverlay(e.clientX || x, e.clientY || y);
+      return;
+    }
+    painting=true; lx=x; ly=y;
+    _drawCtx.beginPath();
+    _drawCtx.arc(x, y, _drawSize/2, 0, Math.PI*2);
+    _drawCtx.fillStyle = _drawTool==='eraser' ? 'rgba(0,0,0,1)' : _drawColor;
+    if(_drawTool==='eraser') _drawCtx.globalCompositeOperation='destination-out';
+    else _drawCtx.globalCompositeOperation='source-over';
+    _drawCtx.fill();
+  }
+  function moveDraw(e){
+    if(!_imgDrawMode || !painting) return;
+    e.preventDefault();
+    const {x,y} = getPos(e);
+    _drawCtx.globalCompositeOperation = _drawTool==='eraser' ? 'destination-out' : 'source-over';
+    _drawCtx.beginPath();
+    _drawCtx.moveTo(lx, ly);
+    _drawCtx.lineTo(x, y);
+    _drawCtx.strokeStyle = _drawTool==='eraser' ? 'rgba(0,0,0,1)' : _drawColor;
+    _drawCtx.lineWidth   = _drawSize;
+    _drawCtx.lineCap     = 'round';
+    _drawCtx.lineJoin    = 'round';
+    _drawCtx.stroke();
+    lx=x; ly=y;
+  }
+  function endDraw(){ painting=false; _drawCtx.globalCompositeOperation='source-over'; }
+
+  dc.addEventListener('mousedown',  startDraw);
+  dc.addEventListener('mousemove',  moveDraw);
+  dc.addEventListener('mouseup',    endDraw);
+  dc.addEventListener('mouseleave', endDraw);
+  dc.addEventListener('touchstart', startDraw, {passive:false});
+  dc.addEventListener('touchmove',  moveDraw,  {passive:false});
+  dc.addEventListener('touchend',   endDraw);
+}
+
+// ── 文字工具 ──
+function showTextOverlay(cx, cy){
+  const ov = document.getElementById('img-text-overlay');
+  ov.classList.add('show');
+  // 定位在點擊位置旁邊，避免超出視窗
+  const margin = 10;
+  let lx = cx + margin;
+  let ty = cy + margin;
+  ov.style.left = lx + 'px';
+  ov.style.top  = ty + 'px';
+  setTimeout(()=>{ document.getElementById('draw-text-input').focus(); }, 50);
+}
+function cancelDrawText(){
+  const ov = document.getElementById('img-text-overlay');
+  ov.classList.remove('show');
+  document.getElementById('draw-text-input').value = '';
+  _drawPending = null;
+}
+function commitDrawText(){
+  const txt = document.getElementById('draw-text-input').value.trim();
+  if(!txt || !_drawPending || !_drawCtx){ cancelDrawText(); return; }
+  const fontSize = parseInt(document.getElementById('draw-text-size').value) || 24;
+  // 字型大小需對應到 draw canvas 的座標空間
+  _drawCtx.globalCompositeOperation = 'source-over';
+  _drawCtx.font = `bold ${fontSize}px 'Noto Sans TC', sans-serif`;
+  _drawCtx.fillStyle = _drawColor;
+  _drawCtx.textBaseline = 'top';
+  _drawCtx.fillText(txt, _drawPending.x, _drawPending.y);
+  cancelDrawText();
+}
+
+// ── 合併塗鴉層到 _imgBase ──
+function flattenDrawLayer(){
+  if(!_drawCanvas || !_imgBase) return;
+  const ctx = _imgBase.getContext('2d');
+  // draw canvas 尺寸 = display canvas 尺寸，需 scale 回 _imgBase
+  ctx.drawImage(_drawCanvas, 0, 0, _imgBase.width, _imgBase.height);
+  // 清除塗鴉層
+  _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
+  _renderImgCanvas();
+}
+function clearDrawLayer(){
+  if(!_drawCtx) return;
+  _drawCtx.clearRect(0, 0, _drawCanvas.width, _drawCanvas.height);
+}
+
+// 重置時也清塗鴉層
 function closeImgEditor(){
   closeModal('imgEdit-modal');
 }
-
 
 </script>
 </body>

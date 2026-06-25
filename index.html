@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>瑞能電子MIS轉檔專屬網站 V46.0</title>
+<title>瑞能電子MIS轉檔專屬網站 V47.0</title>
 
 <!-- Three.js r128 for STL/OBJ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -702,8 +702,38 @@ footer strong { color: var(--cyan); }
   position:relative; border-radius:10px; overflow:hidden;
   border:1px solid rgba(14,165,233,0.2); margin-bottom:14px; background:#f8f9fa;
   min-height:200px; display:flex; align-items:center; justify-content:center;
+  cursor:grab;
+}
+.wm-preview-wrap.panning { cursor:grabbing; }
+/* zoom/pan 容器 — transform 套在這層，canvas 和 overlay 一起動 */
+#wm-zoom-inner {
+  position:relative;
+  transform-origin:0 0;
+  will-change:transform;
+  /* 初始狀態無變形 */
 }
 #wm-preview-canvas { max-width:100%; max-height:420px; display:block; border-radius:8px; }
+/* zoom 工具列 */
+.wm-zoom-bar {
+  position:absolute; bottom:10px; right:10px; z-index:30;
+  display:none; /* 有圖才顯示 */
+  gap:5px; flex-direction:column;
+  align-items:center;
+}
+.wm-zoom-bar.show { display:flex; }
+.wm-zoom-btn {
+  width:30px; height:30px; border-radius:6px;
+  background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.18);
+  color:#fff; font-size:16px; font-weight:700; line-height:1;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:background 0.15s; user-select:none;
+}
+.wm-zoom-btn:hover { background:rgba(14,165,233,0.7); }
+.wm-zoom-label {
+  font-size:10px; font-family:'Share Tech Mono',monospace;
+  color:rgba(255,255,255,0.75); background:rgba(0,0,0,0.45);
+  padding:2px 5px; border-radius:4px; min-width:36px; text-align:center;
+}
 .wm-placeholder {
   display:flex; flex-direction:column; align-items:center; gap:10px;
   color:var(--silver3); font-size:14px; padding:40px;
@@ -868,7 +898,7 @@ footer strong { color: var(--cyan); }
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="topbar-badge">INTERNAL PORTAL</div>
-    <div class="version-badge">V46.0</div>
+    <div class="version-badge">V47.0</div>
   </div>
 </header>
 
@@ -1289,7 +1319,7 @@ footer strong { color: var(--cyan); }
 </section>
 
 <footer>
-  © 2026 &nbsp;MIS 轉檔專屬系統 V46.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
+  © 2026 &nbsp;MIS 轉檔專屬系統 V47.0 &nbsp;·&nbsp; 僅供內部使用 &nbsp;·&nbsp; 最後更新：<span id="footer-update-date"></span>
   <script>
     (function(){
       const d = new Date('2026-06-25'); // 自動更新：每次修改此檔案時會更新為當天日期
@@ -2240,22 +2270,32 @@ P/N 1003-C</textarea>
         </div>
       </div>
       <!-- 預覽（最大化，移除 PDF 說明）-->
-      <div class="wm-preview-wrap" id="wm-preview-wrap" style="position:relative;min-height:300px;max-height:60vh;overflow:auto;background:#1a1a2e;margin-bottom:10px;">
+      <div class="wm-preview-wrap" id="wm-preview-wrap" style="position:relative;min-height:300px;max-height:60vh;overflow:hidden;background:#1a1a2e;margin-bottom:10px;">
         <div class="wm-placeholder" id="wm-placeholder">
           <div class="wm-placeholder-icon">💧</div>
           <div>請先上傳圖片或 PDF 檔案</div>
         </div>
-        <!-- 主預覽 canvas -->
-        <canvas id="wm-preview-canvas" style="display:none;max-width:100%;height:auto;"></canvas>
-        <!-- 印章拖曳覆蓋層（顯示印章可拖動的虛線框） -->
-        <div id="wm-stamp-overlay" style="display:none;position:absolute;cursor:move;border:2px dashed rgba(14,165,233,0.7);
-             border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,0.3);
-             user-select:none;touch-action:none;"
-             title="拖曳移動印章位置">
-          <img id="wm-stamp-preview-img" style="width:100%;height:100%;object-fit:contain;pointer-events:none;display:block;">
-          <div style="position:absolute;top:-20px;left:0;font-size:10px;color:#0EA5E9;
-                      white-space:nowrap;background:rgba(0,0,0,0.55);padding:1px 5px;border-radius:3px;
-                      font-family:'Share Tech Mono',monospace;">拖曳移動</div>
+        <!-- zoom/pan 容器：canvas 與 overlay 一起跟著 transform -->
+        <div id="wm-zoom-inner">
+          <!-- 主預覽 canvas -->
+          <canvas id="wm-preview-canvas" style="display:none;max-width:100%;height:auto;"></canvas>
+          <!-- 印章拖曳覆蓋層（顯示印章可拖動的虛線框） -->
+          <div id="wm-stamp-overlay" style="display:none;position:absolute;cursor:move;border:2px dashed rgba(14,165,233,0.7);
+               border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,0.3);
+               user-select:none;touch-action:none;"
+               title="拖曳移動印章位置">
+            <img id="wm-stamp-preview-img" style="width:100%;height:100%;object-fit:contain;pointer-events:none;display:block;">
+            <div style="position:absolute;top:-20px;left:0;font-size:10px;color:#0EA5E9;
+                        white-space:nowrap;background:rgba(0,0,0,0.55);padding:1px 5px;border-radius:3px;
+                        font-family:'Share Tech Mono',monospace;">拖曳移動</div>
+          </div>
+        </div>
+        <!-- zoom 工具列 -->
+        <div class="wm-zoom-bar" id="wm-zoom-bar">
+          <button class="wm-zoom-btn" onclick="wmZoomIn()" title="放大">＋</button>
+          <span class="wm-zoom-label" id="wm-zoom-label">100%</span>
+          <button class="wm-zoom-btn" onclick="wmZoomOut()" title="縮小">－</button>
+          <button class="wm-zoom-btn" onclick="wmZoomReset()" title="重置視角" style="font-size:12px;">⟳</button>
         </div>
       </div>
 
@@ -5089,7 +5129,7 @@ function _applyStamp(ctx, stampImg, params, W, H){
   ctx.restore();
 }
 
-/* ── 更新拖曳覆蓋層位置（配合 canvas 顯示尺寸）── */
+/* ── 更新拖曳覆蓋層位置（配合 canvas 顯示尺寸 & zoom/pan transform）── */
 function _updateStampOverlay(){
   const ov = document.getElementById('wm-stamp-overlay');
   const canvas = document.getElementById('wm-preview-canvas');
@@ -5120,15 +5160,11 @@ function _updateStampOverlay(){
     else               { sx=(canvas.width-sw)/2;   sy=(canvas.height-sh)/2; }
   }
 
-  // 轉換到顯示座標
-  const canvasRect = canvas.getBoundingClientRect();
-  const wrapRect   = document.getElementById('wm-preview-wrap').getBoundingClientRect();
-  const offLeft = canvasRect.left - wrapRect.left;
-  const offTop  = canvasRect.top  - wrapRect.top + document.getElementById('wm-preview-wrap').scrollTop;
-
+  // overlay 相對於 wm-zoom-inner（canvas 的父容器），直接用 canvas 內座標換算即可
+  // wm-zoom-inner 的 transform 由外層 CSS 套用，overlay 是它的子元素，自動跟著動
   ov.style.display = 'block';
-  ov.style.left    = (offLeft + sx * scaleX) + 'px';
-  ov.style.top     = (offTop  + sy * scaleY) + 'px';
+  ov.style.left    = (sx * scaleX) + 'px';
+  ov.style.top     = (sy * scaleY) + 'px';
   ov.style.width   = (sw * scaleX) + 'px';
   ov.style.height  = (sh * scaleY) + 'px';
   ov.style.opacity = params.opacity;
@@ -5165,8 +5201,16 @@ function _updateStampOverlay(){
       if(!dragging) return;
       const canvas=document.getElementById('wm-preview-canvas');
       if(!canvas||!canvas.width) return;
-      const scaleX=canvas.offsetWidth/canvas.width;
-      const scaleY=canvas.offsetHeight/canvas.height;
+      // 印章 overlay 在 wm-zoom-inner 裡，已跟著 transform 動
+      // 拖曳偏移也需除以目前的 zoom scale
+      const inner=document.getElementById('wm-zoom-inner');
+      let currentScale=1;
+      if(inner && inner.style.transform){
+        const m=inner.style.transform.match(/scale\(([\d.]+)\)/);
+        if(m) currentScale=parseFloat(m[1])||1;
+      }
+      const scaleX=(canvas.offsetWidth/canvas.width)*currentScale;
+      const scaleY=(canvas.offsetHeight/canvas.height)*currentScale;
       const dx=(ex-startX)/scaleX/canvas.width;
       const dy=(ey-startY)/scaleY/canvas.height;
       const newNX=Math.max(0,Math.min(1-_getStampParams().size, origNX+dx));
@@ -5259,7 +5303,167 @@ function wmReset(){
   document.getElementById('wm-stamp-settings').style.display='none';
   const ov=document.getElementById('wm-stamp-overlay');
   if(ov) ov.style.display='none';
+  // 重置 zoom/pan 狀態與工具列 (V47)
+  const bar=document.getElementById('wm-zoom-bar');
+  if(bar) bar.classList.remove('show');
+  const inner=document.getElementById('wm-zoom-inner');
+  if(inner) inner.style.transform='';
+  const lbl=document.getElementById('wm-zoom-label');
+  if(lbl) lbl.textContent='100%';
 }
+
+/* ══════════════════════════════════════════
+   浮水印預覽 Zoom / Pan 功能 (V47新增)
+   ── 僅修改 #wm-zoom-inner 的 transform，
+      不影響 wmRender、wmDownload、_updateStampOverlay 等既有邏輯
+══════════════════════════════════════════ */
+(function(){
+  let _z = 1;          // 目前縮放倍率
+  let _tx = 0, _ty = 0; // 平移偏移 (px，相對於 wrap 中心)
+  let _panning = false;
+  let _panStartX = 0, _panStartY = 0, _panOriginTX = 0, _panOriginTY = 0;
+  const MIN_Z = 0.25, MAX_Z = 8, STEP = 0.25;
+
+  function _applyTransform(){
+    const inner = document.getElementById('wm-zoom-inner');
+    if(!inner) return;
+    inner.style.transform = `translate(${_tx}px,${_ty}px) scale(${_z})`;
+    const lbl = document.getElementById('wm-zoom-label');
+    if(lbl) lbl.textContent = Math.round(_z*100)+'%';
+    // 通知 stamp overlay 重算位置
+    requestAnimationFrame(_updateStampOverlay);
+  }
+
+  /* ── 公開 API（供 HTML onclick 呼叫）── */
+  window.wmZoomIn = function(){
+    _z = Math.min(MAX_Z, parseFloat((_z + STEP).toFixed(2)));
+    _applyTransform();
+  };
+  window.wmZoomOut = function(){
+    _z = Math.max(MIN_Z, parseFloat((_z - STEP).toFixed(2)));
+    _applyTransform();
+  };
+  window.wmZoomReset = function(){
+    _z=1; _tx=0; _ty=0;
+    _applyTransform();
+  };
+
+  /* ── 滾輪縮放 ── */
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const wrap = document.getElementById('wm-preview-wrap');
+    if(!wrap) return;
+
+    wrap.addEventListener('wheel', e=>{
+      const canvas = document.getElementById('wm-preview-canvas');
+      if(!canvas || canvas.style.display==='none') return;
+      e.preventDefault();
+
+      // 以滑鼠位置為縮放中心
+      const rect = wrap.getBoundingClientRect();
+      const mx = e.clientX - rect.left - rect.width/2;
+      const my = e.clientY - rect.top  - rect.height/2;
+      const delta = e.deltaY < 0 ? STEP : -STEP;
+      const newZ  = Math.min(MAX_Z, Math.max(MIN_Z, parseFloat((_z+delta).toFixed(2))));
+      const ratio = newZ / _z;
+
+      // 調整平移，使縮放中心不跑掉
+      _tx = mx + (_tx - mx) * ratio;
+      _ty = my + (_ty - my) * ratio;
+      _z  = newZ;
+      _applyTransform();
+    }, {passive:false});
+
+    /* ── 滑鼠拖曳平移（空白處）── */
+    wrap.addEventListener('mousedown', e=>{
+      // 若點的是印章 overlay 就讓它自己處理，不啟動 pan
+      if(e.target.closest('#wm-stamp-overlay')) return;
+      const canvas = document.getElementById('wm-preview-canvas');
+      if(!canvas || canvas.style.display==='none') return;
+      _panning=true;
+      _panStartX=e.clientX; _panStartY=e.clientY;
+      _panOriginTX=_tx; _panOriginTY=_ty;
+      wrap.classList.add('panning');
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', e=>{
+      if(!_panning) return;
+      _tx = _panOriginTX + (e.clientX - _panStartX);
+      _ty = _panOriginTY + (e.clientY - _panStartY);
+      _applyTransform();
+    });
+    document.addEventListener('mouseup', ()=>{
+      if(!_panning) return;
+      _panning=false;
+      const wrap = document.getElementById('wm-preview-wrap');
+      if(wrap) wrap.classList.remove('panning');
+    });
+
+    /* ── 觸控支援（雙指縮放 + 單指平移）── */
+    let _lastTouchDist = null;
+    wrap.addEventListener('touchstart', e=>{
+      const canvas = document.getElementById('wm-preview-canvas');
+      if(!canvas || canvas.style.display==='none') return;
+      if(e.touches.length===2){
+        _lastTouchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      } else if(e.touches.length===1 && !e.target.closest('#wm-stamp-overlay')){
+        _panning=true;
+        _panStartX=e.touches[0].clientX; _panStartY=e.touches[0].clientY;
+        _panOriginTX=_tx; _panOriginTY=_ty;
+      }
+    },{passive:true});
+    wrap.addEventListener('touchmove', e=>{
+      const canvas = document.getElementById('wm-preview-canvas');
+      if(!canvas || canvas.style.display==='none') return;
+      if(e.touches.length===2){
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if(_lastTouchDist){
+          const ratio = dist / _lastTouchDist;
+          _z = Math.min(MAX_Z, Math.max(MIN_Z, parseFloat((_z*ratio).toFixed(3))));
+          _applyTransform();
+        }
+        _lastTouchDist = dist;
+        e.preventDefault();
+      } else if(e.touches.length===1 && _panning){
+        _tx = _panOriginTX + (e.touches[0].clientX - _panStartX);
+        _ty = _panOriginTY + (e.touches[0].clientY - _panStartY);
+        _applyTransform();
+      }
+    },{passive:false});
+    wrap.addEventListener('touchend', ()=>{
+      _lastTouchDist=null;
+      _panning=false;
+    },{passive:true});
+  });
+
+  /* ── wmRender 完成後顯示工具列並重置視角 ── */
+  const _origWmRenderEnd = window._wmZoom_hooked;
+  if(!_origWmRenderEnd){
+    window._wmZoom_hooked = true;
+    const _origWmRender = window.wmRender;
+    window.wmRender = async function(){
+      await _origWmRender.apply(this, arguments);
+      const canvas = document.getElementById('wm-preview-canvas');
+      if(canvas && canvas.style.display!=='none'){
+        // 第一次載入圖時重置視角；後續調整參數保持現有 zoom
+        const bar = document.getElementById('wm-zoom-bar');
+        if(bar){
+          if(!bar.classList.contains('show')){
+            // 第一次顯示：重置
+            _z=1; _tx=0; _ty=0; _applyTransform();
+          }
+          bar.classList.add('show');
+        }
+      }
+    };
+  }
+})();
+
 </script>
 </body>
 </html>
